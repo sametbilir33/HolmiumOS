@@ -3,11 +3,8 @@ using Cosmos.Core;
 using Cosmos.Core.Memory;
 using Cosmos.System.FileSystem;
 using Cosmos.System.FileSystem.VFS;
-using Cosmos.System.Graphics;
-using Cosmos.System.Graphics.Fonts;
 using Cosmos.System.ScanMaps;
 using HolmiumOS.Shell;
-using IL2CPU.API.Attribs;
 using Sys = Cosmos.System;
 
 namespace HolmiumOS
