@@ -1,0 +1,7 @@
+﻿[*.cs]
+
+# CA1416: Platform uyumlulugunu dogrula
+dotnet_diagnostic.CA1416.severity = none
+
+# CA2211: Sabit olmayan alanlar gorunur olmamalidir
+dotnet_diagnostic.CA2211.severity = none
