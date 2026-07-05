@@ -255,12 +255,6 @@ namespace HolmiumOS.Commands.System
             Console.WriteLine($"Satir: {cursorY + 1}, Sutun: {cursorX + 1}");
         }
 
-        // Cosmos, Console.BufferHeight / Console.BufferWidth'i implemente etmiyor;
-        // bu property'lere erisim "Invalid Opcode" CPU exception'ina yol aciyor.
-        // Bu yuzden buradaki sinirlar sabit (standart VGA metin modu 80x25) tutuluyor.
-        private const int ScreenCols = 80;
-        private const int ScreenRows = 25;
-
         private void PositionCursor(string[] lines)
         {
             // Baslik barinda 3 satir var (title, kisayollar, ayrac)
@@ -269,24 +263,13 @@ namespace HolmiumOS.Commands.System
             int row = headerLines + cursorY;
             int col = cursorX;
 
-            int maxRow = ScreenRows - 1;
-            int maxCol = ScreenCols - 1;
+            int maxRow = Console.BufferHeight - 1;
+            int maxCol = Console.BufferWidth - 1;
 
             if (row > maxRow) row = maxRow;
-            if (row < 0) row = 0;
             if (col > maxCol) col = maxCol;
-            if (col < 0) col = 0;
 
-            try
-            {
-                Console.SetCursorPosition(col, row);
-            }
-            catch
-            {
-                // SetCursorPosition bazi Cosmos surumlerinde ekran disina
-                // tasan degerlerde de sorun cikarabiliyor; sessizce yut,
-                // imlec gorunmese de editor calismaya devam etsin.
-            }
+            Console.SetCursorPosition(col, row);
         }
 
         private void Save(string file, string[] lines)
