@@ -54,7 +54,7 @@ namespace HolmiumOS.Shell
             commands.Add(new Stat());
             commands.Add(new Cat());
             commands.Add(new Run());
-            commands.Add(new Nano());
+            commands.Add(new Miv());
 
             commands.Add(new Rand());
         }
