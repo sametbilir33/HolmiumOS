@@ -10,10 +10,10 @@ HolmiumOS is an experimental operating system created for learning and experimen
 
 ## Features
 
-- [Powerful UX]
-- [Memory and storage resource checks]
-- [Interactive command-line shell]
-- [Scripting language interpreter]
+- Powerful UX
+- Memory and storage resource checks
+- Interactive command-line shell
+- Scripting language interpreter
 
 ## Components
 
