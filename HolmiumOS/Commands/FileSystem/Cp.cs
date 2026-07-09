@@ -1,6 +1,5 @@
 ﻿using HolmiumOS.Shell;
 using System;
-using System.IO;
 
 namespace HolmiumOS.Commands.FileSystem
 {
@@ -22,24 +21,9 @@ namespace HolmiumOS.Commands.FileSystem
                 return;
             }
 
-            string source = Path.IsPathRooted(copyArgs[0])
-                ? copyArgs[0]
-                : Path.Combine(FileSystemManager.CurrentDirectory, copyArgs[0]);
-
-            string destination = Path.IsPathRooted(copyArgs[1])
-                ? copyArgs[1]
-                : Path.Combine(FileSystemManager.CurrentDirectory, copyArgs[1]);
-
             try
             {
-                if (!File.Exists(source))
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"Hata: Kaynak dosya bulunamadi: {source}");
-                    return;
-                }
-
-                File.Copy(source, destination, true);
+                FileSystemManager.CopyFile(copyArgs[0], copyArgs[1]);
 
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("Dosya basariyla kopyalandi.");

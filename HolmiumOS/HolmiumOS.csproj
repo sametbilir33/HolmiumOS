@@ -17,19 +17,9 @@
         <Profile>VMware</Profile>
         <Description>Use VMware Player or Workstation to deploy and debug.</Description>
         <PxeInterface>192.168.0.8</PxeInterface>
-        <RemoveBootDebugOutput>True</RemoveBootDebugOutput>
         <DebugEnabled>False</DebugEnabled>
         <VMWareEdition>Player</VMWareEdition>
-        <CompileVBEMultiboot>False</CompileVBEMultiboot>
-        <VBEResolution></VBEResolution>
     </PropertyGroup>
-
-    <ItemGroup>
-      <None Remove="bold.psf" />
-      <None Remove="boldfont.psf" />
-      <None Remove="cfont.psf" />
-      <None Remove="normal.psf" />
-    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Cosmos.Build" Version="0-*" NoWarn="NU1604" />
@@ -37,6 +27,5 @@
         <PackageReference Include="Cosmos.System2" Version="0-*" NoWarn="NU1604" />
         <PackageReference Include="Cosmos.Plugs" Version="0-*" NoWarn="NU1604" />
     </ItemGroup>
-
 
 </Project>

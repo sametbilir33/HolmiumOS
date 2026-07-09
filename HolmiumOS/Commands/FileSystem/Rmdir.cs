@@ -1,6 +1,5 @@
 ﻿using HolmiumOS.Shell;
 using System;
-using System.IO;
 
 namespace HolmiumOS.Commands.FileSystem
 {
@@ -22,34 +21,9 @@ namespace HolmiumOS.Commands.FileSystem
 
             try
             {
-                if (args == "*")
-                {
-                    foreach (string dir in Directory.GetDirectories(FileSystemManager.CurrentDirectory))
-                    {
-                        Directory.Delete(dir, true);
-
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine($"Klasor silindi: {Path.GetFileName(dir)}");
-                    }
-                }
-                else
-                {
-                    string path = Path.IsPathRooted(args)
-                        ? args
-                        : Path.Combine(FileSystemManager.CurrentDirectory, args);
-
-                    if (!Directory.Exists(path))
-                    {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("Klasor bulunamadi.");
-                        return;
-                    }
-
-                    Directory.Delete(path, true);
-
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"Klasor silindi: {path}");
-                }
+                FileSystemManager.DeleteDirectory(args);
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"Klasor silindi: {args}");
             }
             catch (Exception ex)
             {

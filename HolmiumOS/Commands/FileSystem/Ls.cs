@@ -12,32 +12,10 @@ namespace HolmiumOS.Commands.FileSystem
 
         public void Execute(string args)
         {
-            string directory;
-
-            if (string.IsNullOrWhiteSpace(args))
-            {
-                directory = FileSystemManager.CurrentDirectory;
-            }
-            else if (Path.IsPathRooted(args))
-            {
-                directory = args;
-            }
-            else
-            {
-                directory = Path.Combine(FileSystemManager.CurrentDirectory, args);
-            }
-
             try
             {
-                if (!Directory.Exists(directory))
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("Dizin bulunamadi.");
-                    return;
-                }
-
-                string[] directories = Directory.GetDirectories(directory);
-                string[] files = Directory.GetFiles(directory);
+                string[] directories = FileSystemManager.GetDirectories(args);
+                string[] files = FileSystemManager.GetFiles(args);
 
                 if (directories.Length == 0 && files.Length == 0)
                 {
@@ -48,14 +26,14 @@ namespace HolmiumOS.Commands.FileSystem
 
                 foreach (string dir in directories)
                 {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine($"<DIR> {Path.GetFileName(dir)}");
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine(Path.GetFileName(dir));
                 }
 
                 foreach (string file in files)
                 {
                     Console.ForegroundColor = ConsoleColor.White;
-                    Console.WriteLine($"      {Path.GetFileName(file)}");
+                    Console.WriteLine(Path.GetFileName(file));
                 }
             }
             catch (Exception ex)

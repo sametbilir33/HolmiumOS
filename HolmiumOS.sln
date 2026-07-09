@@ -1,14 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36623.8
+VisualStudioVersion = 17.14.37216.2 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HolmiumOS", "HolmiumOS\HolmiumOS.csproj", "{2DD363AC-3422-42E9-9174-022F47E2DE64}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HolmiumOS", "HolmiumOS\HolmiumOS.csproj", "{F95B7556-284A-410D-8A54-147CB764CD96}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -16,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2DD363AC-3422-42E9-9174-022F47E2DE64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2DD363AC-3422-42E9-9174-022F47E2DE64}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2DD363AC-3422-42E9-9174-022F47E2DE64}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2DD363AC-3422-42E9-9174-022F47E2DE64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F95B7556-284A-410D-8A54-147CB764CD96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F95B7556-284A-410D-8A54-147CB764CD96}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F95B7556-284A-410D-8A54-147CB764CD96}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F95B7556-284A-410D-8A54-147CB764CD96}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {9C2B0039-08AE-4B09-BC77-058F8E46716D}
+		SolutionGuid = {A7895044-45E9-47AF-AC85-77896899692A}
 	EndGlobalSection
 EndGlobal

@@ -1,7 +1,5 @@
-﻿using Cosmos.System.FileSystem.VFS;
-using HolmiumOS.Shell;
+﻿using HolmiumOS.Shell;
 using System;
-using System.IO;
 
 namespace HolmiumOS.Commands.FileSystem
 {
@@ -21,52 +19,19 @@ namespace HolmiumOS.Commands.FileSystem
                 return;
             }
 
-            string target = args.Trim();
-            string currentDir = Shell.FileSystemManager.CurrentDirectory;
-            string newDir;
-
-            if (target == "..")
-            {
-                if (currentDir == @"0:\")
-                {
-                    newDir = currentDir;
-                }
-                else
-                {
-                    string trimmed = currentDir.TrimEnd('\\');
-                    int index = trimmed.LastIndexOf('\\');
-
-                    if (index > 2)
-                        newDir = trimmed.Substring(0, index + 1);
-                    else
-                        newDir = @"0:\";
-                }
-            }
-            else if (Path.IsPathRooted(target))
-            {
-                newDir = target;
-            }
-            else
-            {
-                newDir = Path.Combine(currentDir, target);
-            }
-
-            if (!newDir.EndsWith("\\"))
-                newDir += "\\";
-
             try
             {
-                if (VFSManager.DirectoryExists(newDir))
-                {
-                    Shell.FileSystemManager.CurrentDirectory = newDir;
+                bool success = FileSystemManager.ChangeDirectory(args);
 
+                if (success)
+                {
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"Dizin degisti: {newDir}");
+                    Console.WriteLine($"Dizin degisti: {FileSystemManager.GetDisplayPath()}");
                 }
                 else
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"Hata: '{target}' dizini bulunamadi.");
+                    Console.WriteLine($"Hata: '{args}' dizini bulunamadi.");
                 }
             }
             catch (Exception ex)

@@ -270,18 +270,17 @@ namespace HolmiumOS.Shell
             Console.WriteLine("Belirtilen dosya yoksa otomatik olarak olusturulacaktir.");
 
             string file = Console.ReadLine();
-            string path = Path.Combine(FileSystemManager.CurrentDirectory, file);
 
             try
             {
-                if (File.Exists(path))
+                if (FileSystemManager.FileExists(file))
                 {
                     Console.WriteLine("Dosya Bulundu!");
                 }
                 else
                 {
+                    FileSystemManager.CreateFile(file);
                     Console.WriteLine("Dosya Olusturuldu!");
-                    File.Create(path).Dispose();
                 }
 
                 Console.Clear();
@@ -299,21 +298,38 @@ namespace HolmiumOS.Shell
             Console.WriteLine(file + " dosyasinin icerigini acmak istiyor musunuz? (Yes/No)");
             string answer = Console.ReadLine().ToLower();
 
-            if (answer == "yes" || answer == "y")
+            try
             {
-                text = miv(File.ReadAllText(path));
+                if (answer == "yes" || answer == "y")
+                {
+                    text = miv(FileSystemManager.ReadFile(file));
+                }
+                else
+                {
+                    text = miv(null);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                text = miv(null);
+                Console.WriteLine("Dosya okunamadi: " + ex.Message);
+                Console.WriteLine("Devam etmek icin herhangi bir tusa basin...");
+                Console.ReadKey(true);
+                return;
             }
 
             Console.Clear();
 
             if (text != null)
             {
-                File.WriteAllText(path, text);
-                Console.WriteLine("Icerik " + file + " dosyasina kaydedildi.");
+                try
+                {
+                    FileSystemManager.WriteFile(file, text);
+                    Console.WriteLine("Icerik " + file + " dosyasina kaydedildi.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Kaydedilemedi: " + ex.Message);
+                }
             }
 
             Console.WriteLine("Devam etmek icin herhangi bir tusa basin...");

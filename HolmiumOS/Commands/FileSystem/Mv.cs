@@ -1,6 +1,5 @@
 ﻿using HolmiumOS.Shell;
 using System;
-using System.IO;
 
 namespace HolmiumOS.Commands.FileSystem
 {
@@ -22,25 +21,9 @@ namespace HolmiumOS.Commands.FileSystem
                 return;
             }
 
-            string source = Path.IsPathRooted(moveArgs[0])
-                ? moveArgs[0]
-                : Path.Combine(FileSystemManager.CurrentDirectory, moveArgs[0]);
-
-            string destination = Path.IsPathRooted(moveArgs[1])
-                ? moveArgs[1]
-                : Path.Combine(FileSystemManager.CurrentDirectory, moveArgs[1]);
-
             try
             {
-                if (!File.Exists(source))
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"Hata: Kaynak dosya bulunamadi: {source}");
-                    return;
-                }
-
-                File.Copy(source, destination, true);
-                File.Delete(source);
+                FileSystemManager.MoveFile(moveArgs[0], moveArgs[1]);
 
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("Dosya basariyla tasindi.");

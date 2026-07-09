@@ -7,6 +7,7 @@ using HolmiumOS.Commands.Math;
 using HolmiumOS.Commands.System;
 using HolmiumOS.Commands.Tools;
 using HolmiumOS.Commands.Executable;
+using HolmiumOS.Commands.UserSystem;
 
 namespace HolmiumOS.Shell
 {
@@ -27,6 +28,8 @@ namespace HolmiumOS.Shell
             commands.Add(new Pause());
             commands.Add(new Reboot());
             commands.Add(new Shutdown());
+            commands.Add(new Reset());
+            commands.Add(new Ember());
 
             commands.Add(new Calc());
             commands.Add(new EvenOdd());
@@ -57,6 +60,15 @@ namespace HolmiumOS.Shell
             commands.Add(new Miv());
 
             commands.Add(new Rand());
+
+            commands.Add(new Login());
+            commands.Add(new Logout());
+            commands.Add(new Passwd());
+            commands.Add(new Whoami());
+            commands.Add(new Su());
+            commands.Add(new Sudo());
+            commands.Add(new UserAdd());
+            commands.Add(new UserDel());
         }
 
         public static void ExecuteCommand(string input)
