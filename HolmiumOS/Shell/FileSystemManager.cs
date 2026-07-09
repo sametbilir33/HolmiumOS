@@ -179,6 +179,18 @@ namespace HolmiumOS.Shell
             return File.ReadAllText(path);
         }
 
+        public static byte[] ReadBytes(string path)
+        {
+            path = ResolvePath(path);
+
+            if (!PermissionManager.CanRead(path))
+                throw new UnauthorizedAccessException("Permission denied.");
+
+            if (!File.Exists(path))
+                throw new FileNotFoundException();
+
+            return File.ReadAllBytes(path);
+        }
         public static void WriteFile(string path, string content)
         {
             path = ResolvePath(path);

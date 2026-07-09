@@ -6,6 +6,8 @@ using Cosmos.System.FileSystem;
 using Cosmos.System.FileSystem.VFS;
 using Cosmos.System.ScanMaps;
 using HolmiumOS.Shell;
+using HolmiumOS.Sound;
+using IL2CPU.API.Attribs;
 using FileSystemManager = HolmiumOS.Shell.FileSystemManager;
 using Sys = Cosmos.System;
 
@@ -17,8 +19,11 @@ namespace HolmiumOS
 
         public static readonly string OSVERSION = "0.4-beta";
 
+        [ManifestResourceStream(ResourceName = "HolmiumOS.muzik.wav")]
+        public static byte[] Startup;
+
         protected override void BeforeRun()
-        {
+        {   
             Console.Clear();
 
             try
@@ -319,6 +324,8 @@ namespace HolmiumOS
                 LoginScreen();
                 return;
             }
+
+            AudioManager.Update();
 
             WritePrompt();
 

@@ -8,6 +8,7 @@ using HolmiumOS.Commands.System;
 using HolmiumOS.Commands.Tools;
 using HolmiumOS.Commands.Executable;
 using HolmiumOS.Commands.UserSystem;
+using HolmiumOS.Commands.Sound;
 
 namespace HolmiumOS.Shell
 {
@@ -69,6 +70,11 @@ namespace HolmiumOS.Shell
             commands.Add(new Sudo());
             commands.Add(new UserAdd());
             commands.Add(new UserDel());
+
+            commands.Add(new PlayMusic());
+            commands.Add(new StopMusic());
+            commands.Add(new MusicStatus());
+            commands.Add(new PauseMusic());
         }
 
         public static void ExecuteCommand(string input)
