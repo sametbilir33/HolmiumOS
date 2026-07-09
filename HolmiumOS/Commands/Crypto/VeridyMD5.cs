@@ -4,17 +4,17 @@ using HolmiumOS.Crypto;
 
 namespace HolmiumOS.Commands.Crypto
 {
-    public class Md5Verify : ICommand
+    public class VeridyMD5 : ICommand
     {
         public string Name => "md5verify";
         public string Description => "Metnin MD5 hash degerini dogrular.";
-        public string Usage => "md5verify <text> <hash>";
+        public string Usage => "md5verify <metin> <hash>";
 
         public void Execute(string args)
         {
             if (string.IsNullOrEmpty(args))
             {
-                Console.WriteLine("Usage: " + Usage);
+                Console.WriteLine("Kullanım: " + Usage);
                 return;
             }
 
@@ -22,7 +22,7 @@ namespace HolmiumOS.Commands.Crypto
 
             if (parts.Length < 2)
             {
-                Console.WriteLine("Usage: " + Usage);
+                Console.WriteLine("Kullanım: " + Usage);
                 return;
             }
 
@@ -33,11 +33,11 @@ namespace HolmiumOS.Commands.Crypto
 
             if (calculatedHash.Equals(expectedHash, StringComparison.OrdinalIgnoreCase))
             {
-                Console.WriteLine("Valid");
+                Console.WriteLine("Gecerli");
             }
             else
             {
-                Console.WriteLine("Invalid");
+                Console.WriteLine("Gecersiz");
             }
         }
     }

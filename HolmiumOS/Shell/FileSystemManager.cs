@@ -79,7 +79,7 @@ namespace HolmiumOS.Shell
             path = ResolvePath(path);
 
             if (!PermissionManager.CanEnter(path))
-                throw new UnauthorizedAccessException("Permission denied.");
+                throw new UnauthorizedAccessException("Erisim reddedildi.");
 
             if (!VFSManager.DirectoryExists(path))
                 return false;
@@ -97,7 +97,7 @@ namespace HolmiumOS.Shell
             path = ResolvePath(path);
 
             if (!PermissionManager.CanCreate(path))
-                throw new UnauthorizedAccessException("Permission denied.");
+                throw new UnauthorizedAccessException("Erisim reddedildi.");
 
             if (Directory.Exists(path) || File.Exists(path))
                 throw new IOException("Ayni adda dosya veya klasor zaten var.");
@@ -110,7 +110,7 @@ namespace HolmiumOS.Shell
             path = ResolvePath(path);
 
             if (!PermissionManager.CanDelete(path))
-                throw new UnauthorizedAccessException("Permission denied.");
+                throw new UnauthorizedAccessException("Erisim reddedildi.");
 
             if (!Directory.Exists(path))
                 throw new DirectoryNotFoundException();
@@ -126,7 +126,7 @@ namespace HolmiumOS.Shell
                 throw new IOException("Bu bir aygit dosyasidir, olusturulamaz.");
 
             if (!PermissionManager.CanCreate(path))
-                throw new UnauthorizedAccessException("Permission denied.");
+                throw new UnauthorizedAccessException("Erisim reddedildi.");
 
             if (File.Exists(path))
                 throw new IOException("Dosya zaten var.");
@@ -142,7 +142,7 @@ namespace HolmiumOS.Shell
                 throw new IOException("Bu bir aygit dosyasidir, silinemez.");
 
             if (!PermissionManager.CanDelete(path))
-                throw new UnauthorizedAccessException("Permission denied.");
+                throw new UnauthorizedAccessException("Erisim reddedildi.");
 
             if (!File.Exists(path))
                 throw new FileNotFoundException();
@@ -171,7 +171,7 @@ namespace HolmiumOS.Shell
             }
 
             if (!PermissionManager.CanRead(path))
-                throw new UnauthorizedAccessException("Permission denied.");
+                throw new UnauthorizedAccessException("Erisim reddedildi.");
 
             if (!File.Exists(path))
                 throw new FileNotFoundException();
@@ -184,7 +184,7 @@ namespace HolmiumOS.Shell
             path = ResolvePath(path);
 
             if (!PermissionManager.CanRead(path))
-                throw new UnauthorizedAccessException("Permission denied.");
+                throw new UnauthorizedAccessException("Erisim reddedildi.");
 
             if (!File.Exists(path))
                 throw new FileNotFoundException();
@@ -199,7 +199,7 @@ namespace HolmiumOS.Shell
                 return; // dev/null, dev/zero, dev/random -> yazma yok sayilir
 
             if (!PermissionManager.CanWrite(path))
-                throw new UnauthorizedAccessException("Permission denied.");
+                throw new UnauthorizedAccessException("Erisim reddedildi.");
 
             File.WriteAllText(path, content);
         }
@@ -212,7 +212,7 @@ namespace HolmiumOS.Shell
                 return;
 
             if (!PermissionManager.CanWrite(path))
-                throw new UnauthorizedAccessException("Permission denied.");
+                throw new UnauthorizedAccessException("Erisim reddedildi.");
 
             File.AppendAllText(path, content);
         }
@@ -223,10 +223,10 @@ namespace HolmiumOS.Shell
             destination = ResolvePath(destination);
 
             if (!PermissionManager.CanRead(source))
-                throw new UnauthorizedAccessException("Permission denied.");
+                throw new UnauthorizedAccessException("Erisim reddedildi.");
 
             if (!PermissionManager.CanCreate(destination))
-                throw new UnauthorizedAccessException("Permission denied.");
+                throw new UnauthorizedAccessException("Erisim reddedildi.");
 
             File.Copy(source, destination, overwrite);
         }
@@ -237,10 +237,10 @@ namespace HolmiumOS.Shell
             destination = ResolvePath(destination);
 
             if (!PermissionManager.CanDelete(source))
-                throw new UnauthorizedAccessException("Permission denied.");
+                throw new UnauthorizedAccessException("Erisim reddedildi.");
 
             if (!PermissionManager.CanCreate(destination))
-                throw new UnauthorizedAccessException("Permission denied.");
+                throw new UnauthorizedAccessException("Erisim reddedildi.");
 
             File.Copy(source, destination, true);
             File.Delete(source);
@@ -251,7 +251,7 @@ namespace HolmiumOS.Shell
             path = ResolvePath(path);
 
             if (!PermissionManager.CanRead(path))
-                throw new UnauthorizedAccessException("Permission denied.");
+                throw new UnauthorizedAccessException("Erisim reddedildi.");
 
             return Directory.GetFiles(path);
         }
@@ -261,15 +261,15 @@ namespace HolmiumOS.Shell
             path = ResolvePath(path);
 
             if (!PermissionManager.CanRead(path))
-                throw new UnauthorizedAccessException("Permission denied.");
+                throw new UnauthorizedAccessException("Erisim reddedildi.");
 
             return Directory.GetDirectories(path);
         }
 
         public static string GetDisplayPath()
         {
-            string path = CurrentDirectory.TrimEnd('\\');
-            string home = UserManager.HomeDirectory.TrimEnd('\\');
+            string path = CurrentDirectory.Replace('/', '\\').Trim().TrimEnd('\\');
+            string home = UserManager.HomeDirectory.Replace('/', '\\').Trim().TrimEnd('\\');
 
             if (path.Equals(home, StringComparison.OrdinalIgnoreCase))
                 return "~";
@@ -277,10 +277,7 @@ namespace HolmiumOS.Shell
             if (path.StartsWith(home + "\\", StringComparison.OrdinalIgnoreCase))
                 return "~" + path.Substring(home.Length).Replace('\\', '/');
 
-            if (path.Equals(@"0:", StringComparison.OrdinalIgnoreCase))
-                return "/";
-
-            if (path.Equals(@"0:\", StringComparison.OrdinalIgnoreCase))
+            if (path.Equals("0:", StringComparison.OrdinalIgnoreCase))
                 return "/";
 
             if (path.StartsWith(@"0:\", StringComparison.OrdinalIgnoreCase))

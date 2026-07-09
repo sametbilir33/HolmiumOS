@@ -33,11 +33,11 @@ namespace HolmiumOS.Commands.Crypto
 
             if (currentHash == expectedHash)
             {
-                Console.WriteLine("OK");
+                Console.WriteLine("Gecerli");
             }
             else
             {
-                Console.WriteLine("FAILED");
+                Console.WriteLine("Gecersiz");
             }
         }
     }

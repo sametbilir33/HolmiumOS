@@ -10,6 +10,7 @@ using HolmiumOS.Commands.Executable;
 using HolmiumOS.Commands.UserSystem;
 using HolmiumOS.Commands.Sound;
 using HolmiumOS.Commands.Crypto;
+using HolmiumOS.Commands.Network;
 
 namespace HolmiumOS.Shell
 {
@@ -80,7 +81,10 @@ namespace HolmiumOS.Shell
             commands.Add(new Sha256());
             commands.Add(new VerifySha256());
             commands.Add(new Md5());
-            commands.Add(new Md5Verify());
+            commands.Add(new VeridyMD5());
+
+            commands.Add(new Wget());
+            commands.Add(new Curl());
         }
 
         public static void ExecuteCommand(string input)
