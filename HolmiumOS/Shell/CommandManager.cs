@@ -9,6 +9,7 @@ using HolmiumOS.Commands.Tools;
 using HolmiumOS.Commands.Executable;
 using HolmiumOS.Commands.UserSystem;
 using HolmiumOS.Commands.Sound;
+using HolmiumOS.Commands.Crypto;
 
 namespace HolmiumOS.Shell
 {
@@ -75,6 +76,11 @@ namespace HolmiumOS.Shell
             commands.Add(new StopMusic());
             commands.Add(new MusicStatus());
             commands.Add(new PauseMusic());
+
+            commands.Add(new Sha256());
+            commands.Add(new VerifySha256());
+            commands.Add(new Md5());
+            commands.Add(new Md5Verify());
         }
 
         public static void ExecuteCommand(string input)

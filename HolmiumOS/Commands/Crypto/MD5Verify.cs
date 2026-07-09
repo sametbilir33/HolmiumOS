@@ -1,0 +1,44 @@
+﻿using System;
+using HolmiumOS.Commands;
+using HolmiumOS.Crypto;
+
+namespace HolmiumOS.Commands.Crypto
+{
+    public class Md5Verify : ICommand
+    {
+        public string Name => "md5verify";
+        public string Description => "Metnin MD5 hash degerini dogrular.";
+        public string Usage => "md5verify <text> <hash>";
+
+        public void Execute(string args)
+        {
+            if (string.IsNullOrEmpty(args))
+            {
+                Console.WriteLine("Usage: " + Usage);
+                return;
+            }
+
+            string[] parts = args.Split(' ');
+
+            if (parts.Length < 2)
+            {
+                Console.WriteLine("Usage: " + Usage);
+                return;
+            }
+
+            string text = parts[0];
+            string expectedHash = parts[1];
+
+            string calculatedHash = MD5.hash(text);
+
+            if (calculatedHash.Equals(expectedHash, StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine("Valid");
+            }
+            else
+            {
+                Console.WriteLine("Invalid");
+            }
+        }
+    }
+}
