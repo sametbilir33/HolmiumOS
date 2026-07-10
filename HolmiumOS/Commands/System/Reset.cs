@@ -10,8 +10,16 @@ namespace HolmiumOS.Commands.System
         public string Description => "Diski tamamen siler ve fabrika ayarlarina dondurur";
         public string Usage => "reset";
 
+        private static bool _running;
+
         public void Execute(string args)
         {
+            if (_running)
+            {
+                Console.WriteLine("Reset islemi zaten calisiyor.");
+                return;
+            }
+
             if (!UserManager.IsRoot && !PermissionManager.IsElevated)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -22,63 +30,69 @@ namespace HolmiumOS.Commands.System
 
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("!!! DIKKAT !!!");
-            Console.WriteLine("Bu islem diskteki TUM verileri geri donulemez sekilde silecek.");
-            Console.WriteLine("Onaylamak icin 'EVET' yazin:");
+            Console.WriteLine("Bu islem diskteki tum verileri geri donulemez sekilde silecektir.");
+            Console.Write("Devam etmek icin EVET yazin: ");
             Console.ResetColor();
 
-            string confirm = Console.ReadLine();
-
-            if (confirm != "EVET")
+            if (Console.ReadLine() != "EVET")
             {
                 Console.WriteLine("Islem iptal edildi.");
                 return;
             }
 
+            _running = true;
+
             try
             {
                 var disk = Kernel.fs.Disks[0];
 
-                Console.WriteLine("[DEBUG] Disk boyutu aliniyor...");
+                Console.WriteLine("[1/5] Disk boyutu hesaplaniyor...");
 
-                int sizeMB = (int)(Kernel.fs.GetTotalSize(@"0:\") / 1024 / 1024);
+                int sizeMB = (int)(disk.Size / 1024 / 1024);
 
-                Console.WriteLine($"[DEBUG] Disk boyutu: {sizeMB} MB");
+                if (sizeMB > 8)
+                    sizeMB -= 8;
 
-                Console.WriteLine("[DEBUG] Partitionlar siliniyor...");
+                Console.WriteLine($"Kullanilacak boyut: {sizeMB} MB");
 
-                while (disk.Partitions.Count > 0)
+                Console.WriteLine("[2/5] Partitionlar siliniyor...");
+
+                for (int i = disk.Partitions.Count - 1; i >= 0; i--)
                 {
-                    disk.DeletePartition(0);
+                    disk.DeletePartition(i);
                 }
 
-                Console.WriteLine("[DEBUG] Disk temizleniyor...");
-
-                disk.Clear();
-
-                Console.WriteLine("[DEBUG] Yeni partition olusturuluyor...");
+                Console.WriteLine("[3/5] Yeni partition olusturuluyor...");
 
                 disk.CreatePartition(sizeMB);
 
-                Console.WriteLine("[DEBUG] FAT32 format atiliyor...");
+                Console.WriteLine("[4/5] FAT32 format atiliyor...");
 
                 disk.FormatPartition(0, "FAT32", true);
 
+                Console.WriteLine("[5/5] Son islemler...");
+
+                Syste.Threading.Thread.Sleep(1000);
+
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("Disk sifirlandi. Sistem yeniden baslatiliyor...");
+                Console.WriteLine("Reset basarili.");
+                Console.WriteLine("Sistem yeniden baslatiliyor...");
                 Console.ResetColor();
 
-                Syste.Threading.Thread.Sleep(2000);
+                Syste.Threading.Thread.Sleep(1500);
 
                 Cosmos.System.Power.Reboot();
             }
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Hata: {ex.GetType().Name} - {ex.Message}");
+                Console.WriteLine("Reset basarisiz!");
+                Console.WriteLine($"{ex.GetType().Name}: {ex.Message}");
                 Console.ResetColor();
-
-                Console.WriteLine("Devam etmek icin bir tusa basin...");
-                Console.ReadKey(true);
+            }
+            finally
+            {
+                _running = false;
             }
         }
     }

@@ -33,6 +33,7 @@ namespace HolmiumOS.Shell
             commands.Add(new Shutdown());
             commands.Add(new Reset());
             commands.Add(new Ember());
+            commands.Add(new HolmiumOS.Commands.System.PCI());
 
             commands.Add(new Calc());
             commands.Add(new EvenOdd());
@@ -63,6 +64,7 @@ namespace HolmiumOS.Shell
             commands.Add(new Miv());
 
             commands.Add(new Rand());
+            commands.Add(new LoadKeys());
 
             commands.Add(new Login());
             commands.Add(new Logout());
