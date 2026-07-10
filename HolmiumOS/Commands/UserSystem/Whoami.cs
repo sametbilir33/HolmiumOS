@@ -13,7 +13,7 @@ namespace HolmiumOS.Commands.UserSystem
         {
             Console.ForegroundColor = ConsoleColor.White;
 
-            if (UserManager.CurrentUser == null)
+            if (!UserManager.IsLoggedIn)
                 Console.WriteLine("No user logged in.");
             else
                 Console.WriteLine(UserManager.CurrentUser);

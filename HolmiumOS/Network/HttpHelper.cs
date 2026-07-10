@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * Based on code from GoOS by Owen2k6.
+ * Licensed under GPLv3.
+ * https://github.com/Owen2k6/GoOS
+ *
+ * Modified by Samet Bilir:
+ * - Reworked for HolmiumOS
+ */
+
+using System;
 using System.Text;
 using System.Net.Sockets;
 using System.Collections.Generic;
@@ -24,16 +33,6 @@ namespace HolmiumOS.Network
         {
             public RegionBlockedException(string message) : base(message) { }
         }
-
-
-        private static readonly string[] BlockBodyMarkers = new[]
-        {
-            "<title>Owen2k6 Network is not available in your country",
-            "You are connecting from a country where 2k6 Network is not available.",
-            "United Kingdom Notice:",
-            "Online Safety Act 2023",
-            "Hinweis für Deutschland"
-        };
 
         // -------------- Public API --------------
         public static string SimpleHttpGet(string host, string path)

@@ -1,9 +1,15 @@
 ﻿/*
 * PROJECT:          Aura Operating System Development
-* CONTENT:          Keyboard initialization
-* PROGRAMMERS:      Alexy DA CRUZ <dacruzalexy@gmail.com>
-* LICENSE:          LICENSES\MD5\LICENSE.md
+* CONTENT:          Conversion
+* PROGRAMMER(S):    Valentin Charbonnier <valentinbreiz@gmail.com>
+* SOURCE:           https://github.com/aura-systems/Aura-Operating-System
+* LICENSE:          THIRD_PARTY_LICENSES/Aura-Operating-System-MD5-LICENSE.md
+*
 * MODIFIED FOR HOLMIUMOS
+* MODIFIED BY:      Samet Bilir
+* CHANGES:
+* - Adapted for HolmiumOS
+* - Modified system-specific integrations
 */
 
 using System;

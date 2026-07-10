@@ -1,4 +1,16 @@
-﻿using HolmiumOS.Shell;
+﻿/*
+ * Based on MIV by Denis Bartashevich
+ * https://github.com/bartashevich/MIV
+ *
+ * Modified by Samet Bilir:
+ * - Integrated MIV into HolmiumOS
+ * - Replaced standard file system operations with HolmiumOS FileSystemManager
+ * - Translated user interface messages into Turkish
+ * - Removed the startup delay
+ * - Improved empty input handling
+ */
+
+using HolmiumOS.Shell;
 using System;
 
 namespace HolmiumOS.Commands.FileSystem

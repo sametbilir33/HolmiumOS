@@ -2,8 +2,14 @@
 * PROJECT:          Aura Operating System Development
 * CONTENT:          Conversion
 * PROGRAMMER(S):    Valentin Charbonnier <valentinbreiz@gmail.com>
-* LICENSE:          LICENSES\SHA256\LICENSE.md
+* SOURCE:           https://github.com/aura-systems/Aura-Operating-System
+* LICENSE:          THIRD_PARTY_LICENSES/Aura-Operating-System-SHA256-LICENSE.md
+*
 * MODIFIED FOR HOLMIUMOS
+* MODIFIED BY:      Samet Bilir
+* CHANGES:
+* - Adapted for HolmiumOS
+* - Modified system-specific integrations
 */
 
 using System;

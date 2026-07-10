@@ -1,7 +1,27 @@
-﻿using System;
+﻿/*
+ * HolmiumOS - A custom operating system project based on CosmosOS
+ *
+ * Copyright (C) 2026 Samet Bilir
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.
+ */
+
+using System;
 using System.IO;
 using Cosmos.Core;
 using Cosmos.Core.Memory;
+using Cosmos.HAL;
 using Cosmos.System.FileSystem;
 using Cosmos.System.FileSystem.VFS;
 using Cosmos.System.ScanMaps;
@@ -19,19 +39,10 @@ namespace HolmiumOS
         public static readonly string OSVERSION = "0.4-beta";
 
         protected override void BeforeRun()
-        {   
+        {
             Console.Clear();
-
-            try
-            {
-                fs = new CosmosVFS();
-                VFSManager.RegisterVFS(fs);
-                BootStatus("VFS baslatildi", true);
-            }
-            catch (Exception)
-            {
-                BootStatus("VFS baslatildi", false);
-            }
+            fs = new CosmosVFS();
+            VFSManager.RegisterVFS(fs);
 
             try
             {
@@ -42,21 +53,83 @@ namespace HolmiumOS
                     disk.Mount();
                 }
 
-                BootStatus("Diskler mount edildi", true);
             }
             catch (Exception e)
             {
-                BootStatus($"Disk mount hatasi: {e.Message}", false);
+                Console.WriteLine($"Disk mount hatasi: {e.Message}", false);  //daha sonra loglara gelcek
             }
 
-            try
+            Sys.KeyboardManager.SetKeyLayout(new TRStandardLayout());
+
+            string licenseFile = @"0:\boot\license.accepted";
+
+            bool needAccept = true;
+
+            if (File.Exists(licenseFile))
             {
-                Sys.KeyboardManager.SetKeyLayout(new TRStandardLayout());
-                BootStatus("Klavye layout TR yapildi", true);
+                string licenseData = File.ReadAllText(licenseFile);
+
+                if (licenseData.Contains($"Version: {OSVERSION}"))
+                {
+                    needAccept = false;
+                }
             }
-            catch
+
+            if (needAccept)
             {
-                BootStatus("Klavye layout ayarlanamadi", false);
+                while (true)
+                {
+                    Console.BackgroundColor = ConsoleColor.Red;
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Clear();
+
+                    Console.WriteLine("==============================================");
+                    Console.WriteLine("              HOLMIUMOS LISANS UYARISI");
+                    Console.WriteLine("==============================================");
+                    Console.WriteLine();
+                    Console.WriteLine("HolmiumOS gelistirme asamasinda olan bir");
+                    Console.WriteLine("isletim sistemi projesidir.");
+                    Console.WriteLine();
+                    Console.WriteLine("Kullanim sirasinda veri kaybi, dosya bozulmasi");
+                    Console.WriteLine("veya beklenmeyen sistem hatalari meydana gelebilir.");
+                    Console.WriteLine();
+                    Console.WriteLine("Gercek donanim uzerinde kullanmadan once");
+                    Console.WriteLine("verilerinizi yedeklemeniz onerilir.");
+                    Console.WriteLine("Sanal makine ortaminda test edilmesi tavsiye edilir.");
+                    Console.WriteLine();
+                    Console.WriteLine("Olusabilecek veri kaybi veya donanim sorunlarindan");
+                    Console.WriteLine("HolmiumOS gelistiricileri sorumlu tutulamaz.");
+                    Console.WriteLine();
+                    Console.WriteLine($"Mevcut surum: {OSVERSION}");
+                    Console.WriteLine();
+                    Console.WriteLine("----------------------------------------------");
+                    Console.WriteLine("[ENTER] Okudum ve kabul ediyorum");
+                    Console.WriteLine("[ESC]   Cikis");
+                    Console.WriteLine("==============================================");
+
+                    ConsoleKey key = Console.ReadKey(true).Key;
+
+                    if (key == ConsoleKey.Enter)
+                    {
+
+                        string date =$"{RTC.Year + (RTC.Century * 100):0000}-" +$"{RTC.Month:00}-" +$"{RTC.DayOfTheMonth:00} " +$"{RTC.Hour:00}:" +$"{RTC.Minute:00}:" +$"{RTC.Second:00}";
+
+                        File.WriteAllText(licenseFile, $"HolmiumOS License Accepted\nVersion: {OSVERSION}\nDate: {date}");
+
+                        break;
+                    }
+
+                    if (key == ConsoleKey.Escape)
+                    {
+                        Console.ResetColor();
+                        Console.Clear();
+                        Console.WriteLine("HolmiumOS baslatilamadi. Lisans kabul edilmedi.");
+                        Sys.Power.Shutdown();
+                    }
+                }
+
+                Console.ResetColor();
+                Console.Clear();
             }
 
             CheckResources();
@@ -98,32 +171,15 @@ namespace HolmiumOS
 
             try
             {
-            string motd = FileSystemManager.ReadFile(@"0:\boot\motd.txt");
-            Console.WriteLine(motd);
+                string motd = FileSystemManager.ReadFile(@"0:\boot\motd.txt");
+                Console.WriteLine(motd);
             }
             catch
             {
-             Console.WriteLine("CLI baslatildi. 'help' yazarak komutlari gorebilirsiniz.");
+                Console.WriteLine("CLI baslatildi. 'help' yazarak komutlari gorebilirsiniz.");
             }
 
             Console.WriteLine();
-        }
-
-        private void BootStatus(string message, bool ok)
-        {
-            if (ok)
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write("[ OK ] ");
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.Write("[FAILED] ");
-            }
-
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(message);
         }
 
         private void CheckResources()
@@ -283,14 +339,7 @@ namespace HolmiumOS
         }
         private void WritePrompt()
         {
-            string path = FileSystemManager.CurrentDirectory;
-
-            if (path.StartsWith(UserManager.HomeDirectory, StringComparison.OrdinalIgnoreCase))
-            {
-                path = "~" + path.Substring(UserManager.HomeDirectory.Length);
-                if (path == "~")
-                    path = "~/";
-            }
+            string path = FileSystemManager.GetDisplayPath();
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.Write(UserManager.CurrentUser);

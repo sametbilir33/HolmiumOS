@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using HolmiumOS.Crypto;
 
 namespace HolmiumOS.Shell
 {
@@ -38,8 +39,9 @@ namespace HolmiumOS.Shell
             Dictionary<string, string> passwords = LoadPasswords();
 
             return passwords.TryGetValue(username.ToLower(), out string storedPassword)
-                && storedPassword == password;
+                && PasswordHasher.Verify(password, storedPassword);
         }
+
         public static void SwitchUser(string username)
         {
             CurrentUser = username.ToLower();
@@ -76,7 +78,7 @@ namespace HolmiumOS.Shell
             Directory.CreateDirectory($@"0:\home\{username}");
 
             File.AppendAllText(PasswdFile, username + Environment.NewLine);
-            File.AppendAllText(ShadowFile, username + ":" + password + Environment.NewLine);
+            File.AppendAllText(ShadowFile, username + ":" + PasswordHasher.CreateHash(password) + Environment.NewLine);
 
             return true;
         }
@@ -133,12 +135,12 @@ namespace HolmiumOS.Shell
             {
                 string[] split = line.Split(':');
 
-                if (split.Length != 2)
+                if (split.Length != 3)
                     continue;
 
                 if (split[0].Equals(username, StringComparison.OrdinalIgnoreCase))
                 {
-                    lines.Add(username + ":" + newPassword);
+                    lines.Add(username + ":" + PasswordHasher.CreateHash(newPassword));
                     found = true;
                 }
                 else
@@ -233,10 +235,11 @@ namespace HolmiumOS.Shell
             {
                 string[] split = line.Split(':');
 
-                if (split.Length != 2)
+                if (split.Length != 3)
                     continue;
 
-                users[split[0].ToLower()] = split[1];
+                users[split[0].ToLower()] =
+                    split[1] + ":" + split[2];
             }
 
             return users;

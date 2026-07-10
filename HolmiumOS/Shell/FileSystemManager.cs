@@ -22,6 +22,12 @@ namespace HolmiumOS.Shell
 
             path = path.Replace('/', '\\');
 
+            while (path.Contains(@"\\"))
+                path = path.Replace(@"\\", @"\");
+
+            if (path.Length > 3 && path.EndsWith("\\"))
+                path = path.TrimEnd('\\');
+
             if (path == "~")
                 return UserManager.HomeDirectory;
 
@@ -268,8 +274,11 @@ namespace HolmiumOS.Shell
 
         public static string GetDisplayPath()
         {
-            string path = CurrentDirectory.Replace('/', '\\').Trim().TrimEnd('\\');
-            string home = UserManager.HomeDirectory.Replace('/', '\\').Trim().TrimEnd('\\');
+            string path = CurrentDirectory.Replace('/', '\\').Trim();
+            string home = UserManager.HomeDirectory.Replace('/', '\\').Trim();
+
+            path = path.TrimEnd('\\');
+            home = home.TrimEnd('\\');
 
             if (path.Equals(home, StringComparison.OrdinalIgnoreCase))
                 return "~";
@@ -277,7 +286,8 @@ namespace HolmiumOS.Shell
             if (path.StartsWith(home + "\\", StringComparison.OrdinalIgnoreCase))
                 return "~" + path.Substring(home.Length).Replace('\\', '/');
 
-            if (path.Equals("0:", StringComparison.OrdinalIgnoreCase))
+            if (path.Equals("0:", StringComparison.OrdinalIgnoreCase) ||
+                path.Equals(@"0:\", StringComparison.OrdinalIgnoreCase))
                 return "/";
 
             if (path.StartsWith(@"0:\", StringComparison.OrdinalIgnoreCase))
