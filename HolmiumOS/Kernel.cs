@@ -24,6 +24,7 @@ using Cosmos.Core.Memory;
 using Cosmos.HAL;
 using Cosmos.System.FileSystem;
 using Cosmos.System.FileSystem.VFS;
+using Cosmos.System.Network.IPv4.UDP.DHCP;
 using Cosmos.System.ScanMaps;
 using HolmiumOS.Shell;
 using HolmiumOS.Sound;
@@ -60,6 +61,9 @@ namespace HolmiumOS
             }
 
             Sys.KeyboardManager.SetKeyLayout(new TRStandardLayout());
+
+            var xClient = new DHCPClient();
+            xClient.SendDiscoverPacket();
 
             string licenseFile = @"0:\boot\license.accepted";
 
