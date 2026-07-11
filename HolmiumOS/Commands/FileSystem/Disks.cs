@@ -1,7 +1,8 @@
 ﻿using System;
+using HolmiumOS.Drivers;
+using Cosmos.HAL.BlockDevice;
 using Cosmos.System.FileSystem.VFS;
 using HolmiumOS.Commands;
-using Cosmos.HAL.BlockDevice;
 
 namespace HolmiumOS.Commands.FileSystem
 {
@@ -13,15 +14,20 @@ namespace HolmiumOS.Commands.FileSystem
 
         public void Execute(string args)
         {
+            Console.WriteLine();
+            Console.WriteLine("AHCI SATA Kontrolu:");
+            AHCI_DISK.Check();
+            Console.WriteLine();
+
             var disks = VFSManager.GetDisks();
 
-            Console.WriteLine();
             Console.WriteLine($"Diskler | Total: {disks.Count}");
             Console.WriteLine();
 
             for (int i = 0; i < disks.Count; i++)
             {
                 var disk = disks[i];
+
                 string typeStr = disk.Type switch
                 {
                     BlockDeviceType.HardDrive => "Sabit Disk",

@@ -46,6 +46,7 @@ namespace HolmiumOS.Shell
             commands.Add(new Sqrt());
 
             commands.Add(new Cowsay());
+            commands.Add(new BadApple());
 
             commands.Add(new Cd());
             commands.Add(new Cp());

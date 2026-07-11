@@ -1,4 +1,14 @@
-﻿using System;
+﻿/*
+ * This file contains modifications based on GoOS
+ * by Owen2k6.
+ *
+ * Original source:
+ * https://github.com/Owen2k6/GoOS
+ *
+ * Modifications made for this project.
+ */
+
+using System;
 using System.Text;
 using System.Net.Sockets;
 using Cosmos.System.Network.Config;

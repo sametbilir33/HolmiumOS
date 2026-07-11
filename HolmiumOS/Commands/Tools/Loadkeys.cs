@@ -44,7 +44,7 @@ namespace HolmiumOS.Commands.Tools
                     return;
             }
 
-            Console.WriteLine("Klavye düzeni yüklendi.");
+            Console.WriteLine("Klavye duzeni yuklendi.");
         }
     }
 }

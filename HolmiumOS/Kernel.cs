@@ -18,14 +18,17 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Cosmos.Core;
 using Cosmos.Core.Memory;
 using Cosmos.HAL;
+using Cosmos.HAL.BlockDevice.Ports;
 using Cosmos.System.FileSystem;
 using Cosmos.System.FileSystem.VFS;
 using Cosmos.System.Network.IPv4.UDP.DHCP;
 using Cosmos.System.ScanMaps;
+using HolmiumOS.Drivers;
 using HolmiumOS.Shell;
 using HolmiumOS.Sound;
 using FileSystemManager = HolmiumOS.Shell.FileSystemManager;
@@ -39,11 +42,28 @@ namespace HolmiumOS
 
         public static readonly string OSVERSION = "0.4-beta";
 
+        Disk satadisk;
+
         protected override void BeforeRun()
         {
-            Console.Clear();
             fs = new CosmosVFS();
             VFSManager.RegisterVFS(fs);
+
+            AHCI_DISK ahci_load = new();
+
+            ahci_load.Init();
+
+            AHCI_DISK.Check();
+
+            List<Disk> sataDisks = new();
+
+            for (int i = 0; i < SATA.Devices.Count; i++)
+            {
+                Disk disk = new(SATA.Devices[i]);
+                sataDisks.Add(disk);
+            }
+
+            Console.Clear();
 
             try
             {
