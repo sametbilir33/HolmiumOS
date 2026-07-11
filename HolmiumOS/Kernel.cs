@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using Cosmos.Core;
 using Cosmos.Core.Memory;
@@ -33,6 +32,7 @@ using HolmiumOS.Shell;
 using HolmiumOS.Sound;
 using FileSystemManager = HolmiumOS.Shell.FileSystemManager;
 using Sys = Cosmos.System;
+using System.Collections.Generic;
 
 namespace HolmiumOS
 {
@@ -63,8 +63,6 @@ namespace HolmiumOS
                 sataDisks.Add(disk);
             }
 
-            Console.Clear();
-
             try
             {
                 var disks = fs.GetDisks();
@@ -79,6 +77,8 @@ namespace HolmiumOS
             {
                 Console.WriteLine($"Disk mount hatasi: {e.Message}", false);  //daha sonra loglara gelcek
             }
+
+            Console.Clear();
 
             Sys.KeyboardManager.SetKeyLayout(new TRStandardLayout());
 
