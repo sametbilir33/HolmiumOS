@@ -1,5 +1,6 @@
 ﻿using System;
-using HolmiumOS.Network;
+using System.Text;
+using HolmiumOS.Network.HTTP;
 
 namespace HolmiumOS.Commands.Network
 {
@@ -13,57 +14,24 @@ namespace HolmiumOS.Commands.Network
         {
             if (string.IsNullOrWhiteSpace(args))
             {
-                Console.WriteLine("Kullanim: " + Usage);
-                return;
-            }
-
-            if (!ParseUrl(args.Trim(), out string host, out string path))
-            {
-                Console.WriteLine("Gecersiz URL.");
+                Console.WriteLine(Usage);
                 return;
             }
 
             try
             {
-                string body = HttpHelper.SimpleHttpGet(host, path);
-                Console.Write(body);
-            }
-            catch (HttpHelper.RegionBlockedException ex)
-            {
-                Console.WriteLine(ex.Message);
+                HTTPClient client = new(args);
+
+                byte[] response = client.Get();
+
+                Console.WriteLine(
+                    Encoding.UTF8.GetString(response)
+                );
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Hata: " + ex.Message);
+                Console.WriteLine($"curl error: {ex.Message}");
             }
-        }
-
-        private static bool ParseUrl(string url, out string host, out string path)
-        {
-            host = "";
-            path = "/";
-
-            if (!url.StartsWith("http://"))
-                return false;
-
-            url = url.Substring(7);
-
-            int slash = url.IndexOf('/');
-
-            if (slash == -1)
-            {
-                host = url;
-            }
-            else
-            {
-                host = url.Substring(0, slash);
-                path = url.Substring(slash);
-
-                if (path.Length == 0)
-                    path = "/";
-            }
-
-            return host.Length > 0;
         }
     }
 }

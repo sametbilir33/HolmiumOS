@@ -88,6 +88,7 @@ namespace HolmiumOS.Shell
 
             commands.Add(new Wget());
             commands.Add(new Curl());
+            commands.Add(new Ping());
         }
 
         public static void ExecuteCommand(string input)

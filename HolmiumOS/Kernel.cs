@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Cosmos.Core;
 using Cosmos.Core.Memory;
@@ -28,11 +29,11 @@ using Cosmos.System.FileSystem.VFS;
 using Cosmos.System.Network.IPv4.UDP.DHCP;
 using Cosmos.System.ScanMaps;
 using HolmiumOS.Drivers;
+using HolmiumOS.Network;
 using HolmiumOS.Shell;
 using HolmiumOS.Sound;
 using FileSystemManager = HolmiumOS.Shell.FileSystemManager;
 using Sys = Cosmos.System;
-using System.Collections.Generic;
 
 namespace HolmiumOS
 {
@@ -81,9 +82,6 @@ namespace HolmiumOS
             Console.Clear();
 
             Sys.KeyboardManager.SetKeyLayout(new TRStandardLayout());
-
-            var xClient = new DHCPClient();
-            xClient.SendDiscoverPacket();
 
             string licenseFile = @"0:\boot\license.accepted";
 
@@ -155,6 +153,8 @@ namespace HolmiumOS
                 Console.ResetColor();
                 Console.Clear();
             }
+
+            NetworkManager.Init();
 
             CheckResources();
 

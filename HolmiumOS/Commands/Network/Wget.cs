@@ -1,6 +1,7 @@
 ﻿using System;
-using HolmiumOS.Network;
-using HolmiumOS.Shell;
+using System.IO;
+using System.Text;
+using HolmiumOS.Network.HTTP;
 
 namespace HolmiumOS.Commands.Network
 {
@@ -14,98 +15,41 @@ namespace HolmiumOS.Commands.Network
         {
             if (string.IsNullOrWhiteSpace(args))
             {
-                Console.WriteLine("Kullanim: " + Usage);
+                Console.WriteLine(Usage);
                 return;
-            }
-
-            string[] parts = args.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-            if (!ParseUrl(parts[0], out string host, out string path))
-            {
-                Console.WriteLine("Gecersiz URL.");
-                return;
-            }
-
-            string output;
-
-            if (parts.Length >= 2)
-            {
-                output = parts[1];
-            }
-            else
-            {
-                output = GetFileName(path);
             }
 
             try
             {
-                Console.WriteLine("Baglaniyor...");
+                string[] parts = args.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-                string body = HttpHelper.SimpleHttpGet(host, path);
+                string url = parts[0];
+                string fileName = parts.Length > 1
+                    ? parts[1]
+                    : GetFileName(url);
 
-                FileSystemManager.WriteFile(output, body);
+                HTTPClient client = new(url);
 
-                Console.WriteLine("Kaydedildi: " + output);
-            }
-            catch (HttpHelper.RegionBlockedException ex)
-            {
-                Console.WriteLine(ex.Message);
+                byte[] data = client.Get();
+
+                File.WriteAllBytes(fileName, data);
+
+                Console.WriteLine($"İndirildi: {fileName}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Hata: " + ex.Message);
+                Console.WriteLine($"wget error: {ex.Message}");
             }
         }
 
-        private static bool ParseUrl(string url, out string host, out string path)
+        private string GetFileName(string url)
         {
-            host = "";
-            path = "/";
+            int index = url.LastIndexOf('/');
 
-            if (!url.StartsWith("http://"))
-                return false;
-
-            url = url.Substring(7);
-
-            int slash = url.IndexOf('/');
-
-            if (slash == -1)
-            {
-                host = url;
-            }
-            else
-            {
-                host = url.Substring(0, slash);
-                path = url.Substring(slash);
-
-                if (path.Length == 0)
-                    path = "/";
-            }
-
-            return host.Length > 0;
-        }
-
-        private static string GetFileName(string path)
-        {
-            if (path == "/")
+            if (index == -1 || index == url.Length - 1)
                 return "index.html";
 
-            int slash = path.LastIndexOf('/');
-
-            if (slash == path.Length - 1)
-                return "index.html";
-
-            string file = path.Substring(slash + 1);
-
-            int query = file.IndexOf('?');
-
-            if (query != -1)
-                file = file.Substring(0, query);
-
-            if (string.IsNullOrEmpty(file))
-                file = "index.html";
-
-            return file;
+            return url[(index + 1)..];
         }
     }
 }
