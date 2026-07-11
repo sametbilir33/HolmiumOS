@@ -159,6 +159,7 @@ namespace HolmiumOS
                 return;
             }
 
+            Console.Clear();
 
             NetworkManager.Init();
 
