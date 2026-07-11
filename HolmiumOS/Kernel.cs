@@ -26,7 +26,6 @@ using Cosmos.HAL;
 using Cosmos.HAL.BlockDevice.Ports;
 using Cosmos.System.FileSystem;
 using Cosmos.System.FileSystem.VFS;
-using Cosmos.System.Network.IPv4.UDP.DHCP;
 using Cosmos.System.ScanMaps;
 using HolmiumOS.Drivers;
 using HolmiumOS.Network;
@@ -42,8 +41,6 @@ namespace HolmiumOS
         public static CosmosVFS fs;
 
         public static readonly string OSVERSION = "0.4-beta";
-
-        Disk satadisk;
 
         protected override void BeforeRun()
         {
@@ -153,6 +150,15 @@ namespace HolmiumOS
                 Console.ResetColor();
                 Console.Clear();
             }
+
+            var mode = Boot.BootMenu.Show();
+
+            if (mode == Boot.BootMode.GUI)
+            {
+                GUI.Init.Start();
+                return;
+            }
+
 
             NetworkManager.Init();
 

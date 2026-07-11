@@ -31,8 +31,6 @@ public static class NetworkManager
     {
         try
         {
-            Console.WriteLine("Initializing network...");
-
             _ = new DHCPClient().SendDiscoverPacket();
 
             DNSClient.Connect(new(1, 1, 1, 1));
