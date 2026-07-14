@@ -76,87 +76,28 @@ namespace HolmiumOS
                 Console.WriteLine($"Disk mount hatasi: {e.Message}", false);  //daha sonra loglara gelcek
             }
 
-            Console.Clear();
 
             Sys.KeyboardManager.SetKeyLayout(new TRStandardLayout());
-
-            string licenseFile = @"0:\boot\license.accepted";
-
-            bool needAccept = true;
-
-            if (File.Exists(licenseFile))
-            {
-                string licenseData = File.ReadAllText(licenseFile);
-
-                if (licenseData.Contains($"Version: {OSVERSION}"))
-                {
-                    needAccept = false;
-                }
-            }
-
-            if (needAccept)
-            {
-                while (true)
-                {
-                    Console.BackgroundColor = ConsoleColor.Red;
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.Clear();
-
-                    Console.WriteLine("==============================================");
-                    Console.WriteLine("              HOLMIUMOS LISANS UYARISI");
-                    Console.WriteLine("==============================================");
-                    Console.WriteLine();
-                    Console.WriteLine("HolmiumOS gelistirme asamasinda olan bir");
-                    Console.WriteLine("isletim sistemi projesidir.");
-                    Console.WriteLine();
-                    Console.WriteLine("Kullanim sirasinda veri kaybi, dosya bozulmasi");
-                    Console.WriteLine("veya beklenmeyen sistem hatalari meydana gelebilir.");
-                    Console.WriteLine();
-                    Console.WriteLine("Gercek donanim uzerinde kullanmadan once");
-                    Console.WriteLine("verilerinizi yedeklemeniz onerilir.");
-                    Console.WriteLine("Sanal makine ortaminda test edilmesi tavsiye edilir.");
-                    Console.WriteLine();
-                    Console.WriteLine("Olusabilecek veri kaybi veya donanim sorunlarindan");
-                    Console.WriteLine("HolmiumOS gelistiricileri sorumlu tutulamaz.");
-                    Console.WriteLine();
-                    Console.WriteLine($"Mevcut surum: {OSVERSION}");
-                    Console.WriteLine();
-                    Console.WriteLine("----------------------------------------------");
-                    Console.WriteLine("[ENTER] Okudum ve kabul ediyorum");
-                    Console.WriteLine("[ESC]   Cikis");
-                    Console.WriteLine("==============================================");
-
-                    ConsoleKey key = Console.ReadKey(true).Key;
-
-                    if (key == ConsoleKey.Enter)
-                    {
-
-                        string date =$"{RTC.Year + (RTC.Century * 100):0000}-" +$"{RTC.Month:00}-" +$"{RTC.DayOfTheMonth:00} " +$"{RTC.Hour:00}:" +$"{RTC.Minute:00}:" +$"{RTC.Second:00}";
-
-                        File.WriteAllText(licenseFile, $"HolmiumOS License Accepted\nVersion: {OSVERSION}\nDate: {date}");
-
-                        break;
-                    }
-
-                    if (key == ConsoleKey.Escape)
-                    {
-                        Console.ResetColor();
-                        Console.Clear();
-                        Console.WriteLine("HolmiumOS baslatilamadi. Lisans kabul edilmedi.");
-                        Sys.Power.Shutdown();
-                    }
-                }
-
-                Console.ResetColor();
-                Console.Clear();
-            }
 
             var mode = Boot.BootMenu.Show();
 
             if (mode == Boot.BootMode.GUI)
             {
-                GUI.Init.Start();
-                return;
+                try
+                {
+                    GUI.Init.Start();
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    Console.ResetColor();
+                    Console.Clear();
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("GUI başlatılırken hata oluştu:");
+                    Console.WriteLine("Hata: " + ex.GetType().Name);
+                    Console.WriteLine("Mesaj: " + ex.Message);
+                    Console.ResetColor();
+                }
             }
 
             Console.Clear();
