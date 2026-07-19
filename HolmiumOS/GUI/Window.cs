@@ -1,199 +1,169 @@
-﻿using System.Drawing;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Cosmos.System.Graphics;
-using Cosmos.System.Graphics.Fonts;
 using HolmiumOS.GUI.Controls;
 
 namespace HolmiumOS.GUI
 {
     public class Window
     {
-        public int X;
-        public int Y;
+        public AppBase App { get; set; }
+        public string Title { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
 
-        public int Width;
-        public int Height;
+        public bool Active { get; set; }
+        public bool Dragging { get; set; }
 
-        public string Title;
+        public List<Control> Controls { get; set; } = new List<Control>();
 
-        public bool Visible = true;
+        private int dragX, dragY;
+        private int dragOffsetX, dragOffsetY;
 
-        public bool Active;
-
-        public bool Dragging;
-
-
-        private int dragOffsetX;
-        private int dragOffsetY;
-
-
-        public AppBase App;
-
-
-        public List<Control> Controls =
-            new List<Control>();
-
-
-        public Window(
-            AppBase app,
-            string title,
-            int x,
-            int y,
-            int width,
-            int height
-        )
+        public Window(AppBase app, string title, int x, int y, int width, int height)
         {
-            App = app;
-
-            Title = title;
-
-            X = x;
-            Y = y;
-
-            Width = width;
-            Height = height;
-        }
-
-
-
-        public void Draw(Canvas canvas)
-        {
-            if (!Visible)
-                return;
-
-
-            canvas.DrawFilledRectangle(
-                Color.LightGray,
-                X,
-                Y,
-                Width,
-                Height
-            );
-
-
-            canvas.DrawFilledRectangle(
-                Active ? Color.DarkBlue : Color.Gray,
-                X,
-                Y,
-                Width,
-                22
-            );
-
-
-            canvas.DrawString(
-                Title,
-                PCScreenFont.Default,
-                Color.White,
-                X + 5,
-                Y + 5
-            );
-
-
-            canvas.DrawFilledRectangle(
-                Color.Red,
-                X + Width - 20,
-                Y,
-                20,
-                20
-            );
-
-
-            canvas.DrawString(
-                "X",
-                PCScreenFont.Default,
-                Color.White,
-                X + Width - 15,
-                Y + 4
-            );
-
-
-            foreach (Control control in Controls)
-            {
-                control.Draw(canvas);
-            }
-        }
-
-        public void CheckControlsClick(int mouseX, int mouseY)
-        {
-            for (int i = Controls.Count - 1; i >= 0; i--)
-            {
-                Control control = Controls[i];
-
-
-                if (control.Contains(mouseX, mouseY))
-                {
-                    control.Click();
-                    return;
-                }
-            }
+            this.App = app;
+            this.Title = title;
+            this.X = x;
+            this.Y = y;
+            this.Width = width;
+            this.Height = height;
         }
 
         public void AddControl(Control control)
         {
-            control.Parent = this;
-
-            Controls.Add(control);
+            if (control == null) return;
+            this.Controls.Add(control);
         }
 
-
-        public bool Contains(int mx, int my)
+        public void Draw(Canvas canvas)
         {
-            return
-                mx >= X &&
-                mx <= X + Width &&
-                my >= Y &&
-                my <= Y + Height;
+            if (Dragging)
+            {
+                System.Drawing.Color borderColor = System.Drawing.Color.Black;
+
+                canvas.DrawLine(borderColor, dragX, dragY, dragX + Width, dragY);
+                canvas.DrawLine(borderColor, dragX, dragY + Height, dragX + Width, dragY + Height);
+                canvas.DrawLine(borderColor, dragX, dragY, dragX, dragY + Height);
+                canvas.DrawLine(borderColor, dragX + Width, dragY, dragX + Width, dragY + Height);
+
+                canvas.DrawLine(borderColor, dragX, dragY + 25, dragX + Width, dragY + 25);
+                return;
+            }
+
+            System.Drawing.Color bgColor = Active ? System.Drawing.Color.DarkGray : System.Drawing.Color.Gray;
+            canvas.DrawFilledRectangle(bgColor, X, Y, Width, Height);
+
+            System.Drawing.Color titleColor = Active ? System.Drawing.Color.Blue : System.Drawing.Color.DimGray;
+            canvas.DrawFilledRectangle(titleColor, X, Y, Width, 25);
+
+            System.Drawing.Color textColor = Active ? System.Drawing.Color.White : System.Drawing.Color.LightGray;
+            canvas.DrawString(Title, Cosmos.System.Graphics.Fonts.PCScreenFont.Default, textColor, X + 10, Y + 5);
+
+            int closeX = X + Width - 20;
+            int closeY = Y + 5;
+            int closeSize = 15;
+
+            canvas.DrawFilledRectangle(System.Drawing.Color.Red, closeX, closeY, closeSize, closeSize);
+
+            System.Drawing.Color xColor = System.Drawing.Color.White;
+
+            canvas.DrawLine(xColor, closeX + 3, closeY + 3, closeX + closeSize - 4, closeY + closeSize - 4);
+            canvas.DrawLine(xColor, closeX + closeSize - 4, closeY + 3, closeX + 3, closeY + closeSize - 4);
+
+            int count = Controls.Count;
+            for (int i = 0; i < count; i++)
+            {
+                if (i >= Controls.Count) break;
+                var c = Controls[i];
+                if (c != null)
+                {
+                    int originalX = c.X;
+                    int originalY = c.Y;
+
+                    c.X = this.X + originalX;
+                    c.Y = this.Y + 25 + originalY;
+
+                    c.Draw(canvas);
+
+                    c.X = originalX;
+                    c.Y = originalY;
+                }
+            }
         }
 
-
-
-        public bool TitleContains(int mx, int my)
-        {
-            return
-                mx >= X &&
-                mx <= X + Width &&
-                my >= Y &&
-                my <= Y + 22;
-        }
-
-
-
-        public bool CloseContains(int mx, int my)
-        {
-            return
-                mx >= X + Width - 20 &&
-                my >= Y &&
-                mx <= X + Width &&
-                my <= Y + 20;
-        }
-
-
+        public bool Contains(int mx, int my) => mx >= X && mx <= X + Width && my >= Y && my <= Y + Height;
+        public bool TitleContains(int mx, int my) => mx >= X && mx <= X + Width && my >= Y && my <= Y + 25;
+        public bool CloseContains(int mx, int my) => mx >= X + Width - 20 && mx <= X + Width - 5 && my >= Y + 5 && my <= Y + 20;
 
         public void StartDrag(int mx, int my)
         {
             Dragging = true;
-
             dragOffsetX = mx - X;
             dragOffsetY = my - Y;
+            dragX = X;
+            dragY = Y;
         }
 
-
-
-        public void Drag(int mx, int my)
+        public void Drag(int mx, int my, Canvas canvas)
         {
-            if (!Dragging)
-                return;
+            if (!Dragging) return;
 
+            int targetX = mx - dragOffsetX;
+            int targetY = my - dragOffsetY;
 
-            X = mx - dragOffsetX;
-            Y = my - dragOffsetY;
+            int screenWidth = (int)canvas.Mode.Width;
+            int screenHeight = (int)canvas.Mode.Height;
+
+            if (targetX < 0) targetX = 0;
+
+            if (targetX + Width > screenWidth) targetX = screenWidth - Width;
+
+            if (targetY < 0) targetY = 0;
+
+            if (targetY + Height > screenHeight) targetY = screenHeight - Height;
+
+            dragX = targetX;
+            dragY = targetY;
         }
-
-
 
         public void StopDrag()
         {
+            if (!Dragging) return;
             Dragging = false;
+
+            X = dragX;
+            Y = dragY;
+        }
+
+        public void CheckControlsClick(int mx, int my)
+        {
+            foreach (var ctrl in Controls)
+            {
+                if (ctrl != null)
+                {
+                    ctrl.Focused = false;
+                }
+            }
+
+            int count = Controls.Count;
+            for (int i = 0; i < count; i++)
+            {
+                if (i >= Controls.Count) break;
+                var c = Controls[i];
+                if (c != null)
+                {
+                    int absX = this.X + c.X;
+                    int absY = this.Y + 25 + c.Y;
+
+                    if (mx >= absX && mx <= absX + c.Width && my >= absY && my <= absY + c.Height)
+                    {
+                        c.Click();
+                        break;
+                    }
+                }
+            }
         }
     }
 }

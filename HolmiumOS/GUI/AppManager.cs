@@ -8,15 +8,18 @@ namespace HolmiumOS.GUI
 
         public static void Run<T>() where T : AppBase, new()
         {
+            T app = new T();
+
+            // Tip kontrolünü garantiye almak için isim üzerinden veya döngü koruması yapıyoruz
             for (int i = 0; i < apps.Count; i++)
             {
-                if (apps[i] is T)
+                if (apps[i] != null && apps[i].Name == app.Name)
                 {
+                    // Uygulama zaten açık! Yenisini açma, çökme yaratma.
                     return;
                 }
             }
 
-            T app = new T();
             apps.Add(app);
             app.Open();
         }

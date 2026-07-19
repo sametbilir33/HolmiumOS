@@ -1,6 +1,5 @@
 ﻿using System.Drawing;
 using Cosmos.System.Graphics;
-using Cosmos.System.Graphics.Fonts;
 
 namespace HolmiumOS.GUI.Controls
 {
@@ -8,31 +7,22 @@ namespace HolmiumOS.GUI.Controls
     {
         public string Text;
 
-
-        public Label(
-            string text,
-            int x,
-            int y
-        )
-            : base(x, y, 0, 0)
+        public Label(string text, int x, int y)
+            : base(x, y, 100, 16)
         {
-            Text = text;
+            Text = text ?? "";
         }
-
 
         public override void Draw(Canvas canvas)
         {
-            if (!Visible)
-                return;
+            if (!Visible || canvas == null) return;
 
+            canvas.DrawString(Text, Cosmos.System.Graphics.Fonts.PCScreenFont.Default, Color.Black, X, Y);
+        }
 
-            canvas.DrawString(
-                Text,
-                PCScreenFont.Default,
-                Color.Black,
-                AbsoluteX,
-                AbsoluteY
-            );
+        public override void Click()
+        {
+            // Label tıklamalarında hiçbir şey yapma
         }
     }
 }

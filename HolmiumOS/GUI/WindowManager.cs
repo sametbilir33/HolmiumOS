@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
 using Cosmos.System;
 using Cosmos.System.Graphics;
+using HolmiumOS.GUI.Controls;
 
 namespace HolmiumOS.GUI
 {
     public static class WindowManager
     {
-        private static List<Window> windows =
-            new List<Window>();
-
+        private static List<Window> windows = new List<Window>();
         private static Window activeWindow;
+        private static bool wasPressed = false;
 
         public static void Add(Window window)
         {
@@ -19,88 +19,136 @@ namespace HolmiumOS.GUI
 
         public static void Remove(Window window)
         {
+            if (activeWindow == window)
+            {
+                activeWindow = null;
+            }
             windows.Remove(window);
+            AppManager.Close(window.App);
         }
 
         public static void Draw(Canvas canvas)
         {
-            for (int i = 0; i < windows.Count; i++)
+            if (windows == null || windows.Count == 0) return;
+
+            int count = windows.Count;
+            for (int i = 0; i < count; i++)
             {
-                windows[i].Draw(canvas);
+                if (i >= windows.Count) break;
+                if (windows[i] != null)
+                {
+                    windows[i].Draw(canvas);
+                }
             }
         }
 
         private static void Focus(Window window)
         {
+            if (window == null || activeWindow == window) return;
+
             if (activeWindow != null)
             {
                 activeWindow.Active = false;
             }
 
-
-            windows.Remove(window);
-
-            windows.Add(window);
-
-
             activeWindow = window;
-
             activeWindow.Active = true;
+
+            if (windows.Contains(window))
+            {
+                windows.Remove(window);
+                windows.Add(window);
+            }
         }
 
-        public static void UpdateMouse()
+        public static void UpdateMouse(Canvas canvas)
         {
             int mx = (int)MouseManager.X;
             int my = (int)MouseManager.Y;
+            bool isPressed = (MouseManager.MouseState == MouseState.Left);
 
-
-            if (MouseManager.MouseState == MouseState.Left)
+            if (isPressed && !wasPressed)
             {
                 for (int i = windows.Count - 1; i >= 0; i--)
                 {
+                    if (i >= windows.Count) continue;
                     Window window = windows[i];
-
+                    if (window == null) continue;
 
                     if (window.CloseContains(mx, my))
                     {
                         Remove(window);
+                        wasPressed = isPressed;
                         return;
                     }
-
 
                     if (window.Contains(mx, my))
                     {
                         Focus(window);
 
-
                         if (window.TitleContains(mx, my))
                         {
                             window.StartDrag(mx, my);
-                            return;
+                        }
+                        else
+                        {
+                            window.CheckControlsClick(mx, my);
                         }
 
-
-                        window.CheckControlsClick(
-                            mx,
-                            my
-                        );
-
-
+                        wasPressed = isPressed;
                         return;
                     }
                 }
             }
 
-            foreach (Window window in windows)
+            if (isPressed)
             {
-                window.Drag(mx, my);
+                int count = windows.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    if (i >= windows.Count) break;
+                    if (windows[i] != null && windows[i].Dragging)
+                    {
+                        windows[i].Drag(mx, my, canvas);
+                    }
+                }
+            }
+            else
+            {
+                int count = windows.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    if (i >= windows.Count) break;
+                    if (windows[i] != null)
+                    {
+                        windows[i].StopDrag();
+                    }
+                }
             }
 
-            if (MouseManager.MouseState != MouseState.Left)
+            wasPressed = isPressed;
+        }
+
+        public static void HandleKeyboard()
+        {
+            if (!KeyboardManager.TryReadKey(out KeyEvent keyEvent))
             {
-                foreach (Window window in windows)
+                return;
+            }
+
+            if (activeWindow == null) return;
+
+            int count = activeWindow.Controls.Count;
+            for (int i = 0; i < count; i++)
+            {
+                if (i >= activeWindow.Controls.Count) break;
+
+                var control = activeWindow.Controls[i];
+
+                if (control is TextBox textBox && textBox.Focused)
                 {
-                    window.StopDrag();
+                    textBox.KeyPressed(keyEvent);
+                    break;
                 }
             }
         }

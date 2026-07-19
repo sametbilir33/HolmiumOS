@@ -8,51 +8,28 @@ namespace HolmiumOS.GUI.Controls
     public class Button : Control
     {
         public string Text;
-        public Action OnClick;
+        public Action ClickAction;
 
-        public Button(
-            string text,
-            int x,
-            int y,
-            int width,
-            int height
-        )
+        public Button(string text, int x, int y, int width, int height)
             : base(x, y, width, height)
         {
-            Text = text;
+            Text = text ?? "";
         }
-
 
         public override void Draw(Canvas canvas)
         {
-            if (!Visible)
-                return;
+            if (!Visible || canvas == null) return;
 
+            canvas.DrawFilledRectangle(Color.Gray, X, Y, Width, Height);
 
-            canvas.DrawFilledRectangle(
-                Color.Gray,
-                AbsoluteX,
-                AbsoluteY,
-                Width,
-                Height
-            );
-
-
-            canvas.DrawString(
-                Text,
-                PCScreenFont.Default,
-                Color.White,
-                AbsoluteX + 5,
-                AbsoluteY + 5
-            );
+            canvas.DrawString(Text, PCScreenFont.Default, Color.White, X + 5, Y + 8);
         }
-
 
         public override void Click()
         {
-            if (OnClick != null)
+            if (ClickAction != null)
             {
-                OnClick();
+                ClickAction.Invoke();
             }
         }
     }

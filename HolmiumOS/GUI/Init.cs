@@ -20,10 +20,6 @@ namespace HolmiumOS.GUI
         private static Bitmap cursor;
         private static Bitmap wallpaper;
 
-        private static int fps;
-        private static int frames;
-        private static uint lastSecond;
-
         public static void Start()
         {
             canvas = FullScreenCanvas.GetFullScreenCanvas();
@@ -34,14 +30,15 @@ namespace HolmiumOS.GUI
             MouseManager.ScreenWidth = canvas.Mode.Width;
             MouseManager.ScreenHeight = canvas.Mode.Height;
 
-            AppManager.Run<Terminal>();
+            WindowManager.HandleKeyboard();
 
-            lastSecond = Cosmos.HAL.RTC.Second;
+            AppManager.Run<Terminal>();
 
             while (true)
             {
                 Taskbar.UpdateMouse(canvas);
-                WindowManager.UpdateMouse();
+                WindowManager.UpdateMouse(canvas);
+                WindowManager.HandleKeyboard();
 
                 int x = (int)MouseManager.X;
                 int y = (int)MouseManager.Y;
@@ -62,61 +59,17 @@ namespace HolmiumOS.GUI
 
                 Taskbar.Draw(canvas);
 
-                DrawDebug();
-
                 DrawCursor(x, y);
 
                 canvas.Display();
 
-
-                frames++;
-                if (Cosmos.HAL.RTC.Second != lastSecond)
-                {
-                    fps = frames;
-                    frames = 0;
-                    lastSecond = Cosmos.HAL.RTC.Second;
-                }
+                Cosmos.Core.Memory.Heap.Collect();
             }
         }
 
         private static void DrawCursor(int x, int y)
         {
             canvas.DrawImageAlpha(cursor, x, y);
-        }
-
-        private static void DrawDebug()
-        {
-            canvas.DrawFilledRectangle(
-                Color.Black,
-                0,
-                0,
-                300,
-                70
-            );
-
-            canvas.DrawString(
-                "HolmiumOS Debug",
-                PCScreenFont.Default,
-                Color.White,
-                5,
-                5
-            );
-
-            canvas.DrawString(
-                "Resolution: " + canvas.Mode.Width + "x" + canvas.Mode.Height,
-                PCScreenFont.Default,
-                Color.White,
-                5,
-                20
-            );
-
-            canvas.DrawString(
-                "FPS: " + fps + " Mouse: " + MouseManager.X + "," + MouseManager.Y,
-                PCScreenFont.Default,
-                Color.White,
-                5,
-                35
-            );
         }
 
         private static int Clamp(int value, int min, int max)
