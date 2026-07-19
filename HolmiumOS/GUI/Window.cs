@@ -6,6 +6,7 @@ namespace HolmiumOS.GUI
 {
     public class Window
     {
+        //test
         public AppBase App { get; set; }
         public string Title { get; set; }
         public int X { get; set; }
