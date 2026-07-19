@@ -20,12 +20,10 @@ namespace HolmiumOS.Commands.Fun
             int width = Console.WindowWidth;
             int height = Console.WindowHeight;
 
-            // Trenin genişliği yaklaşık 20 karakter, tamamen dışarıdan başlaması için -20
             int x = -20;
             int y = height - 10;
             int frame = 0;
 
-            // Sadece lokomotif kalacak şekilde sadeleştirilmiş tren tasarımı
             string[] train =
             {
                 "      ====      ",
@@ -45,7 +43,6 @@ namespace HolmiumOS.Commands.Fun
                         break;
                 }
 
-                // CosmosOS için her karede tüm ekranı temizlemek yerine sadece gerekli yerleri çiziyoruz
                 Console.Clear();
 
                 DrawRails(width, frame);
@@ -63,7 +60,6 @@ namespace HolmiumOS.Commands.Fun
 
         private void DrawTrain(int x, int y, string[] train, int frame)
         {
-            // Tren tamamen beyaz olacak
             Console.ForegroundColor = ConsoleColor.White;
 
             for (int i = 0; i < train.Length; i++)
@@ -71,14 +67,12 @@ namespace HolmiumOS.Commands.Fun
                 Draw(x, y + i, train[i]);
             }
 
-            // Tekerlek animasyonu (Beyaz renk)
             string wheel = (frame % 2 == 0) ? "O       O" : "o       o";
             Draw(x + 3, y + 5, wheel);
         }
 
         private void DrawSmoke(int x, int y)
         {
-            // Dumanlar beyaz ve lokomotif bacasına göre hizalı
             Console.ForegroundColor = ConsoleColor.White;
 
             int offset = random.Next(0, 2);
@@ -90,7 +84,6 @@ namespace HolmiumOS.Commands.Fun
 
         private void DrawRails(int width, int frame)
         {
-            // Yol kendi orijinal renginde (DarkGray) kalıyor
             Console.ForegroundColor = ConsoleColor.DarkGray;
 
             string rail = "";
@@ -113,16 +106,12 @@ namespace HolmiumOS.Commands.Fun
 
         private void Draw(int x, int y, string text)
         {
-            // Y ekseni sınır kontrolü
             if (y < 0 || y >= Console.WindowHeight)
                 return;
 
-            // Tren soldan girerken x negatif olacaktır. 
-            // Eğer metnin tamamı ekranın solunun dışındaysa hiç çizme.
             if (x + text.Length <= 0 || x >= Console.WindowWidth)
                 return;
 
-            // Eğer metnin bir kısmı ekranın solunda kalıyorsa, sadece ekrana sığan kısmını kesip çiziyoruz.
             if (x < 0)
             {
                 int substringIndex = Mat.Abs(x);
@@ -137,7 +126,6 @@ namespace HolmiumOS.Commands.Fun
                 }
             }
 
-            // Ekranın sağına taşan kısmı kesme kontrolü
             if (x + text.Length > Console.WindowWidth)
             {
                 text = text.Substring(0, Console.WindowWidth - x);
