@@ -11,11 +11,8 @@ namespace HolmiumOS.Shell
         private const string ShadowFile = @"0:\etc\shadow";
 
         public static string CurrentUser { get; private set; }
-
         public static bool IsRoot => CurrentUser.Equals("root", StringComparison.OrdinalIgnoreCase);
-
         public static bool IsLoggedIn => !string.IsNullOrWhiteSpace(CurrentUser);
-
         public static string HomeDirectory => $@"0:\home\{CurrentUser}";
 
         public static void Logout()
@@ -224,6 +221,7 @@ namespace HolmiumOS.Shell
 
             return true;
         }
+
         private static Dictionary<string, string> LoadPasswords()
         {
             Dictionary<string, string> users = new Dictionary<string, string>();
@@ -238,8 +236,7 @@ namespace HolmiumOS.Shell
                 if (split.Length != 3)
                     continue;
 
-                users[split[0].ToLower()] =
-                    split[1] + ":" + split[2];
+                users[split[0].ToLower()] = split[1] + ":" + split[2];
             }
 
             return users;

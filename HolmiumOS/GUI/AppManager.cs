@@ -4,24 +4,26 @@ namespace HolmiumOS.GUI
 {
     public static class AppManager
     {
-        private static List<AppBase> apps = new List<AppBase>();
+        public static List<AppBase> apps = new List<AppBase>();
 
-        public static void Run<T>() where T : AppBase, new()
+        public static void Run<T>(int x = 100, int y = 100) where T : AppBase, new()
         {
-            T app = new T();
-
-            // Tip kontrolünü garantiye almak için isim üzerinden veya döngü koruması yapıyoruz
+            int instanceCount = 0;
             for (int i = 0; i < apps.Count; i++)
             {
-                if (apps[i] != null && apps[i].Name == app.Name)
+                if (apps[i] != null && apps[i] is T)
                 {
-                    // Uygulama zaten açık! Yenisini açma, çökme yaratma.
-                    return;
+                    instanceCount++;
                 }
             }
 
+            int spawnX = x + (instanceCount * 30);
+            int spawnY = y + (instanceCount * 30);
+
+            T app = new T();
             apps.Add(app);
-            app.Open();
+
+            app.Open(spawnX, spawnY);
         }
 
         public static void Close(AppBase app)

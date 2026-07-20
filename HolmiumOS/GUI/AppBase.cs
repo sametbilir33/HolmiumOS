@@ -10,9 +10,9 @@
             this.Name = name;
         }
 
-        public void Open()
+        public void Open(int defaultX = 100, int defaultY = 100)
         {
-            this.Window = new Window(this, this.Name, 100, 100, 400, 300);
+            this.Window = new Window(this, this.Name, defaultX, defaultY);
 
             WindowManager.Add(this.Window);
             Load();

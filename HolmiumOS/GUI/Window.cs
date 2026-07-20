@@ -6,36 +6,68 @@ namespace HolmiumOS.GUI
 {
     public class Window
     {
-        //test
         public AppBase App { get; set; }
         public string Title { get; set; }
         public int X { get; set; }
         public int Y { get; set; }
-        public int Width { get; set; }
-        public int Height { get; set; }
+        public int Width { get; private set; }
+        public int Height { get; private set; }
 
         public bool Active { get; set; }
         public bool Dragging { get; set; }
 
         public List<Control> Controls { get; set; } = new List<Control>();
 
+        private const int PaddingX = 20;
+        private const int PaddingY = 25;
+
         private int dragX, dragY;
         private int dragOffsetX, dragOffsetY;
 
-        public Window(AppBase app, string title, int x, int y, int width, int height)
+        public Window(AppBase app, string title, int x, int y)
         {
             this.App = app;
-            this.Title = title;
+            this.Title = title ?? "Uygulama";
             this.X = x;
             this.Y = y;
-            this.Width = width;
-            this.Height = height;
+
+            int minWidth = (this.Title.Length * 8) + 60;
+            this.Width = minWidth;
+
+            this.Height = 40;
+        }
+
+        public void UpdateSize()
+        {
+            int minWidth = (Title.Length * 8) + 60;
+            int maxWidth = 0;
+            int maxHeight = 0;
+
+            for (int i = 0; i < Controls.Count; i++)
+            {
+                var c = Controls[i];
+                if (c != null && c.Visible)
+                {
+                    int controlRight = c.X + c.Width;
+                    int controlBottom = c.Y + c.Height;
+
+                    if (controlRight > maxWidth) maxWidth = controlRight;
+                    if (controlBottom > maxHeight) maxHeight = controlBottom;
+                }
+            }
+
+            int calculatedWidth = maxWidth + PaddingX;
+            this.Width = calculatedWidth < minWidth ? minWidth : calculatedWidth;
+
+            this.Height = 25 + maxHeight + PaddingY;
         }
 
         public void AddControl(Control control)
         {
             if (control == null) return;
             this.Controls.Add(control);
+
+            UpdateSize();
         }
 
         public void Draw(Canvas canvas)
@@ -53,7 +85,7 @@ namespace HolmiumOS.GUI
                 return;
             }
 
-            System.Drawing.Color bgColor = Active ? System.Drawing.Color.DarkGray : System.Drawing.Color.Gray;
+            System.Drawing.Color bgColor = System.Drawing.Color.DarkGray;
             canvas.DrawFilledRectangle(bgColor, X, Y, Width, Height);
 
             System.Drawing.Color titleColor = Active ? System.Drawing.Color.Blue : System.Drawing.Color.DimGray;
@@ -67,7 +99,6 @@ namespace HolmiumOS.GUI
             int closeSize = 15;
 
             canvas.DrawFilledRectangle(System.Drawing.Color.Red, closeX, closeY, closeSize, closeSize);
-
             System.Drawing.Color xColor = System.Drawing.Color.White;
 
             canvas.DrawLine(xColor, closeX + 3, closeY + 3, closeX + closeSize - 4, closeY + closeSize - 4);
@@ -76,7 +107,6 @@ namespace HolmiumOS.GUI
             int count = Controls.Count;
             for (int i = 0; i < count; i++)
             {
-                if (i >= Controls.Count) break;
                 var c = Controls[i];
                 if (c != null)
                 {
@@ -90,6 +120,23 @@ namespace HolmiumOS.GUI
 
                     c.X = originalX;
                     c.Y = originalY;
+                }
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                if (Controls[i] is ComboBox cb && cb.IsDropped)
+                {
+                    int originalX = cb.X;
+                    int originalY = cb.Y;
+
+                    cb.X = this.X + originalX;
+                    cb.Y = this.Y + 25 + originalY;
+
+                    cb.Draw(canvas);
+
+                    cb.X = originalX;
+                    cb.Y = originalY;
                 }
             }
         }
@@ -118,11 +165,8 @@ namespace HolmiumOS.GUI
             int screenHeight = (int)canvas.Mode.Height;
 
             if (targetX < 0) targetX = 0;
-
             if (targetX + Width > screenWidth) targetX = screenWidth - Width;
-
             if (targetY < 0) targetY = 0;
-
             if (targetY + Height > screenHeight) targetY = screenHeight - Height;
 
             dragX = targetX;
@@ -140,29 +184,72 @@ namespace HolmiumOS.GUI
 
         public void CheckControlsClick(int mx, int my)
         {
-            foreach (var ctrl in Controls)
+            for (int i = 0; i < Controls.Count; i++)
             {
-                if (ctrl != null)
+                if (Controls[i] is ComboBox cb && cb.IsDropped)
                 {
-                    ctrl.Focused = false;
+                    int cbAbsX = this.X + cb.X;
+                    int cbAbsY = this.Y + 25 + cb.Y;
+                    int listBottom = cbAbsY + cb.Height + (cb.Items.Count * 20);
+
+                    if (!(mx >= cbAbsX && mx <= cbAbsX + cb.Width && my >= cbAbsY && my <= listBottom))
+                    {
+                        cb.CloseDropdown();
+                    }
+                }
+            }
+
+            for (int i = 0; i < Controls.Count; i++)
+            {
+                if (Controls[i] != null)
+                {
+                    Controls[i].Focused = false;
                 }
             }
 
             int count = Controls.Count;
             for (int i = 0; i < count; i++)
             {
-                if (i >= Controls.Count) break;
                 var c = Controls[i];
-                if (c != null)
+                if (c is ComboBox comboBox && comboBox.IsDropped)
                 {
-                    int absX = this.X + c.X;
-                    int absY = this.Y + 25 + c.Y;
+                    int cbAbsX = this.X + comboBox.X;
+                    int cbAbsY = this.Y + 25 + comboBox.Y;
+                    int listTop = cbAbsY + comboBox.Height;
+                    int listBottom = listTop + (comboBox.Items.Count * 20);
 
-                    if (mx >= absX && mx <= absX + c.Width && my >= absY && my <= absY + c.Height)
+                    if (mx >= cbAbsX && mx <= cbAbsX + comboBox.Width && my >= listTop && my <= listBottom)
                     {
-                        c.Click();
-                        break;
+                        comboBox.HandleAbsoluteClick(this.X, this.Y, mx, my);
+                        return;
                     }
+                }
+            }
+
+            for (int i = count - 1; i >= 0; i--)
+            {
+                var c = Controls[i];
+                if (c == null || !c.Visible) continue;
+
+                int absX = this.X + c.X;
+                int absY = this.Y + 25 + c.Y;
+
+                if (mx >= absX && mx <= absX + c.Width && my >= absY && my <= absY + c.Height)
+                {
+                    if (c is ListBox listBox)
+                    {
+                        int listRelY = my - absY;
+                        int clickedIdx = listRelY / 20;
+                        if (clickedIdx >= 0 && clickedIdx < listBox.Items.Count)
+                        {
+                            listBox.HandleAbsoluteClick(absX, absY + listRelY);
+                        }
+                    }
+
+                    c.Focused = true;
+                    c.Click();
+
+                    break;
                 }
             }
         }

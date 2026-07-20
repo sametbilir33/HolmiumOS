@@ -8,7 +8,7 @@ namespace HolmiumOS.GUI
     public static class WindowManager
     {
         private static List<Window> windows = new List<Window>();
-        private static Window activeWindow;
+        public static Window activeWindow;
         private static bool wasPressed = false;
 
         public static void Add(Window window)
@@ -42,7 +42,7 @@ namespace HolmiumOS.GUI
             }
         }
 
-        private static void Focus(Window window)
+        public static void Focus(Window window)
         {
             if (window == null || activeWindow == window) return;
 
@@ -59,6 +59,11 @@ namespace HolmiumOS.GUI
                 windows.Remove(window);
                 windows.Add(window);
             }
+        }
+
+        public static List<Window> GetWindows()
+        {
+            return windows;
         }
 
         public static void UpdateMouse(Canvas canvas)

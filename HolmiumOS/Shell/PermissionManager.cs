@@ -94,6 +94,9 @@ namespace HolmiumOS.Shell
         {
             path = Normalize(path);
 
+            if (path.Equals(@"0:\home", StringComparison.OrdinalIgnoreCase))
+                return false;
+
             if (!path.StartsWith(@"0:\home", StringComparison.OrdinalIgnoreCase))
                 return false;
 

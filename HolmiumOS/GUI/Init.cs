@@ -1,6 +1,7 @@
 ﻿using Cosmos.System;
 using Cosmos.System.Graphics;
 using HolmiumOS.GUI.Apps;
+using HolmiumOS.Shell;
 using IL2CPU.API.Attribs;
 
 namespace HolmiumOS.GUI
@@ -30,11 +31,31 @@ namespace HolmiumOS.GUI
 
             WindowManager.HandleKeyboard();
 
-            AppManager.Run<Terminal>();
+            AppManager.Run<Login>(60, 60);
 
             while (true)
             {
-                Taskbar.UpdateMouse(canvas);
+                bool isLoginAppOpen = false;
+                for (int i = 0; i < AppManager.apps.Count; i++)
+                {
+                    if (AppManager.apps[i] is Login)
+                    {
+                        isLoginAppOpen = true;
+                        break;
+                    }
+                }
+
+                if (!UserManager.IsLoggedIn && !isLoginAppOpen)
+                {
+                    AppManager.Run<Login>(60, 60);
+                    isLoginAppOpen = true;
+                }
+
+                if (UserManager.IsLoggedIn)
+                {
+                    Taskbar.UpdateMouse(canvas);
+                }
+
                 WindowManager.UpdateMouse(canvas);
                 WindowManager.HandleKeyboard();
 
@@ -50,12 +71,14 @@ namespace HolmiumOS.GUI
                 x = Clamp(x, 0, maxX);
                 y = Clamp(y, 0, maxY);
 
-
                 canvas.DrawImage(wallpaper, 0, 0);
 
                 WindowManager.Draw(canvas);
 
-                Taskbar.Draw(canvas);
+                if (UserManager.IsLoggedIn)
+                {
+                    Taskbar.Draw(canvas);
+                }
 
                 DrawCursor(x, y);
 

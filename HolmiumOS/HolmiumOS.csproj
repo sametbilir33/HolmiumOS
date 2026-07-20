@@ -19,6 +19,9 @@
         <PxeInterface>192.168.0.8</PxeInterface>
         <DebugEnabled>False</DebugEnabled>
         <VMWareEdition>Player</VMWareEdition>
+        <OptimizationLevel>1</OptimizationLevel>
+        <UseUEFI>True</UseUEFI>
+        <StackCorruptionDetectionEnabled>True</StackCorruptionDetectionEnabled>
     </PropertyGroup>
 
     <ItemGroup>
