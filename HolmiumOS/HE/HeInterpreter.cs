@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using HolmiumOS.Shell;
 
 namespace HolmiumOS.HE
@@ -30,145 +29,197 @@ namespace HolmiumOS.HE
 
         public void Run(string path)
         {
-            if (!File.Exists(path))
-                return;
-
-            _lines = File.ReadAllLines(path);
-            _funcs.Clear();
-
-            for (int i = 0; i < _lines.Length; i++)
+            try
             {
-                var l = _lines[i].Trim();
+                if (!FileSystemManager.FileExists(path))
+                    return;
 
-                if (l.StartsWith("func "))
-                    _funcs[l.Substring(5).Trim()] = i;
-            }
+                string content = FileSystemManager.ReadFile(path);
+                _lines = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                _funcs.Clear();
 
-            _ip = 0;
-
-            while (_ip < _lines.Length)
-            {
-                var line = _lines[_ip].Trim();
-
-                if (line.Length == 0 || line[0] == '#')
+                for (int i = 0; i < _lines.Length; i++)
                 {
-                    _ip++;
-                    continue;
+                    var l = _lines[i].Trim();
+
+                    if (l.StartsWith("func "))
+                        _funcs[l.Substring(5).Trim()] = i;
                 }
 
-                Execute(line);
-                _ip++;
+                _ip = 0;
+
+                while (_ip < _lines.Length)
+                {
+                    var line = _lines[_ip].Trim();
+
+                    if (line.Length == 0 || line[0] == '#')
+                    {
+                        _ip++;
+                        continue;
+                    }
+
+                    Execute(line);
+                    _ip++;
+                }
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Console.WriteLine($"[HE Hata] {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[HE Hata] {ex.Message}");
             }
         }
 
         private void Execute(string line)
         {
-            if (line.StartsWith("os.run("))
+            try
             {
-                int s = line.IndexOf('(');
-                int e = line.LastIndexOf(')');
+                if (line.StartsWith("os.run("))
+                {
+                    int s = line.IndexOf('(');
+                    int e = line.LastIndexOf(')');
 
-                if (s == -1 || e == -1 || e <= s)
+                    if (s == -1 || e == -1 || e <= s)
+                        return;
+
+                    string cmd = ExtractString(line.Substring(s + 1, e - s - 1));
+
+                    if (!string.IsNullOrWhiteSpace(cmd))
+                        CommandManager.ExecuteCommand(cmd);
+
                     return;
-
-                string cmd = ExtractString(line.Substring(s + 1, e - s - 1));
-
-                if (!string.IsNullOrWhiteSpace(cmd))
-                    CommandManager.ExecuteCommand(cmd);
-
-                return;
-            }
-
-            if (line.StartsWith("print("))
-            {
-                var inner = GetInside(line);
-                var v = Eval(inner);
-                Console.WriteLine(ToString(v));
-                return;
-            }
-
-            if (line.StartsWith("let "))
-            {
-                var parts = line.Substring(4).Split('=', 2);
-                if (parts.Length != 2) return;
-
-                _vars[parts[0].Trim()] = Eval(parts[1].Trim());
-                return;
-            }
-
-            if (line.StartsWith("if("))
-            {
-                if (!ToBool(Eval(GetInside(line))))
-                    SkipBlock();
-                return;
-            }
-
-            if (line.StartsWith("call "))
-            {
-                RunFunc(line.Substring(5).Trim());
-                return;
-            }
-
-            // FS
-
-            if (line.StartsWith("fs.write "))
-            {
-                var args = SplitArgs(line.Substring(9));
-                if (args.Length != 2) return;
-
-                File.WriteAllText(ResolveFsPath(args[0]), args[1]);
-                return;
-            }
-
-            if (line.StartsWith("fs.read "))
-            {
-                var args = SplitArgs(line.Substring(8));
-                if (args.Length != 1) return;
-
-                var path = ResolveFsPath(args[0]);
-                if (File.Exists(path))
-                    Console.WriteLine(File.ReadAllText(path));
-
-                return;
-            }
-
-            if (line.StartsWith("fs.exists "))
-            {
-                var args = SplitArgs(line.Substring(10));
-                if (args.Length != 1) return;
-
-                Console.WriteLine(File.Exists(ResolveFsPath(args[0])).ToString().ToLower());
-                return;
-            }
-
-            if (line.StartsWith("fs.ls"))
-            {
-                var raw = line.Substring(5).Trim();
-                var path = FileSystemManager.CurrentDirectory;
-
-                if (!string.IsNullOrWhiteSpace(raw))
-                {
-                    var a = SplitArgs(raw);
-                    if (a.Length > 0)
-                        path = ResolveFsPath(a[0]);
                 }
 
-                if (Directory.Exists(path))
+                if (line.StartsWith("print("))
                 {
-                    foreach (var d in Directory.GetDirectories(path))
-                        Console.WriteLine("[DIR] " + Path.GetFileName(d));
-
-                    foreach (var f in Directory.GetFiles(path))
-                        Console.WriteLine("[FILE] " + Path.GetFileName(f));
+                    var inner = GetInside(line);
+                    var v = Eval(inner);
+                    Console.WriteLine(ToString(v));
+                    return;
                 }
 
-                return;
+                if (line.StartsWith("let "))
+                {
+                    var parts = line.Substring(4).Split('=', 2);
+                    if (parts.Length != 2) return;
+
+                    _vars[parts[0].Trim()] = Eval(parts[1].Trim());
+                    return;
+                }
+
+                if (line.StartsWith("if("))
+                {
+                    if (!ToBool(Eval(GetInside(line))))
+                        SkipBlock();
+                    return;
+                }
+
+                if (line.StartsWith("call "))
+                {
+                    RunFunc(line.Substring(5).Trim());
+                    return;
+                }
+
+
+                if (line.StartsWith("fs.write "))
+                {
+                    var args = SplitArgs(line.Substring(9));
+                    if (args.Length != 2) return;
+
+                    FileSystemManager.WriteFile(args[0], args[1]);
+                    return;
+                }
+
+                if (line.StartsWith("fs.append "))
+                {
+                    var args = SplitArgs(line.Substring(10));
+                    if (args.Length != 2) return;
+
+                    FileSystemManager.AppendFile(args[0], args[1]);
+                    return;
+                }
+
+                if (line.StartsWith("fs.read "))
+                {
+                    var args = SplitArgs(line.Substring(8));
+                    if (args.Length != 1) return;
+
+                    if (FileSystemManager.FileExists(args[0]))
+                    {
+                        string content = FileSystemManager.ReadFile(args[0]);
+                        Console.WriteLine(content);
+                    }
+                    return;
+                }
+
+                if (line.StartsWith("fs.delete "))
+                {
+                    var args = SplitArgs(line.Substring(10));
+                    if (args.Length != 1) return;
+
+                    if (FileSystemManager.FileExists(args[0]))
+                        FileSystemManager.DeleteFile(args[0]);
+                    else if (FileSystemManager.DirectoryExists(args[0]))
+                        FileSystemManager.DeleteDirectory(args[0]);
+
+                    return;
+                }
+
+                if (line.StartsWith("fs.mkdir "))
+                {
+                    var args = SplitArgs(line.Substring(9));
+                    if (args.Length != 1) return;
+
+                    FileSystemManager.CreateDirectory(args[0]);
+                    return;
+                }
+
+                if (line.StartsWith("fs.exists "))
+                {
+                    var args = SplitArgs(line.Substring(10));
+                    if (args.Length != 1) return;
+
+                    bool exists = FileSystemManager.FileExists(args[0]) || FileSystemManager.DirectoryExists(args[0]);
+                    Console.WriteLine(exists.ToString().ToLower());
+                    return;
+                }
+
+                if (line.StartsWith("fs.ls"))
+                {
+                    var raw = line.Substring(5).Trim();
+                    var path = FileSystemManager.CurrentDirectory;
+
+                    if (!string.IsNullOrWhiteSpace(raw))
+                    {
+                        var a = SplitArgs(raw);
+                        if (a.Length > 0)
+                            path = a[0];
+                    }
+
+                    if (FileSystemManager.DirectoryExists(path))
+                    {
+                        foreach (var d in FileSystemManager.GetDirectories(path))
+                            Console.WriteLine("[DIR] " + System.IO.Path.GetFileName(d));
+
+                        foreach (var f in FileSystemManager.GetFiles(path))
+                            Console.WriteLine("[FILE] " + System.IO.Path.GetFileName(f));
+                    }
+
+                    return;
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.WriteLine("Erisim reddedildi.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Hata] " + ex.Message);
             }
         }
 
-        // =========================
-        // EXPRESSION ENGINE
-        // =========================
 
         private Value Eval(string expr)
         {
@@ -238,9 +289,6 @@ namespace HolmiumOS.HE
             return Value.FromStr(expr);
         }
 
-        // =========================
-        // HELPERS
-        // =========================
 
         private string GetInside(string line)
         {
@@ -324,19 +372,6 @@ namespace HolmiumOS.HE
                 list.Add(cur);
 
             return list.ToArray();
-        }
-
-        private string ResolveFsPath(string path)
-        {
-            if (Path.IsPathRooted(path))
-                return path;
-
-            string baseDir = FileSystemManager.CurrentDirectory;
-
-            if (!baseDir.EndsWith("\\"))
-                baseDir += "\\";
-
-            return Path.GetFullPath(Path.Combine(baseDir, path));
         }
 
         private void RunFunc(string name)
