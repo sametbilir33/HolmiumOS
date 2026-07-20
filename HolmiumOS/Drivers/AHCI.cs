@@ -80,7 +80,6 @@ namespace HolmiumOS.Drivers
         /// </summary>
         public void Init()
         {
-            Console.WriteLine("_");
             try
             {
                 //try { Cosmos.Core.Global.Init(); } catch { }
@@ -95,11 +94,9 @@ namespace HolmiumOS.Drivers
                 {
                     i++;
                     //var b0 = device.BAR0.ToString();
-                    Console.WriteLine($"PCI #0{i}=> VendorID: {dvc.VendorID} |  BAR0: {dvc.BAR0}  | ProgIf: {dvc.ProgIF}  ||  BUS!: {dvc.bus} | func!: {dvc.function} | slot!: {dvc.slot} ||  Class: {dvc.ClassCode}  | Sub: {dvc.Subclass} | CMD: {GetCMD(dvc.Command)}");
 
                     if (dvc.ClassCode == 1 && dvc.Subclass == 6)
                     {
-                        Console.WriteLine("in start----------");
 
                         PCIDevice pci = new PCIDevice(dvc.bus, dvc.slot, dvc.function);
                         Cosmos.HAL.BlockDevice.AHCI hci = new Cosmos.HAL.BlockDevice.AHCI(pci);
@@ -119,37 +116,19 @@ namespace HolmiumOS.Drivers
                         string mPortName; uint mPortNum = 0; uint aAddressX = (uint)pci.BaseAddressBar[0].BaseAddress + 20;
                         foreach (StoragePort port in ports)
                         {
-                            Console.WriteLine($"STR PORT Name: {port.mPortName} | STR Num: {port.mPortNumber} | BlockSize: {port.BlockSize}");
                             if (port.mPortType == PortType.SATA) { mPortName = port.mPortName; mPortNum = port.mPortNumber; }
                             ;
                             aAddressX = 128;
                             StoragePort.Devices.Add(port);
                         }
-                        StoragePort.Devices.ForEach(device => { Console.WriteLine($"(old)FOUND A STORAGE DEVICE !. Type: {GetBlockType(device.Type)} | BlockSize: {device.BlockSize} | BlockCount: {device.BlockCount}"); });
-                        Console.WriteLine($"ADDR: {aAddressX} | PortNum: {mPortNum}");
                         PortRegisters prtg = new PortRegisters(aAddressX, mPortNum);
-                        Console.WriteLine($"is Active prtg : {prtg.Active} | port num: {prtg.mPortNumber} | port CMD: {prtg.CMD} | Resrv : {prtg.Reserved}");
-                        Console.WriteLine("BEFORE");
                         BlockDevice block = null;
-                        //try { block = new SATA(prtg); } catch (Exception ex) { Console.WriteLine($"!!!! ERR !: {ex.Message}"); }
-                        Console.WriteLine("AFTER");
 
                         try { Cosmos.Core.Global.Init(); } catch { }
 
                         List<BlockDevice> satadevices = SATA.Devices;
-                        Console.WriteLine($"--\namnt of satas : {satadevices.Count}\n");
-                        foreach (var satadevice in satadevices)
-                        {
-                            Console.WriteLine($"one is bsize = {satadevice.BlockSize} | bcount = {satadevice.BlockCount} | {GetBlockType(satadevice.Type)}");
-
-                        }
                     }
                 }
-
-
-
-
-                Console.Write("\n\n_");
             }
             catch (Exception ex) { BSOD(ex); }
 
@@ -160,76 +139,9 @@ namespace HolmiumOS.Drivers
         /// </summary>
         public static void Check()
         {
-            Console.WriteLine("Initializing SATA - AHCI Storage Devices...");
             List<BlockDevice> satadevices = SATA.Devices;
-            Console.WriteLine($"[ok] Amount of found devices: {satadevices.Count}\n");
 
         }
-
-        private string GetCMD(PCIDevice.PCICommand type)
-        {
-            switch (type)
-            {
-                case PCIDevice.PCICommand.Wait:
-                    return "Wait";
-                case PCIDevice.PCICommand.VGA_Pallete:
-                    return "VGA_PALLETE";
-                case PCIDevice.PCICommand.Special:
-                    return "Special";
-                case PCIDevice.PCICommand.SERR:
-                    return "SERR";
-                case PCIDevice.PCICommand.Parity:
-                    return "Parity";
-                case PCIDevice.PCICommand.Memory:
-                    return "Memory";
-                case PCIDevice.PCICommand.Master:
-                    return "Master";
-                case PCIDevice.PCICommand.IO:
-                    return "I/O";
-                case PCIDevice.PCICommand.Invalidate:
-                    return "Invalidate";
-                case PCIDevice.PCICommand.Fast_Back:
-                    return "Fast_Back 512";
-                default:
-                    return "Unknown CMD";
-            }
-        }
-
-        private string GetPType(PortType port)
-        {
-            switch (port)
-            {
-                case PortType.Nothing:
-                    return "N/A";
-                case PortType.PM:
-                    return "PM";
-                case PortType.SATA:
-                    return "SATA";
-                case PortType.SATAPI:
-                    return "SATA-PI";
-                case PortType.SEMB:
-                    return "SEMB";
-
-                default:
-                    return "Unknown";
-            }
-        }
-
-        private string GetBlockType(BlockDeviceType type)
-        {
-            switch (type)
-            {
-                case BlockDeviceType.Removable:
-                    return "Removable Disk";
-                case BlockDeviceType.HardDrive:
-                    return "Hard Drive";
-                case BlockDeviceType.RemovableCD:
-                    return "CD or DvD";
-                default:
-                    return "Unknown";
-            }
-        }
-
         private void BSOD(Exception exception)
         {
             Console.BackgroundColor = ConsoleColor.Blue;
