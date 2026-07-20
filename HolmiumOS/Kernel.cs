@@ -269,8 +269,10 @@ namespace HolmiumOS
             }
 
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Ilk kurulum tamamlandi.");
-            Console.ResetColor();
+            Console.WriteLine("Ilk kurulum basariyla tamamlandi!");
+            Console.WriteLine("Sistem 3 saniye icinde yeniden baslatiliyor...");
+            Cosmos.HAL.Global.PIT.Wait(3000);
+            Sys.Power.Reboot();
         }
         private void LoginScreen()
         {
