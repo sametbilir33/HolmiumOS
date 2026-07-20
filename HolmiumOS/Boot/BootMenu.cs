@@ -1,6 +1,5 @@
 ﻿using System;
 using Cosmos.System;
-using Sys = Cosmos.System;
 
 namespace HolmiumOS.Boot
 {

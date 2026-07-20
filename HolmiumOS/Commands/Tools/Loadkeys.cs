@@ -1,6 +1,5 @@
 ﻿using System;
 using Cosmos.System.ScanMaps;
-using HolmiumOS.Commands;
 using Sys = Cosmos.System;
 
 namespace HolmiumOS.Commands.Tools

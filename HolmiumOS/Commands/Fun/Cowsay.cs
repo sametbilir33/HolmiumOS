@@ -1,5 +1,4 @@
 ﻿using System;
-using HolmiumOS.Commands;
 
 namespace HolmiumOS.Commands.Fun
 {

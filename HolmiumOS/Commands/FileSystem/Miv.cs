@@ -10,8 +10,8 @@
  * - Improved empty input handling
  */
 
-using HolmiumOS.Shell;
 using System;
+using HolmiumOS.Shell;
 
 namespace HolmiumOS.Commands.FileSystem
 {

@@ -10,12 +10,12 @@
 
 using System;
 using System.Collections.Generic;
+using Cosmos.Common.Extensions;
+using Cosmos.Core;
 using Cosmos.HAL;
 using Cosmos.HAL.BlockDevice;
-using Cosmos.HAL.BlockDevice.Registers;
 using Cosmos.HAL.BlockDevice.Ports;
-using Cosmos.Core;
-using Cosmos.Common.Extensions;
+using Cosmos.HAL.BlockDevice.Registers;
 namespace HolmiumOS.Drivers
 {
     public class AHCI_DISK

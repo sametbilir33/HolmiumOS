@@ -1,6 +1,4 @@
 ﻿using System;
-using HolmiumOS.Commands;
-using HolmiumOS.Crypto;
 
 namespace HolmiumOS.Commands.Crypto
 {

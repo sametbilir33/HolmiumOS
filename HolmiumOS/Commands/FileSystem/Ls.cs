@@ -1,6 +1,6 @@
-﻿using HolmiumOS.Shell;
-using System;
+﻿using System;
 using System.IO;
+using HolmiumOS.Shell;
 
 namespace HolmiumOS.Commands.FileSystem
 {

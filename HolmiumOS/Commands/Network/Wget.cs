@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 using HolmiumOS.Network.HTTP;
 
 namespace HolmiumOS.Commands.Network

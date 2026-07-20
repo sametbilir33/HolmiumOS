@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Text;
-using HolmiumOS.Commands;
-using HolmiumOS.Crypto;
 
 namespace HolmiumOS.Commands.Crypto
 {
@@ -10,7 +7,7 @@ namespace HolmiumOS.Commands.Crypto
         public string Name => "sha256";
         public string Description => "Verilen metnin SHA-256 hash degerini olusturur.";
         public string Usage => "sha256 <metin>";
-        
+
         public void Execute(string args)
         {
             if (string.IsNullOrWhiteSpace(args))

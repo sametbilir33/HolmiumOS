@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using HolmiumOS.Commands;
 
 namespace HolmiumOS.Commands.System
 {

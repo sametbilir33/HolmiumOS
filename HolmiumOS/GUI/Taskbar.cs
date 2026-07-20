@@ -1,7 +1,6 @@
 ﻿using System.Drawing;
 using Cosmos.System;
 using Cosmos.System.Graphics;
-using HolmiumOS.GUI.Apps; // Terminal uygulamasını tetikleyebilmek için eklendi
 
 namespace HolmiumOS.GUI
 {

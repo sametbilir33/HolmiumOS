@@ -1,5 +1,4 @@
 ﻿using System;
-using HolmiumOS.Commands;
 using Cosmos.HAL;
 
 namespace HolmiumOS.Commands.System

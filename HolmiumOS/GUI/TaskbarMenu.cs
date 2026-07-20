@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
-using Cosmos.System.Graphics;
 using Cosmos.System;
+using Cosmos.System.Graphics;
 
 namespace HolmiumOS.GUI
 {

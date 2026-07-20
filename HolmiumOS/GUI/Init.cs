@@ -1,9 +1,7 @@
-﻿using System.Drawing;
-using Cosmos.System;
+﻿using Cosmos.System;
 using Cosmos.System.Graphics;
-using Cosmos.System.Graphics.Fonts;
-using IL2CPU.API.Attribs;
 using HolmiumOS.GUI.Apps;
+using IL2CPU.API.Attribs;
 
 namespace HolmiumOS.GUI
 {

@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.IO;
 using Cosmos.Core;
 using Cosmos.Core.Memory;
-using Cosmos.HAL;
 using Cosmos.HAL.BlockDevice.Ports;
 using Cosmos.System.FileSystem;
 using Cosmos.System.FileSystem.VFS;

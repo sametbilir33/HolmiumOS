@@ -1,5 +1,5 @@
-﻿using HolmiumOS.Shell;
-using System;
+﻿using System;
+using HolmiumOS.Shell;
 
 namespace HolmiumOS.Commands.UserSystem
 {

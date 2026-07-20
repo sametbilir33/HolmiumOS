@@ -1,5 +1,4 @@
-﻿using System;
-using Cosmos.System;
+﻿using Cosmos.System;
 using Cosmos.System.Graphics;
 
 namespace HolmiumOS.GUI.Controls

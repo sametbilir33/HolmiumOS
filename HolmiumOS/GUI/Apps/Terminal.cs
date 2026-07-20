@@ -1,5 +1,4 @@
-﻿using System;
-using HolmiumOS.GUI.Controls;
+﻿using HolmiumOS.GUI.Controls;
 
 namespace HolmiumOS.GUI.Apps
 {

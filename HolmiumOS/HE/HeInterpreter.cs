@@ -382,6 +382,6 @@ namespace HolmiumOS.HE
             }
 
             _ip = _lines.Length;
-        }   
+        }
     }
 }
