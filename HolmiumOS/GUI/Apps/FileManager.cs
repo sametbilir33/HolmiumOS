@@ -5,23 +5,22 @@ using HolmiumOS.Shell;
 
 namespace HolmiumOS.GUI.Apps
 {
-    public class FileEntry
-    {
-        public string Name { get; set; } = "";
-        public string FullPath { get; set; } = "";
-        public bool IsDirectory { get; set; }
-    }
-
     public class FileManager : AppBase
     {
-        private TextBox pathTextBox;
         private Button btnBack;
+        private TextBox txtPath;
         private Button btnGo;
-        private Label statusLabel;
-        private ListBox fileListBox;
+        private Label lblStatus;
 
-        private string localPath = @"0:\";
-        private List<FileEntry> currentEntries = new List<FileEntry>();
+        private Button btnUp;
+        private Button btnDown;
+
+        private ListBox lstFiles;
+
+        private string currentPath = @"0:\";
+
+        private int scrollOffset = 0;
+        private const int PAGE_SIZE = 12;
 
         public FileManager() : base("File Manager")
         {
@@ -31,308 +30,284 @@ namespace HolmiumOS.GUI.Apps
         {
             try
             {
-                if (this.Window != null)
+                if (Window != null) Window.Title = "File Manager";
+
+                InitUserPath();
+
+                btnBack = new Button("<-", 10, 10, 45, 30) { ClickAction = DoNavigateBack };
+                txtPath = new TextBox(60, 10, 360, 30) { Text = currentPath, MaxLength = 100 };
+                btnGo = new Button("Go", 425, 10, 65, 30) { ClickAction = DoNavigateGo };
+
+                btnUp = new Button("^", 450, 50, 40, 140) { ClickAction = ScrollUp };
+                btnDown = new Button("v", 450, 195, 40, 140) { ClickAction = ScrollDown };
+
+                lblStatus = new Label("Hazir", 10, 360);
+
+                if (Window != null)
                 {
-                    this.Window.Title = "File Manager";
+                    Window.AddControl(btnBack);
+                    Window.AddControl(txtPath);
+                    Window.AddControl(btnGo);
+                    Window.AddControl(btnUp);
+                    Window.AddControl(btnDown);
+                    Window.AddControl(lblStatus);
                 }
 
-                InitPath();
-
-                btnBack = new Button("<-", 10, 10, 35, 25);
-                btnBack.ClickAction = OnClickBack;
-
-                pathTextBox = new TextBox(50, 10, 180, 25);
-                pathTextBox.Text = localPath ?? @"0:\";
-                pathTextBox.MaxLength = 100;
-
-                btnGo = new Button("Go", 235, 10, 45, 25);
-                btnGo.ClickAction = OnClickGo;
-
-                fileListBox = new ListBox(10, 45, 270, 180);
-
-                statusLabel = new Label("Hazir                                ", 10, 235);
-
-                if (this.Window != null)
-                {
-                    this.Window.AddControl(btnBack);
-                    this.Window.AddControl(pathTextBox);
-                    this.Window.AddControl(btnGo);
-                    this.Window.AddControl(fileListBox);
-                    this.Window.AddControl(statusLabel);
-                }
-
-                EnsureDirectoryExists(localPath);
-                RefreshDirectory();
+                LoadDirectory(currentPath);
             }
             catch
             {
+                SetStatus("Baslatma hatasi!");
             }
         }
 
-        private void InitPath()
+        private void InitUserPath()
         {
             try
             {
-                if (UserManager.IsLoggedIn && !string.IsNullOrEmpty(UserManager.CurrentUser))
+                if (UserManager.IsLoggedIn && !string.IsNullOrEmpty(UserManager.HomeDirectory) && FileSystemManager.DirectoryExists(UserManager.HomeDirectory))
                 {
-                    localPath = UserManager.HomeDirectory;
+                    currentPath = UserManager.HomeDirectory;
+                }
+                else
+                {
+                    currentPath = @"0:\";
                 }
             }
             catch
             {
-                localPath = @"0:\";
+                currentPath = @"0:\";
             }
 
-            FormatPath();
+            FixPath();
         }
 
-        private void FormatPath()
+        private void FixPath()
         {
-            if (string.IsNullOrEmpty(localPath))
+            if (string.IsNullOrEmpty(currentPath)) currentPath = @"0:\";
+
+            currentPath = currentPath.Replace('/', '\\');
+
+            if (!currentPath.StartsWith("0:"))
             {
-                localPath = @"0:\";
-                return;
+                currentPath = @"0:\" + currentPath.TrimStart('\\');
             }
 
-            localPath = localPath.Replace('/', '\\');
-
-            if (localPath.StartsWith("\\"))
+            if (!currentPath.EndsWith("\\"))
             {
-                localPath = "0:" + localPath;
-            }
-            else if (!localPath.StartsWith("0:\\") && !localPath.StartsWith("0:"))
-            {
-                localPath = @"0:\" + localPath;
-            }
-
-            localPath = localPath.Replace("\\\\", "\\");
-
-            if (!localPath.EndsWith("\\"))
-            {
-                localPath += "\\";
+                currentPath += "\\";
             }
         }
 
-        private void EnsureDirectoryExists(string path)
+        private void LoadDirectory(string path)
         {
-            try
+            currentPath = path;
+            FixPath();
+
+            if (txtPath != null) txtPath.Text = currentPath;
+
+            if (lstFiles != null && Window != null)
             {
-                if (!FileSystemManager.DirectoryExists(path))
-                {
-                    FileSystemManager.CreateDirectory(path);
-                }
-            }
-            catch
-            {
-            }
-        }
-
-        private string SafeGetFileName(string fullPath)
-        {
-            if (string.IsNullOrEmpty(fullPath)) return "";
-
-            int len = fullPath.Length;
-            while (len > 0 && (fullPath[len - 1] == '\\' || fullPath[len - 1] == '/')) len--;
-
-            if (len == 0) return "";
-
-            int lastSlash = -1;
-            for (int i = len - 1; i >= 0; i--)
-            {
-                if (fullPath[i] == '\\' || fullPath[i] == '/')
-                {
-                    lastSlash = i;
-                    break;
-                }
-            }
-
-            if (lastSlash == -1) return fullPath;
-            return fullPath.Substring(lastSlash + 1, len - (lastSlash + 1));
-        }
-
-        private void RefreshDirectory()
-        {
-            if (fileListBox == null || pathTextBox == null)
-                return;
-
-            fileListBox.OnSelectedIndexChanged = null;
-
-            currentEntries.Clear();
-            fileListBox.Clear();
-
-            try
-            {
-                bool canRead = true;
-
                 try
                 {
-                    canRead = PermissionManager.CanRead(localPath);
+                    Window.Controls.Remove(lstFiles);
                 }
-                catch
-                {
-                }
+                catch { }
+                lstFiles = null;
+            }
 
-                if (!canRead)
-                {
-                    localPath = @"0:\";
-                    FormatPath();
-                }
+            lstFiles = new ListBox(10, 50, 435, 285);
 
-                string[] dirs = null;
+            List<string> rawItems = new List<string>();
 
-                try
+            try
+            {
+                if (!PermissionManager.CanRead(currentPath))
                 {
-                    dirs = FileSystemManager.GetDirectories(localPath);
+                    SetStatus("Erisim Yetkisi Yok!");
+                    AttachListBoxToWindow();
+                    return;
                 }
-                catch
-                {
-                }
+            }
+            catch { }
 
+            try
+            {
+                string[] dirs = FileSystemManager.GetDirectories(currentPath);
                 if (dirs != null)
                 {
                     for (int i = 0; i < dirs.Length; i++)
                     {
-                        string dir = dirs[i];
-
-                        if (string.IsNullOrEmpty(dir))
-                            continue;
-
-                        string name = SafeGetFileName(dir);
-
-                        currentEntries.Add(new FileEntry
-                        {
-                            Name = name,
-                            FullPath = dir,
-                            IsDirectory = true
-                        });
-
-                        fileListBox.AddItem("[DIR] " + name);
+                        if (!string.IsNullOrEmpty(dirs[i])) rawItems.Add(dirs[i]);
                     }
                 }
+            }
+            catch { }
 
-                string[] files = null;
-
-                try
-                {
-                    files = FileSystemManager.GetFiles(localPath);
-                }
-                catch
-                {
-                }
-
+            try
+            {
+                string[] files = FileSystemManager.GetFiles(currentPath);
                 if (files != null)
                 {
                     for (int i = 0; i < files.Length; i++)
                     {
-                        string file = files[i];
-
-                        if (string.IsNullOrEmpty(file))
-                            continue;
-
-                        string name = SafeGetFileName(file);
-
-                        currentEntries.Add(new FileEntry
-                        {
-                            Name = name,
-                            FullPath = file,
-                            IsDirectory = false
-                        });
-
-                        fileListBox.AddItem("[FILE] " + name);
+                        if (!string.IsNullOrEmpty(files[i])) rawItems.Add(files[i]);
                     }
                 }
-
-                pathTextBox.Text = localPath;
-
-                if (statusLabel != null)
-                {
-                    statusLabel.Text = currentEntries.Count == 0
-                        ? "Klasor bos."
-                        : $"Toplam {currentEntries.Count} oge.";
-                }
             }
-            catch
+            catch { }
+
+            List<string> visiblePaths = new List<string>();
+
+            if (scrollOffset < 0) scrollOffset = 0;
+            if (scrollOffset > Math.Max(0, rawItems.Count - PAGE_SIZE))
             {
-                if (statusLabel != null)
-                    statusLabel.Text = "Hata olustu.";
+                scrollOffset = Math.Max(0, rawItems.Count - PAGE_SIZE);
             }
 
-            fileListBox.OnSelectedIndexChanged = OnFileSelected;
-        }
+            int endLimit = Math.Min(scrollOffset + PAGE_SIZE, rawItems.Count);
 
-        private void OnFileSelected(int selectedIndex, string selectedItemText)
-        {
-            if (selectedIndex < 0 || selectedIndex >= currentEntries.Count)
-                return;
-
-            var selectedEntry = currentEntries[selectedIndex];
-
-            try
+            for (int i = scrollOffset; i < endLimit; i++)
             {
-                if (selectedEntry.IsDirectory)
+                string itemPath = rawItems[i];
+                bool isDir = FileSystemManager.DirectoryExists(itemPath);
+                string cleanName = ExtractName(itemPath);
+
+                if (isDir)
                 {
-                    localPath = selectedEntry.FullPath;
-                    FormatPath();
-                    RefreshDirectory();
-                }
-                else if (statusLabel != null)
-                {
-                    statusLabel.Text = "Secildi: " + selectedEntry.Name;
-                }
-            }
-            catch
-            {
-            }
-        }
-
-        private void OnClickBack()
-        {
-            try
-            {
-                string trimmedPath = localPath.TrimEnd('\\', '/');
-
-                if (trimmedPath.Length <= 3 || (!trimmedPath.Contains("\\") && !trimmedPath.Contains("/")))
-                {
-                    return;
-                }
-
-                int lastIndex = Math.Max(trimmedPath.LastIndexOf('\\'), trimmedPath.LastIndexOf('/'));
-                if (lastIndex > 0)
-                {
-                    localPath = trimmedPath.Substring(0, lastIndex + 1);
-                    FormatPath();
-                    RefreshDirectory();
-                }
-            }
-            catch
-            {
-            }
-        }
-
-        private void OnClickGo()
-        {
-            if (pathTextBox == null) return;
-
-            try
-            {
-                string targetPath = pathTextBox.Text.Trim();
-                if (string.IsNullOrEmpty(targetPath)) return;
-
-                localPath = targetPath;
-                FormatPath();
-
-                if (FileSystemManager.DirectoryExists(localPath))
-                {
-                    RefreshDirectory();
+                    lstFiles.AddItem("[DIR]  " + Shorten(cleanName, 32));
                 }
                 else
                 {
-                    if (statusLabel != null) statusLabel.Text = "Klasor bulunamadi!";
+                    lstFiles.AddItem("[FILE] " + Shorten(cleanName, 31));
+                }
+
+                visiblePaths.Add(itemPath);
+            }
+
+            if (rawItems.Count > PAGE_SIZE)
+            {
+                SetStatus("Gosterilen: " + (scrollOffset + 1) + "-" + endLimit + " / " + rawItems.Count);
+            }
+            else
+            {
+                SetStatus(rawItems.Count == 0 ? "Klasor bos." : "Toplam: " + rawItems.Count);
+            }
+
+            lstFiles.OnSelectedIndexChanged = (index, text) =>
+            {
+                if (index >= 0 && index < visiblePaths.Count)
+                {
+                    string selectedPath = visiblePaths[index];
+
+                    if (FileSystemManager.DirectoryExists(selectedPath))
+                    {
+                        scrollOffset = 0;
+                        LoadDirectory(selectedPath);
+                    }
+                    else
+                    {
+                        SetStatus("Dosya: " + Shorten(ExtractName(selectedPath), 30));
+                    }
+                }
+            };
+
+            AttachListBoxToWindow();
+        }
+
+        private void ScrollUp()
+        {
+            if (scrollOffset > 0)
+            {
+                scrollOffset--;
+                LoadDirectory(currentPath);
+            }
+        }
+
+        private void ScrollDown()
+        {
+            scrollOffset++;
+            LoadDirectory(currentPath);
+        }
+
+        private void AttachListBoxToWindow()
+        {
+            if (Window != null && lstFiles != null)
+            {
+                Window.AddControl(lstFiles);
+            }
+        }
+
+        private void DoNavigateBack()
+        {
+            try
+            {
+                string path = currentPath.TrimEnd('\\');
+
+                if (path.Length <= 2) return;
+
+                int lastSlash = path.LastIndexOf('\\');
+                if (lastSlash > 0)
+                {
+                    string parent = path.Substring(0, lastSlash);
+                    scrollOffset = 0;
+                    LoadDirectory(parent);
+                }
+                else
+                {
+                    scrollOffset = 0;
+                    LoadDirectory(@"0:\");
                 }
             }
             catch
             {
+                scrollOffset = 0;
+                LoadDirectory(@"0:\");
             }
+        }
+
+        private void DoNavigateGo()
+        {
+            if (txtPath == null) return;
+
+            string target = txtPath.Text.Trim();
+            if (string.IsNullOrEmpty(target)) return;
+
+            if (FileSystemManager.DirectoryExists(target))
+            {
+                scrollOffset = 0;
+                LoadDirectory(target);
+            }
+            else
+            {
+                SetStatus("Klasor bulunamadi!");
+            }
+        }
+
+        private string ExtractName(string fullPath)
+        {
+            if (string.IsNullOrEmpty(fullPath)) return "";
+
+            string p = fullPath.TrimEnd('\\');
+            int idx = p.LastIndexOf('\\');
+
+            if (idx >= 0 && idx < p.Length - 1)
+            {
+                return p.Substring(idx + 1);
+            }
+            return p;
+        }
+
+        private string Shorten(string text, int maxLen)
+        {
+            if (string.IsNullOrEmpty(text)) return "";
+            if (text.Length <= maxLen) return text;
+            return text.Substring(0, maxLen - 3) + "...";
+        }
+
+        private void SetStatus(string msg)
+        {
+            if (lblStatus != null) lblStatus.Text = msg;
         }
     }
 }
