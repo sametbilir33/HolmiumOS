@@ -47,13 +47,10 @@ namespace HolmiumOS
             VFSManager.RegisterVFS(fs);
 
             AHCI_DISK ahci_load = new();
-
             ahci_load.Init();
-
             AHCI_DISK.Check();
 
             List<Disk> sataDisks = new();
-
             for (int i = 0; i < SATA.Devices.Count; i++)
             {
                 Disk disk = new(SATA.Devices[i]);
@@ -63,20 +60,19 @@ namespace HolmiumOS
             try
             {
                 var disks = fs.GetDisks();
-
                 foreach (var disk in disks)
                 {
                     disk.Mount();
                 }
-
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Disk mount hatasi: {e.Message}", false);  //daha sonra loglara gelcek
+                Console.WriteLine($"Disk mount hatasi: {e.Message}", false);
             }
 
-
             Sys.KeyboardManager.SetKeyLayout(new TRStandardLayout());
+
+            InitializeSystem();
 
             var mode = Boot.BootMenu.Show();
 
@@ -102,27 +98,26 @@ namespace HolmiumOS
             Console.Clear();
 
             NetworkManager.Init();
-
             CheckResources();
 
             Console.ResetColor();
 
             string[] asciiArt = new string[]
             {
-                " _   _       _           _                  ___  ____  ",
-                "| | | | ___ | |_ __ ___ (_)_   _ _ __ ___  / _ \\/ ___| ",
-                "| |_| |/ _ \\| | '_ ` _ \\| | | | | '_ ` _ \\| | | \\___ \\ ",
-                "|  _  | (_) | | | | | | | | |_| | | | | | | |_| |___)|",
-                "|_| |_|\\___/|_|_| |_| |_|_|\\__,_|_| |_| |_|\\___/|____/ "
+        " _   _       _           _                  ___  ____  ",
+        "| | | | ___ | |_ __ ___ (_)_   _ _ __ ___  / _ \\/ ___| ",
+        "| |_| |/ _ \\| | '_ ` _ \\| | | | | '_ ` _ \\| | | \\___ \\ ",
+        "|  _  | (_) | | | | | | | | |_| | | | | | | |_| |___)|",
+        "|_| |_|\\___/|_|_| |_| |_|_|\\__,_|_| |_| |_|\\___/|____/ "
             };
 
             ConsoleColor[] colors = new ConsoleColor[]
             {
-                ConsoleColor.Red,
-                ConsoleColor.Green,
-                ConsoleColor.Yellow,
-                ConsoleColor.Cyan,
-                ConsoleColor.Magenta
+        ConsoleColor.Red,
+        ConsoleColor.Green,
+        ConsoleColor.Yellow,
+        ConsoleColor.Cyan,
+        ConsoleColor.Magenta
             };
 
             for (int i = 0; i < asciiArt.Length; i++)
@@ -133,7 +128,7 @@ namespace HolmiumOS
 
             Console.ResetColor();
 
-            InitializeSystem();
+
             LoginScreen();
             CommandManager.RegisterCommands();
 
