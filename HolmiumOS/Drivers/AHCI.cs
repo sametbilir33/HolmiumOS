@@ -80,7 +80,6 @@ namespace HolmiumOS.Drivers
         /// </summary>
         public void Init()
         {
-            Console.Clear();
             Console.WriteLine("_");
             try
             {
@@ -96,7 +95,6 @@ namespace HolmiumOS.Drivers
                 {
                     i++;
                     //var b0 = device.BAR0.ToString();
-                    Console.Clear();
                     Console.WriteLine($"PCI #0{i}=> VendorID: {dvc.VendorID} |  BAR0: {dvc.BAR0}  | ProgIf: {dvc.ProgIF}  ||  BUS!: {dvc.bus} | func!: {dvc.function} | slot!: {dvc.slot} ||  Class: {dvc.ClassCode}  | Sub: {dvc.Subclass} | CMD: {GetCMD(dvc.Command)}");
 
                     if (dvc.ClassCode == 1 && dvc.Subclass == 6)
@@ -145,7 +143,6 @@ namespace HolmiumOS.Drivers
                             Console.WriteLine($"one is bsize = {satadevice.BlockSize} | bcount = {satadevice.BlockCount} | {GetBlockType(satadevice.Type)}");
 
                         }
-                        Console.Clear();
                     }
                 }
 
@@ -163,7 +160,6 @@ namespace HolmiumOS.Drivers
         /// </summary>
         public static void Check()
         {
-            Console.Clear();
             Console.WriteLine("Initializing SATA - AHCI Storage Devices...");
             List<BlockDevice> satadevices = SATA.Devices;
             Console.WriteLine($"[ok] Amount of found devices: {satadevices.Count}\n");
@@ -236,10 +232,8 @@ namespace HolmiumOS.Drivers
 
         private void BSOD(Exception exception)
         {
-            Console.Clear();
             Console.BackgroundColor = ConsoleColor.Blue;
             Console.ForegroundColor = ConsoleColor.White;
-            Console.Clear();
             Console.WriteLine("KERNEL ERROR:");
             Console.WriteLine($"{exception.GetType().ToString()}\n");
             Console.WriteLine($"Details: {exception.ToString()}\n");
