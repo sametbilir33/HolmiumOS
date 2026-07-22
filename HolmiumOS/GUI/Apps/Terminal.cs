@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using HolmiumOS.GUI.Controls;
+﻿using HolmiumOS.GUI.Controls;
 
 namespace HolmiumOS.GUI.Apps
 {
@@ -8,6 +7,7 @@ namespace HolmiumOS.GUI.Apps
         private TextBox inputTextBox;
         private CheckBox termCheckBox;
         private Button submitButton;
+        private Button notificationButton; // <--- Yeni buton eklendi
         private Label statusLabel;
 
         private RadioButton radioLightMode;
@@ -60,6 +60,10 @@ namespace HolmiumOS.GUI.Apps
             submitButton = new Button("Verileri Isle ve Derle", 20, 305, 180, 35);
             submitButton.ClickAction = OnSubmitButtonClick;
 
+            // <--- Bildirim Butonu Tanımlandı --->
+            notificationButton = new Button("Bildirim Gonder", 210, 305, 180, 35);
+            notificationButton.ClickAction = OnNotificationButtonClick;
+
             if (this.Window != null)
             {
                 this.Window.AddControl(inputTitle);
@@ -78,6 +82,7 @@ namespace HolmiumOS.GUI.Apps
                 this.Window.AddControl(systemProgressBar);
                 this.Window.AddControl(statusLabel);
                 this.Window.AddControl(submitButton);
+                this.Window.AddControl(notificationButton); // <--- Pencereye eklendi
             }
         }
 
@@ -99,6 +104,17 @@ namespace HolmiumOS.GUI.Apps
             statusLabel.Text = $"U: {username} | T: {theme} | S: {shell} | H: {rememberMe}";
 
             Cosmos.Core.Memory.Heap.Collect();
+        }
+
+        // <--- Bildirim Butonunun Action Metodu --->
+        private void OnNotificationButtonClick()
+        {
+            string username = string.IsNullOrEmpty(inputTextBox?.Text) ? "Anonim" : inputTextBox.Text;
+
+            // Farklı türlerde test bildirimleri:
+            SendNotification("İslem Basarili", $"{username} verileri kaydedildi.", NotificationType.Success, 6);
+            SendNotification("Sistem Uyarisi", "Bellek tüketimi yüksek!", NotificationType.Warning, 8);
+            SendNotification("Kritik Hata", "Ag baglantisi koptu!", NotificationType.Error, 10);
         }
     }
 }

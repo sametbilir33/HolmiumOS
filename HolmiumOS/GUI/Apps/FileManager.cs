@@ -22,7 +22,7 @@ namespace HolmiumOS.GUI.Apps
         private int scrollOffset = 0;
         private const int PAGE_SIZE = 12;
 
-        public FileManager() : base("File Manager")
+        public FileManager() : base("Dosya Yoneticisi")
         {
         }
 
@@ -30,7 +30,7 @@ namespace HolmiumOS.GUI.Apps
         {
             try
             {
-                if (Window != null) Window.Title = "File Manager";
+                if (Window != null) Window.Title = "Dosya Yoneticisi";
 
                 InitUserPath();
 
@@ -118,7 +118,7 @@ namespace HolmiumOS.GUI.Apps
 
             lstFiles = new ListBox(10, 50, 435, 285);
 
-            List<string> rawItems = new List<string>();
+            List<ItemEntry> items = new List<ItemEntry>();
 
             try
             {
@@ -138,7 +138,10 @@ namespace HolmiumOS.GUI.Apps
                 {
                     for (int i = 0; i < dirs.Length; i++)
                     {
-                        if (!string.IsNullOrEmpty(dirs[i])) rawItems.Add(dirs[i]);
+                        if (!string.IsNullOrEmpty(dirs[i]))
+                        {
+                            items.Add(new ItemEntry { Path = dirs[i], IsDirectory = true });
+                        }
                     }
                 }
             }
@@ -151,29 +154,31 @@ namespace HolmiumOS.GUI.Apps
                 {
                     for (int i = 0; i < files.Length; i++)
                     {
-                        if (!string.IsNullOrEmpty(files[i])) rawItems.Add(files[i]);
+                        if (!string.IsNullOrEmpty(files[i]))
+                        {
+                            items.Add(new ItemEntry { Path = files[i], IsDirectory = false });
+                        }
                     }
                 }
             }
             catch { }
 
-            List<string> visiblePaths = new List<string>();
+            List<ItemEntry> visibleItems = new List<ItemEntry>();
 
             if (scrollOffset < 0) scrollOffset = 0;
-            if (scrollOffset > Math.Max(0, rawItems.Count - PAGE_SIZE))
+            if (scrollOffset > Math.Max(0, items.Count - PAGE_SIZE))
             {
-                scrollOffset = Math.Max(0, rawItems.Count - PAGE_SIZE);
+                scrollOffset = Math.Max(0, items.Count - PAGE_SIZE);
             }
 
-            int endLimit = Math.Min(scrollOffset + PAGE_SIZE, rawItems.Count);
+            int endLimit = Math.Min(scrollOffset + PAGE_SIZE, items.Count);
 
             for (int i = scrollOffset; i < endLimit; i++)
             {
-                string itemPath = rawItems[i];
-                bool isDir = FileSystemManager.DirectoryExists(itemPath);
-                string cleanName = ExtractName(itemPath);
+                ItemEntry entry = items[i];
+                string cleanName = ExtractName(entry.Path);
 
-                if (isDir)
+                if (entry.IsDirectory)
                 {
                     lstFiles.AddItem("[DIR]  " + Shorten(cleanName, 32));
                 }
@@ -182,32 +187,31 @@ namespace HolmiumOS.GUI.Apps
                     lstFiles.AddItem("[FILE] " + Shorten(cleanName, 31));
                 }
 
-                visiblePaths.Add(itemPath);
+                visibleItems.Add(entry);
             }
 
-            if (rawItems.Count > PAGE_SIZE)
+            if (items.Count > PAGE_SIZE)
             {
-                SetStatus("Gosterilen: " + (scrollOffset + 1) + "-" + endLimit + " / " + rawItems.Count);
+                SetStatus("Gosterilen: " + (scrollOffset + 1) + "-" + endLimit + " / " + items.Count);
             }
             else
             {
-                SetStatus(rawItems.Count == 0 ? "Klasor bos." : "Toplam: " + rawItems.Count);
+                SetStatus(items.Count == 0 ? "Klasor bos." : "Toplam: " + items.Count);
             }
 
             lstFiles.OnSelectedIndexChanged = (index, text) =>
             {
-                if (index >= 0 && index < visiblePaths.Count)
+                if (index >= 0 && index < visibleItems.Count)
                 {
-                    string selectedPath = visiblePaths[index];
+                    ItemEntry selected = visibleItems[index];
 
-                    if (FileSystemManager.DirectoryExists(selectedPath))
+                    if (selected.IsDirectory)
                     {
-                        scrollOffset = 0;
-                        LoadDirectory(selectedPath);
+                        SetStatus("Klasor: " + Shorten(ExtractName(selected.Path), 30));
                     }
                     else
                     {
-                        SetStatus("Dosya: " + Shorten(ExtractName(selectedPath), 30));
+                        SetStatus("Dosya: " + Shorten(ExtractName(selected.Path), 30));
                     }
                 }
             };
@@ -308,6 +312,12 @@ namespace HolmiumOS.GUI.Apps
         private void SetStatus(string msg)
         {
             if (lblStatus != null) lblStatus.Text = msg;
+        }
+
+        private class ItemEntry
+        {
+            public string Path { get; set; }
+            public bool IsDirectory { get; set; }
         }
     }
 }

@@ -22,5 +22,10 @@
 
         public virtual void Close()
         { }
+
+        public void SendNotification(string title, string message, NotificationType type = NotificationType.Info, int durationSeconds = 5)
+        {
+            NotificationManager.Send(title, message, type, durationSeconds);
+        }
     }
 }

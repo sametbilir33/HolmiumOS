@@ -28,12 +28,17 @@ namespace HolmiumOS.GUI.Controls
 
             if (Focused)
             {
-                int textWidth = Text.Length * 8;
-                int cursorX = X + 5 + textWidth;
+                bool showCursor = (Cosmos.HAL.RTC.Second % 2) == 0;
 
-                if (cursorX < X + Width - 10)
+                if (showCursor)
                 {
-                    canvas.DrawLine(System.Drawing.Color.Black, cursorX, Y + 4, cursorX, Y + Height - 4);
+                    int textWidth = Text.Length * 8;
+                    int cursorX = X + 5 + textWidth;
+
+                    if (cursorX < X + Width - 10)
+                    {
+                        canvas.DrawLine(System.Drawing.Color.Black, cursorX, Y + 4, cursorX, Y + Height - 4);
+                    }
                 }
             }
         }

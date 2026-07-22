@@ -34,7 +34,6 @@ namespace HolmiumOS.Shell
             commands.Add(new Reset());
             commands.Add(new Ember());
             commands.Add(new PCI());
-            commands.Add(new Gui());
 
             commands.Add(new Calc());
             commands.Add(new EvenOdd());

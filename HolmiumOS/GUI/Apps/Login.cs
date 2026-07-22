@@ -10,9 +10,9 @@ namespace HolmiumOS.GUI.Apps
         private TextBox passwordTextBox;
         private Button loginButton;
         private Label statusLabel;
-        private bool isSuccess = false;
+        private bool isSuccess;
 
-        public Login() : base("HolmiumOS - Sistem Girisi")
+        public Login() : base("Giris Yap")
         {
             this.isSuccess = false;
         }
@@ -21,24 +21,24 @@ namespace HolmiumOS.GUI.Apps
         {
             if (this.Window != null)
             {
-                this.Window.Title = "Sistem Girisi";
+                this.Window.Title = "Giris Yap";
             }
 
-            Label welcomeLabel = new Label("HolmiumOS GUI Ortamina Hos Geldiniz", 20, 20);
+            Label welcomeLabel = new Label("HolmiumOS'e Hos Geldiniz", 20, 20);
 
-            Label userTitle = new Label("Kullanici Adi:", 20, 60);
-            usernameTextBox = new TextBox(20, 80, 260, 25);
+            Label userTitle = new Label("Kullanici Adi:", 20, 55);
+            usernameTextBox = new TextBox(20, 75, 200, 25);
             usernameTextBox.Text = "";
             usernameTextBox.MaxLength = 20;
 
-            Label passTitle = new Label("Sifre:", 20, 115);
-            passwordTextBox = new TextBox(20, 135, 260, 25);
+            Label passTitle = new Label("Sifre:", 20, 110);
+            passwordTextBox = new TextBox(20, 130, 200, 25);
             passwordTextBox.Text = "";
             passwordTextBox.MaxLength = 20;
 
-            statusLabel = new Label("Lutfen bilgilerinizi giriniz...                  ", 20, 180);
+            statusLabel = new Label("Lutfen bilgilerinizi giriniz...    ", 20, 165);
 
-            loginButton = new Button("Giris Yap", 20, 215, 260, 35);
+            loginButton = new Button("Giris Yap", 20, 195, 200, 32);
             loginButton.ClickAction = OnLoginButtonClick;
 
             if (this.Window != null)
@@ -68,12 +68,14 @@ namespace HolmiumOS.GUI.Apps
 
             try
             {
-                statusLabel.Text = "Dogrulanıyor...";
+                statusLabel.Text = "Dogrulaniyor...";
 
                 if (UserManager.Login(username, password))
                 {
                     statusLabel.Text = "Giris Basarili!";
                     isSuccess = true;
+
+                    SendNotification("Sistem", "Giris basarili! Hos geldiniz.", NotificationType.Success, 5);
 
                     if (this.Window != null)
                     {

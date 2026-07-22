@@ -91,13 +91,7 @@ namespace HolmiumOS.GUI.Controls
             if (mx < X || mx > X + Width || my < Y || my > Y + Height)
                 return;
 
-            int index = (my - Y) / ItemHeight;
-
-            if (index < 0 || index >= items.Count)
-                return;
-
-            SelectedIndex = index;
-            OnSelectedIndexChanged?.Invoke(index, items[index]);
+            Focused = true;
         }
     }
 }

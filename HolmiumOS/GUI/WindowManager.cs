@@ -76,7 +76,8 @@ namespace HolmiumOS.GUI
             {
                 for (int i = windows.Count - 1; i >= 0; i--)
                 {
-                    if (i >= windows.Count) continue;
+                    if (i >= windows.Count) break;
+
                     Window window = windows[i];
                     if (window == null) continue;
 
@@ -109,9 +110,11 @@ namespace HolmiumOS.GUI
             if (isPressed)
             {
                 int count = windows.Count;
+
                 for (int i = 0; i < count; i++)
                 {
                     if (i >= windows.Count) break;
+
                     if (windows[i] != null && windows[i].Dragging)
                     {
                         windows[i].Drag(mx, my, canvas);
@@ -121,9 +124,11 @@ namespace HolmiumOS.GUI
             else
             {
                 int count = windows.Count;
+
                 for (int i = 0; i < count; i++)
                 {
                     if (i >= windows.Count) break;
+
                     if (windows[i] != null)
                     {
                         windows[i].StopDrag();
@@ -136,23 +141,23 @@ namespace HolmiumOS.GUI
 
         public static void HandleKeyboard()
         {
-            if (!KeyboardManager.TryReadKey(out KeyEvent keyEvent))
-            {
-                return;
-            }
-
+            if (!KeyboardManager.TryReadKey(out KeyEvent keyEvent)) return;
             if (activeWindow == null) return;
 
             int count = activeWindow.Controls.Count;
             for (int i = 0; i < count; i++)
             {
-                if (i >= activeWindow.Controls.Count) break;
-
                 var control = activeWindow.Controls[i];
 
                 if (control is TextBox textBox && textBox.Focused)
                 {
                     textBox.KeyPressed(keyEvent);
+                    break;
+                }
+
+                if (control is RichTextBox richTextBox && richTextBox.Focused)
+                {
+                    richTextBox.KeyPressed(keyEvent);
                     break;
                 }
             }

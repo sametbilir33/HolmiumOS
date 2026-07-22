@@ -10,7 +10,7 @@ namespace HolmiumOS.GUI.Apps
         private TextBox displayTextBox;
         private string currentExpression = "";
 
-        public Calculator() : base("Calculator")
+        public Calculator() : base("Hesap Makinesi")
         {
         }
 
@@ -18,7 +18,7 @@ namespace HolmiumOS.GUI.Apps
         {
             if (this.Window == null) return;
 
-            this.Window.Title = "Calculator";
+            this.Window.Title = "Hesap Makinesi";
 
             displayTextBox = new TextBox(15, 15, 210, 30);
             displayTextBox.Text = "0";

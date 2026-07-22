@@ -18,6 +18,7 @@ namespace HolmiumOS.GUI
 
         private static Bitmap cursor;
         private static Bitmap wallpaper;
+        private static bool isLoginAppOpen = false;
 
         public static void Start()
         {
@@ -29,13 +30,12 @@ namespace HolmiumOS.GUI
             MouseManager.ScreenWidth = canvas.Mode.Width;
             MouseManager.ScreenHeight = canvas.Mode.Height;
 
-            WindowManager.HandleKeyboard();
-
-            AppManager.Run<Login>(60, 60);
+            MouseManager.X = canvas.Mode.Width / 2;
+            MouseManager.Y = canvas.Mode.Height / 2;
 
             while (true)
             {
-                bool isLoginAppOpen = false;
+                isLoginAppOpen = false;
                 for (int i = 0; i < AppManager.apps.Count; i++)
                 {
                     if (AppManager.apps[i] is Login)
@@ -57,6 +57,8 @@ namespace HolmiumOS.GUI
                 }
 
                 WindowManager.UpdateMouse(canvas);
+                NotificationManager.UpdateMouse(canvas);
+
                 WindowManager.HandleKeyboard();
 
                 int x = (int)MouseManager.X;
@@ -80,11 +82,12 @@ namespace HolmiumOS.GUI
                     Taskbar.Draw(canvas);
                 }
 
+                NotificationManager.Draw(canvas);
+
                 DrawCursor(x, y);
 
                 canvas.Display();
 
-                Cosmos.Core.Memory.Heap.Collect();
             }
         }
 

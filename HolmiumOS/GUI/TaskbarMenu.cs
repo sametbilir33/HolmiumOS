@@ -10,6 +10,7 @@ namespace HolmiumOS.GUI
         private static bool terminalHover;
         private static bool fileManagerHover;
         private static bool calculatorHover;
+        private static bool notepadHover;
         private static bool rebootHover;
         private static bool shutdownHover;
 
@@ -33,11 +34,11 @@ namespace HolmiumOS.GUI
         public static void Draw(Canvas canvas)
         {
             int x = 10;
-            int y = (int)canvas.Mode.Height - 370;
+            int y = (int)canvas.Mode.Height - 420;
 
             canvas.DrawFilledRectangle(
                 Color.FromArgb(30, 30, 30),
-                x, y, 200, 320
+                x, y, 200, 370
             );
 
             canvas.DrawFilledRectangle(
@@ -65,40 +66,47 @@ namespace HolmiumOS.GUI
             DrawCenteredString(canvas, "Calculator", x + 10, y + 160, 180, 35);
 
             canvas.DrawFilledRectangle(
-                rebootHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
+                notepadHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
                 x + 10, y + 210, 180, 35
             );
-            DrawCenteredString(canvas, "Reboot", x + 10, y + 210, 180, 35);
+            DrawCenteredString(canvas, "Notepad", x + 10, y + 210, 180, 35);
+
+            canvas.DrawFilledRectangle(
+                rebootHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
+                x + 10, y + 260, 180, 35
+            );
+            DrawCenteredString(canvas, "Reboot", x + 10, y + 260, 180, 35);
 
             canvas.DrawFilledRectangle(
                 shutdownHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
-                x + 10, y + 260, 180, 35
+                x + 10, y + 310, 180, 35
             );
-            DrawCenteredString(canvas, "Shutdown", x + 10, y + 260, 180, 35);
+            DrawCenteredString(canvas, "Shutdown", x + 10, y + 310, 180, 35);
         }
 
         public static bool IsInside(int mouseX, int mouseY)
         {
             int x = 10;
-            int y = (int)MouseManager.ScreenHeight - 370;
+            int y = (int)MouseManager.ScreenHeight - 420;
 
             return mouseX >= x &&
                    mouseX <= x + 200 &&
                    mouseY >= y &&
-                   mouseY <= y + 320;
+                   mouseY <= y + 370;
         }
 
         public static void UpdateHover(int mouseX, int mouseY)
         {
             int x = 10;
-            int y = (int)MouseManager.ScreenHeight - 370;
+            int y = (int)MouseManager.ScreenHeight - 420;
 
             aboutHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 10 && mouseY <= y + 45;
             terminalHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 60 && mouseY <= y + 95;
             fileManagerHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 110 && mouseY <= y + 145;
             calculatorHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 160 && mouseY <= y + 195;
-            rebootHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 210 && mouseY <= y + 245;
-            shutdownHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 260 && mouseY <= y + 295;
+            notepadHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 210 && mouseY <= y + 245;
+            rebootHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 260 && mouseY <= y + 295;
+            shutdownHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 310 && mouseY <= y + 345;
         }
 
         public static void Click(int mouseX, int mouseY)
@@ -124,6 +132,12 @@ namespace HolmiumOS.GUI
             if (calculatorHover)
             {
                 AppManager.Run<Apps.Calculator>(50, 50);
+                Taskbar.MenuOpen = false;
+            }
+
+            if (notepadHover)
+            {
+                AppManager.Run<Apps.Notepad>(70, 70);
                 Taskbar.MenuOpen = false;
             }
 

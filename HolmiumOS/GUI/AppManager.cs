@@ -26,6 +26,17 @@ namespace HolmiumOS.GUI
             app.Open(spawnX, spawnY);
         }
 
+        public static void Run(AppBase app, int x = 150, int y = 150)
+        {
+            if (app == null) return;
+
+            int spawnX = x + (apps.Count * 20);
+            int spawnY = y + (apps.Count * 20);
+
+            apps.Add(app);
+            app.Open(spawnX, spawnY);
+        }
+
         public static void Close(AppBase app)
         {
             if (app == null) return;

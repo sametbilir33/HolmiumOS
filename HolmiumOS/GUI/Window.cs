@@ -247,7 +247,15 @@ namespace HolmiumOS.GUI
                     }
 
                     c.Focused = true;
-                    c.Click();
+
+                    if (c is RichTextBox richTextBox)
+                    {
+                        richTextBox.MouseClick(mx, my);
+                    }
+                    else
+                    {
+                        c.Click();
+                    }
 
                     break;
                 }
