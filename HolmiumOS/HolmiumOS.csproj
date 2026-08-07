@@ -25,8 +25,15 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <None Remove="Resources\bad_apple.bad" />
       <None Remove="Resources\Cursor.bmp" />
       <None Remove="Resources\Walpaper.bmp" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Resources\bad_apple.bad">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>

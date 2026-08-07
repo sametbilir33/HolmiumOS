@@ -11,6 +11,7 @@ namespace HolmiumOS.GUI
         private static bool fileManagerHover;
         private static bool calculatorHover;
         private static bool notepadHover;
+        private static bool badAppleHover;
         private static bool rebootHover;
         private static bool shutdownHover;
 
@@ -34,79 +35,87 @@ namespace HolmiumOS.GUI
         public static void Draw(Canvas canvas)
         {
             int x = 10;
-            int y = (int)canvas.Mode.Height - 420;
+            int y = (int)canvas.Mode.Height - 330;
 
             canvas.DrawFilledRectangle(
                 Color.FromArgb(30, 30, 30),
-                x, y, 200, 370
+                x, y, 200, 320
             );
+
 
             canvas.DrawFilledRectangle(
                 aboutHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
-                x + 10, y + 10, 180, 35
+                x + 10, y + 10, 180, 28
             );
-            DrawCenteredString(canvas, "About", x + 10, y + 10, 180, 35);
+            DrawCenteredString(canvas, "About", x + 10, y + 10, 180, 28);
 
             canvas.DrawFilledRectangle(
                 terminalHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
-                x + 10, y + 60, 180, 35
+                x + 10, y + 44, 180, 28
             );
-            DrawCenteredString(canvas, "Terminal", x + 10, y + 60, 180, 35);
+            DrawCenteredString(canvas, "Terminal", x + 10, y + 44, 180, 28);
 
             canvas.DrawFilledRectangle(
                 fileManagerHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
-                x + 10, y + 110, 180, 35
+                x + 10, y + 78, 180, 28
             );
-            DrawCenteredString(canvas, "File Manager", x + 10, y + 110, 180, 35);
+            DrawCenteredString(canvas, "File Manager", x + 10, y + 78, 180, 28);
 
             canvas.DrawFilledRectangle(
                 calculatorHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
-                x + 10, y + 160, 180, 35
+                x + 10, y + 112, 180, 28
             );
-            DrawCenteredString(canvas, "Calculator", x + 10, y + 160, 180, 35);
+            DrawCenteredString(canvas, "Calculator", x + 10, y + 112, 180, 28);
 
             canvas.DrawFilledRectangle(
                 notepadHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
-                x + 10, y + 210, 180, 35
+                x + 10, y + 146, 180, 28
             );
-            DrawCenteredString(canvas, "Notepad", x + 10, y + 210, 180, 35);
+            DrawCenteredString(canvas, "Notepad", x + 10, y + 146, 180, 28);
+
+            canvas.DrawFilledRectangle(
+                badAppleHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
+                x + 10, y + 180, 180, 28
+            );
+            DrawCenteredString(canvas, "Bad Apple!!", x + 10, y + 180, 180, 28);
 
             canvas.DrawFilledRectangle(
                 rebootHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
-                x + 10, y + 260, 180, 35
+                x + 10, y + 214, 180, 28
             );
-            DrawCenteredString(canvas, "Reboot", x + 10, y + 260, 180, 35);
+            DrawCenteredString(canvas, "Reboot", x + 10, y + 214, 180, 28);
 
             canvas.DrawFilledRectangle(
                 shutdownHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
-                x + 10, y + 310, 180, 35
+                x + 10, y + 248, 180, 28
             );
-            DrawCenteredString(canvas, "Shutdown", x + 10, y + 310, 180, 35);
+            DrawCenteredString(canvas, "Shutdown", x + 10, y + 248, 180, 28);
         }
 
         public static bool IsInside(int mouseX, int mouseY)
         {
             int x = 10;
-            int y = (int)MouseManager.ScreenHeight - 420;
+            int y = (int)MouseManager.ScreenHeight - 330;
 
             return mouseX >= x &&
                    mouseX <= x + 200 &&
                    mouseY >= y &&
-                   mouseY <= y + 370;
+                   mouseY <= y + 320;
         }
 
         public static void UpdateHover(int mouseX, int mouseY)
         {
             int x = 10;
-            int y = (int)MouseManager.ScreenHeight - 420;
+            int y = (int)MouseManager.ScreenHeight - 330;
 
-            aboutHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 10 && mouseY <= y + 45;
-            terminalHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 60 && mouseY <= y + 95;
-            fileManagerHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 110 && mouseY <= y + 145;
-            calculatorHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 160 && mouseY <= y + 195;
-            notepadHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 210 && mouseY <= y + 245;
-            rebootHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 260 && mouseY <= y + 295;
-            shutdownHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 310 && mouseY <= y + 345;
+            aboutHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 10 && mouseY <= y + 38;
+            terminalHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 44 && mouseY <= y + 72;
+            fileManagerHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 78 && mouseY <= y + 106;
+            calculatorHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 112 && mouseY <= y + 140;
+            notepadHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 146 && mouseY <= y + 174;
+            badAppleHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 180 && mouseY <= y + 208;
+            rebootHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 214 && mouseY <= y + 242;
+            shutdownHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 248 && mouseY <= y + 276;
         }
 
         public static void Click(int mouseX, int mouseY)
@@ -138,6 +147,12 @@ namespace HolmiumOS.GUI
             if (notepadHover)
             {
                 AppManager.Run<Apps.Notepad>(70, 70);
+                Taskbar.MenuOpen = false;
+            }
+
+            if (badAppleHover)
+            {
+                AppManager.Run<Apps.BadApple>(40, 40);
                 Taskbar.MenuOpen = false;
             }
 
