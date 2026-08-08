@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Drawing;
 using Cosmos.System.Graphics;
 using IL2CPU.API.Attribs;
@@ -22,7 +21,8 @@ namespace HolmiumOS.GUI.Apps
 
             this.Window.Title = "Bad Apple!! Player";
 
-            VideoPlayerControl player = new VideoPlayerControl(5, 5, embeddedBadVideo, this.Window);
+            // parentWindow parametresi kaldırıldı, koordinat offset hatası çözüldü
+            VideoPlayerControl player = new VideoPlayerControl(5, 5, embeddedBadVideo);
             this.Window.AddControl(player);
         }
     }
@@ -36,12 +36,9 @@ namespace HolmiumOS.GUI.Apps
         private byte fps;
         private Color[] pixelBuffer;
         private bool isLoaded = false;
-        private Window parentWindow;
 
-        public VideoPlayerControl(int x, int y, byte[] videoData, Window window) : base(x, y, 160, 120)
+        public VideoPlayerControl(int x, int y, byte[] videoData) : base(x, y, 160, 120)
         {
-            this.parentWindow = window;
-
             if (videoData == null || videoData.Length < 9) return;
 
             fileData = videoData;
@@ -124,8 +121,11 @@ namespace HolmiumOS.GUI.Apps
 
             if (!isLoaded || pixelBuffer == null) return;
 
-            int startX = parentWindow != null ? parentWindow.X + this.X : this.X;
-            int startY = parentWindow != null ? parentWindow.Y + 25 + this.Y : this.Y;
+            // Window.cs çizim yapmadan hemen önce this.X ve this.Y değerlerini
+            // pencerenin mutlak ekran konumuna getiriyor.
+            // Bu yüzden doğrudan bu koordinatları kullanıyoruz.
+            int startX = this.X;
+            int startY = this.Y;
 
             for (int py = 0; py < height; py++)
             {
