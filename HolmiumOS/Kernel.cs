@@ -27,6 +27,7 @@ using Cosmos.System.FileSystem;
 using Cosmos.System.FileSystem.VFS;
 using Cosmos.System.ScanMaps;
 using HolmiumOS.Drivers;
+using HolmiumOS.GUI;
 using HolmiumOS.Network;
 using HolmiumOS.Shell;
 using HolmiumOS.Sound;
@@ -75,6 +76,11 @@ namespace HolmiumOS
             InitializeSystem();
 
             var mode = Boot.BootMenu.Show();
+
+            if (mode == Boot.BootMode.CLI)
+            {
+                Init.isGuiLoopRunning = false;
+            }
 
             if (mode == Boot.BootMode.GUI)
             {
@@ -340,17 +346,18 @@ namespace HolmiumOS
 
             AudioManager.Update();
 
-            WritePrompt();
+            if(Init.isGuiLoopRunning == false) 
+            {
+                WritePrompt();
 
-            string input = InputReader.ReadLineWithHistory(WritePrompt).Trim();
+                string input = InputReader.ReadLineWithHistory(WritePrompt).Trim();
 
-            if (string.IsNullOrWhiteSpace(input))
-                return;
+                if (string.IsNullOrWhiteSpace(input))
+                    return;
 
-            CommandHistory.Add(input);
-            CommandManager.ExecuteCommand(input);
-
-            Heap.Collect();
+                CommandHistory.Add(input);
+                CommandManager.ExecuteCommand(input);
+            }
         }
     }
 }

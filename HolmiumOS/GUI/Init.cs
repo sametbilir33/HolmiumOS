@@ -19,9 +19,11 @@ namespace HolmiumOS.GUI
         private static Bitmap cursor;
         private static Bitmap wallpaper;
         private static bool isLoginAppOpen = false;
-
+        public static bool isGuiLoopRunning = true;
         public static void Start()
         {
+            isGuiLoopRunning = true;
+
             canvas = FullScreenCanvas.GetFullScreenCanvas();
 
             cursor = new Bitmap(cursorData);
