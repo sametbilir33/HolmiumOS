@@ -110,11 +110,9 @@ namespace HolmiumOS.GUI
             if (isPressed)
             {
                 int count = windows.Count;
-
                 for (int i = 0; i < count; i++)
                 {
                     if (i >= windows.Count) break;
-
                     if (windows[i] != null && windows[i].Dragging)
                     {
                         windows[i].Drag(mx, my, canvas);
@@ -124,11 +122,9 @@ namespace HolmiumOS.GUI
             else
             {
                 int count = windows.Count;
-
                 for (int i = 0; i < count; i++)
                 {
                     if (i >= windows.Count) break;
-
                     if (windows[i] != null)
                     {
                         windows[i].StopDrag();

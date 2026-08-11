@@ -18,7 +18,6 @@ namespace HolmiumOS.GUI
 
         private static Bitmap cursor;
         private static Bitmap wallpaper;
-        private static bool isLoginAppOpen = false;
         public static bool isGuiLoopRunning = true;
 
         public static void Start()
@@ -43,61 +42,60 @@ namespace HolmiumOS.GUI
             MouseManager.X = canvas.Mode.Width / 2;
             MouseManager.Y = canvas.Mode.Height / 2;
 
-            while (true)
-            {
-                isLoginAppOpen = false;
-                for (int i = 0; i < AppManager.apps.Count; i++)
-                {
-                    if (AppManager.apps[i] is Login)
-                    {
-                        isLoginAppOpen = true;
-                        break;
-                    }
-                }
+            int screenWidth = (int)canvas.Mode.Width;
+            int screenHeight = (int)canvas.Mode.Height;
+            int cursorWidth = (int)cursor.Width;
+            int cursorHeight = (int)cursor.Height;
 
-                if (!UserManager.IsLoggedIn && !isLoginAppOpen)
+            while (isGuiLoopRunning)
+            {
+                bool isLoggedIn = UserManager.IsLoggedIn;
+                bool isLoginAppOpen = CheckIfLoginIsOpen();
+
+                if (!isLoggedIn && !isLoginAppOpen)
                 {
                     AppManager.Run<Login>(60, 60);
-                    isLoginAppOpen = true;
                 }
 
-                if (UserManager.IsLoggedIn)
+                if (isLoggedIn)
                 {
                     Taskbar.UpdateMouse(canvas);
                 }
 
+                DesktopManager.UpdateMouse(canvas);
                 WindowManager.UpdateMouse(canvas);
                 NotificationManager.UpdateMouse(canvas);
-
                 WindowManager.HandleKeyboard();
 
-                int x = (int)MouseManager.X;
-                int y = (int)MouseManager.Y;
-
-                int maxX = (int)canvas.Mode.Width - (int)cursor.Width;
-                int maxY = (int)canvas.Mode.Height - (int)cursor.Height;
-
-                if (maxX < 0) maxX = 0;
-                if (maxY < 0) maxY = 0;
-
-                x = Clamp(x, 0, maxX);
-                y = Clamp(y, 0, maxY);
+                int x = Clamp((int)MouseManager.X, 0, screenWidth - cursorWidth);
+                int y = Clamp((int)MouseManager.Y, 0, screenHeight - cursorHeight);
 
                 canvas.DrawImage(wallpaper, 0, 0);
-
+                DesktopManager.Draw(canvas);
                 WindowManager.Draw(canvas);
 
-                if (UserManager.IsLoggedIn)
+                if (isLoggedIn)
                 {
                     Taskbar.Draw(canvas);
                 }
 
                 NotificationManager.Draw(canvas);
-
                 DrawCursor(x, y);
 
                 canvas.Display();
             }
+        }
+
+        private static bool CheckIfLoginIsOpen()
+        {
+            for (int i = 0; i < AppManager.apps.Count; i++)
+            {
+                if (AppManager.apps[i] is Login)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private static void DrawCursor(int x, int y)
@@ -107,6 +105,7 @@ namespace HolmiumOS.GUI
 
         private static int Clamp(int value, int min, int max)
         {
+            if (min > max) return min;
             if (value < min) return min;
             if (value > max) return max;
             return value;

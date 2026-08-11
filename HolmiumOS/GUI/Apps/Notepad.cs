@@ -16,9 +16,17 @@ namespace HolmiumOS.GUI.Apps
         private Label lblStatus;
 
         private string currentFile = null;
+        private string initialFilePath = null;
 
+        // Normal açılış için boş constructor
         public Notepad() : base("Not Defteri")
         {
+        }
+
+        // Masaüstünden veya dışarıdan dosya yoluyla açılış için constructor
+        public Notepad(string filePath) : base("Not Defteri")
+        {
+            initialFilePath = filePath;
         }
 
         public override void Load()
@@ -52,6 +60,12 @@ namespace HolmiumOS.GUI.Apps
                 Window.AddControl(btnSave);
                 Window.AddControl(btnSaveAs);
                 Window.AddControl(lblStatus);
+            }
+
+            // Arayüz yüklendiği an eğer dışarıdan dosya yolu verildiyse içeriği yükle
+            if (!string.IsNullOrEmpty(initialFilePath))
+            {
+                OpenFileDirectly(initialFilePath);
             }
         }
 
@@ -90,20 +104,16 @@ namespace HolmiumOS.GUI.Apps
 
             try
             {
-                if (!PermissionManager.CanRead(path))
-                {
-                    SetStatus("Erisim Engellendi!");
-                    return;
-                }
+                string resolvedPath = FileSystemManager.ResolvePath(path);
 
-                if (!FileSystemManager.FileExists(path))
+                if (!FileSystemManager.FileExists(resolvedPath))
                 {
                     SetStatus("Dosya bulunamadi!");
                     return;
                 }
 
-                txtEditor.Text = FileSystemManager.ReadFile(path);
-                currentFile = NormalizePath(FileSystemManager.ResolvePath(path));
+                txtEditor.Text = FileSystemManager.ReadFile(resolvedPath);
+                currentFile = resolvedPath;
                 SetStatus("Acildi: " + ExtractName(currentFile));
             }
             catch
@@ -122,15 +132,12 @@ namespace HolmiumOS.GUI.Apps
 
             try
             {
-                currentFile = NormalizePath(currentFile);
-
-                if (!PermissionManager.CanWrite(currentFile))
-                {
-                    SetStatus("Erisim Engellendi!");
-                    return;
-                }
+                currentFile = NormalizePath(FileSystemManager.ResolvePath(currentFile));
 
                 FileSystemManager.WriteFile(currentFile, txtEditor.Text);
+
+                DesktopManager.RefreshIcons();
+
                 SetStatus("Kaydedildi.");
             }
             catch
@@ -165,14 +172,12 @@ namespace HolmiumOS.GUI.Apps
 
             try
             {
-                if (!PermissionManager.CanWrite(path))
-                {
-                    SetStatus("Erisim Engellendi!");
-                    return;
-                }
-
                 currentFile = NormalizePath(FileSystemManager.ResolvePath(path));
+
                 FileSystemManager.WriteFile(currentFile, txtEditor.Text);
+
+                DesktopManager.RefreshIcons();
+
                 SetStatus("Kaydedildi: " + ExtractName(currentFile));
             }
             catch
@@ -191,6 +196,33 @@ namespace HolmiumOS.GUI.Apps
             if (lblStatus != null)
             {
                 lblStatus.Text = msg;
+            }
+        }
+
+        public void OpenFileDirectly(string path)
+        {
+            try
+            {
+                string resolvedPath = NormalizePath(FileSystemManager.ResolvePath(path));
+
+                if (FileSystemManager.FileExists(resolvedPath))
+                {
+                    string content = FileSystemManager.ReadFile(resolvedPath);
+                    if (txtEditor != null)
+                    {
+                        txtEditor.Text = content ?? "";
+                    }
+                    currentFile = resolvedPath;
+                    SetStatus("Acildi: " + ExtractName(currentFile));
+                }
+                else
+                {
+                    SetStatus("Dosya bulunamadi: " + path);
+                }
+            }
+            catch
+            {
+                SetStatus("Dosya acilirken hata olustu!");
             }
         }
 
