@@ -32,7 +32,7 @@
 
     <ItemGroup>
       <EmbeddedResource Include="Resources\bad_apple.bad">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       </EmbeddedResource>
     </ItemGroup>
 

@@ -46,6 +46,20 @@ namespace HolmiumOS.GUI
                 apps.Remove(app);
             }
 
+            for (int i = 0; i < WindowManager.GetWindows().Count; i++)
+            {
+                var win = WindowManager.GetWindows()[i];
+                if (win != null && win.App == app)
+                {
+                    WindowManager.GetWindows().RemoveAt(i);
+                    if (WindowManager.activeWindow == win)
+                    {
+                        WindowManager.activeWindow = null;
+                    }
+                    break;
+                }
+            }
+
             app.Close();
         }
     }

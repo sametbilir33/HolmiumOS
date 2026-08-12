@@ -22,8 +22,15 @@ namespace HolmiumOS.GUI.Apps
         private int scrollOffset = 0;
         private const int PAGE_SIZE = 12;
 
+        private string initialPathOverride = null;
+
         public FileManager() : base("Dosya Yoneticisi")
         {
+        }
+
+        public FileManager(string initialPath) : base("Dosya Yoneticisi")
+        {
+            initialPathOverride = initialPath;
         }
 
         public override void Load()
@@ -65,7 +72,11 @@ namespace HolmiumOS.GUI.Apps
         {
             try
             {
-                if (UserManager.IsLoggedIn && !string.IsNullOrEmpty(UserManager.HomeDirectory) && FileSystemManager.DirectoryExists(UserManager.HomeDirectory))
+                if (!string.IsNullOrEmpty(initialPathOverride) && FileSystemManager.DirectoryExists(initialPathOverride))
+                {
+                    currentPath = initialPathOverride;
+                }
+                else if (UserManager.IsLoggedIn && !string.IsNullOrEmpty(UserManager.HomeDirectory) && FileSystemManager.DirectoryExists(UserManager.HomeDirectory))
                 {
                     currentPath = UserManager.HomeDirectory;
                 }
@@ -207,10 +218,13 @@ namespace HolmiumOS.GUI.Apps
 
                     if (selected.IsDirectory)
                     {
-                        SetStatus("Klasor: " + Shorten(ExtractName(selected.Path), 30));
+                        scrollOffset = 0;
+                        LoadDirectory(selected.Path);
                     }
                     else
                     {
+                        var notepad = new Notepad(selected.Path);
+                        AppManager.Run(notepad);
                         SetStatus("Dosya: " + Shorten(ExtractName(selected.Path), 30));
                     }
                 }

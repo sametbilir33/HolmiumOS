@@ -210,6 +210,7 @@ namespace HolmiumOS
             if (UserManager.UserExists("root"))
                 return;
 
+            Console.Clear();
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("=== Ilk Kurulum ===");
             Console.ResetColor();
