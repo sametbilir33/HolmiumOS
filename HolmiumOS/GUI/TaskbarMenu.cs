@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using Cosmos.System;
 using Cosmos.System.Graphics;
+using HolmiumOS.Shell;
 
 namespace HolmiumOS.GUI
 {
@@ -134,7 +135,8 @@ namespace HolmiumOS.GUI
 
             if (fileManagerHover)
             {
-                AppManager.Run<Apps.FileManager>(60, 60);
+                var fileManager = new Apps.FileManager(UserManager.HomeDirectory);
+                AppManager.Run(fileManager);
                 Taskbar.MenuOpen = false;
             }
 

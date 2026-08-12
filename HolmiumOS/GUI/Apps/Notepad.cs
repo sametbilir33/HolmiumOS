@@ -18,13 +18,11 @@ namespace HolmiumOS.GUI.Apps
         private string currentFile = null;
         private string initialFilePath = null;
 
-        // Normal açılış için boş constructor
         public Notepad() : base("Not Defteri")
         {
         }
 
-        // Masaüstünden veya dışarıdan dosya yoluyla açılış için constructor
-        public Notepad(string filePath) : base("Not Defteri")
+        public Notepad(string filePath = null) : base("Not Defteri")
         {
             initialFilePath = filePath;
         }

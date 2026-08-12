@@ -272,6 +272,16 @@ namespace HolmiumOS.GUI
             int mouseX = (int)MouseManager.X;
             int mouseY = (int)MouseManager.Y;
 
+            foreach (var window in WindowManager.GetWindows())
+            {
+                if (window != null && window.Contains(mouseX, mouseY))
+                {
+                    wasLeftPressed = MouseManager.MouseState == MouseState.Left;
+                    wasRightPressed = MouseManager.MouseState == MouseState.Right;
+                    return;
+                }
+            }
+
             bool leftPressed = MouseManager.MouseState == MouseState.Left;
             bool rightPressed = MouseManager.MouseState == MouseState.Right;
 
@@ -327,7 +337,6 @@ namespace HolmiumOS.GUI
             wasLeftPressed = leftPressed;
             wasRightPressed = rightPressed;
         }
-
         private static void HandleIconClick(DesktopIcon icon)
         {
             long now = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;

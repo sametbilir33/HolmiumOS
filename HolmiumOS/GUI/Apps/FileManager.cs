@@ -28,7 +28,7 @@ namespace HolmiumOS.GUI.Apps
         {
         }
 
-        public FileManager(string initialPath) : base("Dosya Yoneticisi")
+        public FileManager(string initialPath = null) : base("Dosya Yoneticisi")
         {
             initialPathOverride = initialPath;
         }
