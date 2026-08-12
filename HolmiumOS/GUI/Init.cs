@@ -8,7 +8,7 @@ namespace HolmiumOS.GUI
 {
     public static class Init
     {
-        private static Canvas canvas;
+        public static Canvas canvas;
 
         [ManifestResourceStream(ResourceName = "HolmiumOS.Resources.Cursor.bmp")]
         private static byte[] cursorData;

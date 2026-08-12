@@ -1,9 +1,10 @@
 ﻿using System;
-using HolmiumOS.GUI.Controls;
+using System.Drawing;
 using Cosmos.Core;
 using Cosmos.Core.Multiboot;
+using Cosmos.System.Graphics;
+using HolmiumOS.GUI.Controls;
 using Sys = Cosmos.System;
-using System.Drawing;
 
 namespace HolmiumOS.GUI.Apps
 {
@@ -26,6 +27,8 @@ namespace HolmiumOS.GUI.Apps
             string vmType = "Bilinmiyor";
             string ramInfo = "RAM: Bilgi Alinamadi";
             string storageInfo = "Depolama: Bilgi Alinamadi";
+            string resolutionInfo = "Cozunurluk: Bilgi Alinamadi";
+            string colorDepthInfo = "Renk Derinligi: Bilgi Alinamadi";
             int storagePercent = 0;
 
             try
@@ -63,6 +66,13 @@ namespace HolmiumOS.GUI.Apps
                     double usedMB = usedBytes / 1024.0 / 1024.0;
                     storageInfo = $"Depolama: {usedMB:F2} MB / {totalGB:F2} GB";
                 }
+
+                int screenWidth = (int)Init.canvas.Mode.Width;
+                int screenHeight = (int)Init.canvas.Mode.Height;
+                resolutionInfo = $"Cozunurluk: {screenWidth}x{screenHeight}";
+
+                int colorDepth = (int)Init.canvas.Mode.ColorDepth;
+                colorDepthInfo = $"Renk Derinligi: {colorDepth} Bit";
             }
             catch
             {
@@ -72,8 +82,10 @@ namespace HolmiumOS.GUI.Apps
             Label vmInfoLabel = new Label("Ortam: " + vmType, 20, 55);
             Label ramTextLabel = new Label(ramInfo, 20, 75);
             Label storageTextLabel = new Label(storageInfo, 20, 95);
+            Label resolutionLabel = new Label(resolutionInfo, 20, 115);
+            Label colorDepthLabel = new Label(colorDepthInfo, 20, 135);
 
-            ProgressBar storageBar = new ProgressBar(20, 120, 240, 15);
+            ProgressBar storageBar = new ProgressBar(20, 160, 240, 15);
             storageBar.Value = storagePercent;
             storageBar.BarColor = Color.DodgerBlue;
             storageBar.BackgroundColor = Color.LightGray;
@@ -85,6 +97,8 @@ namespace HolmiumOS.GUI.Apps
                 Window.AddControl(vmInfoLabel);
                 Window.AddControl(ramTextLabel);
                 Window.AddControl(storageTextLabel);
+                Window.AddControl(resolutionLabel);
+                Window.AddControl(colorDepthLabel);
                 Window.AddControl(storageBar);
             }
         }
