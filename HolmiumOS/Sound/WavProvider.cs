@@ -7,17 +7,17 @@ namespace HolmiumOS.Sound
         private readonly byte[] data;
         private int position;
 
-        public bool Finished => position >= data.Length;
-
-        public WavProvider(byte[] wavFile)
+        public bool Finished
         {
-            data = new byte[wavFile.Length - 44];
-
-            for (int i = 0; i < data.Length; i++)
+            get
             {
-                data[i] = wavFile[i + 44];
+                return position >= data.Length;
             }
+        }
 
+        public WavProvider(byte[] pcmData)
+        {
+            data = pcmData;
             position = 0;
         }
 
@@ -29,7 +29,8 @@ namespace HolmiumOS.Sound
             {
                 if (position < data.Length)
                 {
-                    output[i] = data[position++];
+                    output[i] = data[position];
+                    position++;
                 }
                 else
                 {
