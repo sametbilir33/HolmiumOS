@@ -19,29 +19,28 @@ namespace HolmiumOS.Commands.Executable
                 return;
             }
 
-            string file = ResolvePath(args.Trim());
+            string file = FileSystemManager.ResolvePath(args.Trim());
 
-            if (Path.GetExtension(file).ToLower() != ".he")
+            if (!string.Equals(Path.GetExtension(file), ".he", StringComparison.OrdinalIgnoreCase))
             {
                 Console.WriteLine("Sadece .he uzantili dosyalar calistirilabilir.");
                 return;
             }
 
+            if (!PermissionManager.CanRead(file))
+            {
+                Console.WriteLine("Bu dosyayi calistirma/okuma yetkiniz yok.");
+                return;
+            }
+
+            if (!File.Exists(file))
+            {
+                Console.WriteLine("Dosya bulunamadi.");
+                return;
+            }
+
             var interpreter = new HeInterpreter();
             interpreter.Run(file);
-        }
-
-        private string ResolvePath(string path)
-        {
-            if (path.Contains(":\\"))
-                return path;
-
-            string current = FileSystemManager.CurrentDirectory;
-
-            if (!current.EndsWith("\\"))
-                current += "\\";
-
-            return current + path;
         }
     }
 }
