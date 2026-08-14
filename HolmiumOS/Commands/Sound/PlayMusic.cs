@@ -21,7 +21,7 @@ namespace HolmiumOS.Commands.Sound
             {
                 WavFile wav = WavFile.Load(args.Trim());
 
-                AudioManager.Play(wav.Data);
+                AudioManager.Play(wav);
 
                 Console.WriteLine("Caliniyor: " + args);
             }

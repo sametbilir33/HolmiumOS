@@ -31,6 +31,7 @@ using HolmiumOS.GUI;
 using HolmiumOS.Network;
 using HolmiumOS.Shell;
 using HolmiumOS.Sound;
+using IL2CPU.API.Attribs;
 using FileSystemManager = HolmiumOS.Shell.FileSystemManager;
 using Sys = Cosmos.System;
 
@@ -41,6 +42,10 @@ namespace HolmiumOS
         public static CosmosVFS fs;
 
         public static readonly string OSVERSION = "0.4-beta";
+
+
+        [ManifestResourceStream(ResourceName = "HolmiumOS.Resources.muzik.wav")]
+        private static byte[] muzik;
 
         protected override void BeforeRun()
         {
