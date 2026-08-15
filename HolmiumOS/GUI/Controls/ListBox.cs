@@ -11,9 +11,7 @@ namespace HolmiumOS.GUI.Controls
         private readonly List<string> items = new List<string>();
 
         public IReadOnlyList<string> Items => items;
-
         public int SelectedIndex { get; private set; } = -1;
-
         public Action<int, string> OnSelectedIndexChanged;
 
         private const int ItemHeight = 20;
@@ -30,8 +28,7 @@ namespace HolmiumOS.GUI.Controls
 
         public void AddItems(IEnumerable<string> collection)
         {
-            if (collection == null)
-                return;
+            if (collection == null) return;
 
             foreach (var item in collection)
                 items.Add(item ?? "");
@@ -45,8 +42,7 @@ namespace HolmiumOS.GUI.Controls
 
         public void RemoveAt(int index)
         {
-            if (index < 0 || index >= items.Count)
-                return;
+            if (index < 0 || index >= items.Count) return;
 
             items.RemoveAt(index);
 
@@ -54,29 +50,54 @@ namespace HolmiumOS.GUI.Controls
                 SelectedIndex = items.Count - 1;
         }
 
+        public string GetSelectedItem()
+        {
+            if (SelectedIndex < 0 || SelectedIndex >= items.Count)
+                return null;
+
+            return items[SelectedIndex];
+        }
+
         public override void Draw(Canvas canvas)
         {
-            if (!Visible)
-                return;
+            if (!Visible || canvas == null) return;
 
             canvas.DrawFilledRectangle(Color.White, X, Y, Width, Height);
-
             canvas.DrawRectangle(Color.Black, X, Y, Width, Height);
 
             int visibleCount = Height / ItemHeight;
 
             for (int i = 0; i < visibleCount && i < items.Count; i++)
             {
-                int itemY = Y + i * ItemHeight;
+                int itemY = Y + (i * ItemHeight);
 
                 if (i == SelectedIndex)
                 {
-                    canvas.DrawFilledRectangle(Color.Blue, X + 1, itemY + 1, Width - 2, ItemHeight - 2);
-                    canvas.DrawString(items[i], PCScreenFont.Default, Color.White, X + 4, itemY + 4);
+                    canvas.DrawFilledRectangle(
+                        Color.DodgerBlue,
+                        X + 1,
+                        itemY + 1,
+                        Width - 2,
+                        ItemHeight - 2
+                    );
+
+                    canvas.DrawString(
+                        items[i],
+                        PCScreenFont.Default,
+                        Color.White,
+                        X + 5,
+                        itemY + 3
+                    );
                 }
                 else
                 {
-                    canvas.DrawString(items[i], PCScreenFont.Default, Color.Black, X + 4, itemY + 4);
+                    canvas.DrawString(
+                        items[i],
+                        PCScreenFont.Default,
+                        Color.Black,
+                        X + 5,
+                        itemY + 3
+                    );
                 }
             }
         }
@@ -86,12 +107,33 @@ namespace HolmiumOS.GUI.Controls
             Focused = true;
         }
 
-        public void HandleAbsoluteClick(int mx, int my)
+        public void SelectIndex(int index)
         {
-            if (mx < X || mx > X + Width || my < Y || my > Y + Height)
+            if (index < 0 || index >= items.Count)
                 return;
 
+            SelectedIndex = index;
             Focused = true;
+
+            if (OnSelectedIndexChanged != null)
+                OnSelectedIndexChanged(index, items[index]);
+        }
+
+        public void HandleAbsoluteClick(int absoluteX, int absoluteY, int absoluteListX, int absoluteListY)
+        {
+            int relativeX = absoluteX - absoluteListX;
+            int relativeY = absoluteY - absoluteListY;
+
+            if (relativeX < 0 || relativeX >= Width ||
+                relativeY < 0 || relativeY >= Height)
+                return;
+
+            int index = relativeY / ItemHeight;
+
+            if (index < 0 || index >= items.Count)
+                return;
+
+            SelectIndex(index);
         }
     }
 }

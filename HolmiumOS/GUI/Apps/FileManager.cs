@@ -219,13 +219,21 @@ namespace HolmiumOS.GUI.Apps
                     if (selected.IsDirectory)
                     {
                         scrollOffset = 0;
-                        LoadDirectory(selected.Path);
+
+                        string dirName = ExtractName(selected.Path);
+                        string newPath = currentPath.TrimEnd('\\') + "\\" + dirName;
+
+                        LoadDirectory(newPath);
                     }
                     else
                     {
-                        var notepad = new Notepad(selected.Path);
+                        string fileName = ExtractName(selected.Path);
+                        string filePath = currentPath.TrimEnd('\\') + "\\" + fileName;
+
+                        var notepad = new Notepad(filePath);
                         AppManager.Run(notepad);
-                        SetStatus("Dosya: " + Shorten(ExtractName(selected.Path), 30));
+
+                        SetStatus("Dosya: " + Shorten(fileName, 30));
                     }
                 }
             };

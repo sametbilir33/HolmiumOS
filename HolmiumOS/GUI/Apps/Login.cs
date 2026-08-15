@@ -1,4 +1,5 @@
 ﻿using System;
+using Cosmos.System;
 using HolmiumOS.GUI.Controls;
 using HolmiumOS.Shell;
 
@@ -9,6 +10,8 @@ namespace HolmiumOS.GUI.Apps
         private TextBox usernameTextBox;
         private TextBox passwordTextBox;
         private Button loginButton;
+        private Button rebootButton;
+        private Button shutdownButton;
         private Label statusLabel;
         private bool isSuccess;
 
@@ -19,10 +22,7 @@ namespace HolmiumOS.GUI.Apps
 
         public override void Load()
         {
-            if (this.Window != null)
-            {
-                this.Window.Title = "Giris Yap";
-            }
+            if (this.Window != null) this.Window.Title = "Giris Yap";
 
             Label welcomeLabel = new Label("HolmiumOS'e Hos Geldiniz", 20, 20);
 
@@ -41,6 +41,12 @@ namespace HolmiumOS.GUI.Apps
             loginButton = new Button("Giris Yap", 20, 195, 200, 32);
             loginButton.ClickAction = OnLoginButtonClick;
 
+            rebootButton = new Button("Yeniden Baslat", 20, 235, 130, 32);
+            rebootButton.ClickAction = OnRebootClick;
+
+            shutdownButton = new Button("Kapat", 155, 235, 95, 32);
+            shutdownButton.ClickAction = OnShutdownClick;
+
             if (this.Window != null)
             {
                 this.Window.AddControl(welcomeLabel);
@@ -50,6 +56,8 @@ namespace HolmiumOS.GUI.Apps
                 this.Window.AddControl(passwordTextBox);
                 this.Window.AddControl(statusLabel);
                 this.Window.AddControl(loginButton);
+                this.Window.AddControl(rebootButton);
+                this.Window.AddControl(shutdownButton);
             }
         }
 
@@ -77,13 +85,9 @@ namespace HolmiumOS.GUI.Apps
 
                     SendNotification("Sistem", "Giris basarili! Hos geldiniz.", NotificationType.Success, 5);
 
-                    if (this.Window != null)
-                    {
-                        WindowManager.Remove(this.Window);
-                    }
+                    if (this.Window != null) WindowManager.Remove(this.Window);
 
                     AppManager.Close(this);
-
                     Cosmos.Core.Memory.Heap.Collect();
                 }
                 else
@@ -95,6 +99,16 @@ namespace HolmiumOS.GUI.Apps
             {
                 statusLabel.Text = "Giris Hatasi: " + ex.GetType().Name;
             }
+        }
+
+        private void OnRebootClick()
+        {
+            Power.Reboot();
+        }
+
+        private void OnShutdownClick()
+        {
+            Power.Shutdown();
         }
 
         public override void Close()

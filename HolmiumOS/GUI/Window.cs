@@ -236,17 +236,15 @@ namespace HolmiumOS.GUI
 
                 if (mx >= absX && mx <= absX + c.Width && my >= absY && my <= absY + c.Height)
                 {
+                    c.Focused = true;
+
                     if (c is ListBox listBox)
                     {
-                        int listRelY = my - absY;
-                        int clickedIdx = listRelY / 20;
-                        if (clickedIdx >= 0 && clickedIdx < listBox.Items.Count)
-                        {
-                            listBox.HandleAbsoluteClick(absX, absY + listRelY);
-                        }
-                    }
+                        listBox.HandleAbsoluteClick(mx, my, absX, absY);
 
-                    c.Focused = true;
+                        c.Focused = true;
+                        return;
+                    }
 
                     if (c is RichTextBox richTextBox)
                     {

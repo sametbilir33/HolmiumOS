@@ -13,110 +13,238 @@ namespace HolmiumOS.GUI
         private static bool calculatorHover;
         private static bool notepadHover;
         private static bool badAppleHover;
+        private static bool taskManagerHover;
         private static bool rebootHover;
         private static bool shutdownHover;
 
-        private static void DrawCenteredString(Canvas canvas, string text, int btnX, int btnY, int btnWidth, int btnHeight)
+        private const int MenuX = 10;
+        private const int MenuWidth = 230;
+        private const int MenuHeight = 380;
+
+        private const int ButtonX = 20;
+        private const int ButtonWidth = 210;
+        private const int ButtonHeight = 30;
+        private const int ButtonSpacing = 5;
+
+        private static void DrawCenteredString(Canvas canvas, string text, int x, int y, int width, int height, Color color)
         {
             int charWidth = 8;
             int charHeight = 16;
-
             int textWidth = text.Length * charWidth;
 
-            int textX = btnX + ((btnWidth - textWidth) / 2);
-            int textY = btnY + ((btnHeight - charHeight) / 2);
+            int textX = x + ((width - textWidth) / 2);
+            int textY = y + ((height - charHeight) / 2);
 
             canvas.DrawString(
                 text,
                 Cosmos.System.Graphics.Fonts.PCScreenFont.Default,
-                Color.White, textX, textY
+                color,
+                textX,
+                textY
+            );
+        }
+
+        private static void DrawButton(Canvas canvas, string text, int x, int y, bool hover, Color normalColor, Color hoverColor)
+        {
+            Color color = hover ? hoverColor : normalColor;
+
+            canvas.DrawFilledRectangle(
+                color,
+                x,
+                y,
+                ButtonWidth,
+                ButtonHeight
+            );
+
+            DrawCenteredString(
+                canvas,
+                text,
+                x,
+                y,
+                ButtonWidth,
+                ButtonHeight,
+                Color.White
             );
         }
 
         public static void Draw(Canvas canvas)
         {
-            int x = 10;
-            int y = (int)canvas.Mode.Height - 330;
+            int y = (int)canvas.Mode.Height - Taskbar.Height - MenuHeight;
 
             canvas.DrawFilledRectangle(
-                Color.FromArgb(30, 30, 30),
-                x, y, 200, 320
+                Color.FromArgb(25, 25, 30),
+                MenuX,
+                y,
+                MenuWidth,
+                MenuHeight
             );
-
 
             canvas.DrawFilledRectangle(
-                aboutHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
-                x + 10, y + 10, 180, 28
+                Color.FromArgb(45, 45, 55),
+                MenuX,
+                y,
+                MenuWidth,
+                45
             );
-            DrawCenteredString(canvas, "About", x + 10, y + 10, 180, 28);
 
-            canvas.DrawFilledRectangle(
-                terminalHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
-                x + 10, y + 44, 180, 28
+            canvas.DrawString(
+                "HolmiumOS",
+                Cosmos.System.Graphics.Fonts.PCScreenFont.Default,
+                Color.White,
+                MenuX + 15,
+                y + 8
             );
-            DrawCenteredString(canvas, "Terminal", x + 10, y + 44, 180, 28);
 
-            canvas.DrawFilledRectangle(
-                fileManagerHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
-                x + 10, y + 78, 180, 28
+            canvas.DrawString(
+                "Uygulamalar",
+                Cosmos.System.Graphics.Fonts.PCScreenFont.Default,
+                Color.LightGray,
+                MenuX + 15,
+                y + 25
             );
-            DrawCenteredString(canvas, "File Manager", x + 10, y + 78, 180, 28);
 
-            canvas.DrawFilledRectangle(
-                calculatorHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
-                x + 10, y + 112, 180, 28
-            );
-            DrawCenteredString(canvas, "Calculator", x + 10, y + 112, 180, 28);
+            int buttonY = y + 55;
 
-            canvas.DrawFilledRectangle(
-                notepadHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
-                x + 10, y + 146, 180, 28
+            DrawButton(
+                canvas,
+                "About",
+                MenuX + 10,
+                buttonY,
+                aboutHover,
+                Color.FromArgb(55, 55, 65),
+                Color.FromArgb(80, 110, 180)
             );
-            DrawCenteredString(canvas, "Notepad", x + 10, y + 146, 180, 28);
 
-            canvas.DrawFilledRectangle(
-                badAppleHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
-                x + 10, y + 180, 180, 28
-            );
-            DrawCenteredString(canvas, "Bad Apple!!", x + 10, y + 180, 180, 28);
+            buttonY += ButtonHeight + ButtonSpacing;
 
-            canvas.DrawFilledRectangle(
-                rebootHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
-                x + 10, y + 214, 180, 28
+            DrawButton(
+                canvas,
+                "Terminal",
+                MenuX + 10,
+                buttonY,
+                terminalHover,
+                Color.FromArgb(55, 55, 65),
+                Color.FromArgb(80, 110, 180)
             );
-            DrawCenteredString(canvas, "Reboot", x + 10, y + 214, 180, 28);
 
-            canvas.DrawFilledRectangle(
-                shutdownHover ? Color.FromArgb(120, 120, 120) : Color.FromArgb(80, 80, 80),
-                x + 10, y + 248, 180, 28
+            buttonY += ButtonHeight + ButtonSpacing;
+
+            DrawButton(
+                canvas,
+                "File Manager",
+                MenuX + 10,
+                buttonY,
+                fileManagerHover,
+                Color.FromArgb(55, 55, 65),
+                Color.FromArgb(80, 110, 180)
             );
-            DrawCenteredString(canvas, "Shutdown", x + 10, y + 248, 180, 28);
+
+            buttonY += ButtonHeight + ButtonSpacing;
+
+            DrawButton(
+                canvas,
+                "Calculator",
+                MenuX + 10,
+                buttonY,
+                calculatorHover,
+                Color.FromArgb(55, 55, 65),
+                Color.FromArgb(80, 110, 180)
+            );
+
+            buttonY += ButtonHeight + ButtonSpacing;
+
+            DrawButton(
+                canvas,
+                "Notepad",
+                MenuX + 10,
+                buttonY,
+                notepadHover,
+                Color.FromArgb(55, 55, 65),
+                Color.FromArgb(80, 110, 180)
+            );
+
+            buttonY += ButtonHeight + ButtonSpacing;
+
+            DrawButton(
+                canvas,
+                "Bad Apple!!",
+                MenuX + 10,
+                buttonY,
+                badAppleHover,
+                Color.FromArgb(55, 55, 65),
+                Color.FromArgb(80, 110, 180)
+            );
+
+            buttonY += ButtonHeight + ButtonSpacing;
+
+            DrawButton(
+                canvas,
+                "Task Manager",
+                MenuX + 10,
+                buttonY,
+                taskManagerHover,
+                Color.FromArgb(55, 55, 65),
+                Color.FromArgb(80, 110, 180)
+            );
+
+            buttonY += ButtonHeight + ButtonSpacing + 5;
+
+            DrawButton(
+                canvas,
+                "Reboot",
+                MenuX + 10,
+                buttonY,
+                rebootHover,
+                Color.FromArgb(75, 65, 55),
+                Color.FromArgb(180, 120, 60)
+            );
+
+            buttonY += ButtonHeight + ButtonSpacing;
+
+            DrawButton(
+                canvas,
+                "Shutdown",
+                MenuX + 10,
+                buttonY,
+                shutdownHover,
+                Color.FromArgb(75, 50, 50),
+                Color.FromArgb(180, 70, 70)
+            );
         }
-
         public static bool IsInside(int mouseX, int mouseY)
         {
-            int x = 10;
-            int y = (int)MouseManager.ScreenHeight - 330;
+            int y = (int)MouseManager.ScreenHeight - Taskbar.Height - MenuHeight;
 
-            return mouseX >= x &&
-                   mouseX <= x + 200 &&
+            return mouseX >= MenuX &&
+                   mouseX <= MenuX + MenuWidth &&
                    mouseY >= y &&
-                   mouseY <= y + 320;
+                   mouseY <= y + MenuHeight;
         }
 
         public static void UpdateHover(int mouseX, int mouseY)
         {
-            int x = 10;
-            int y = (int)MouseManager.ScreenHeight - 330;
+            int y = (int)MouseManager.ScreenHeight - Taskbar.Height - MenuHeight;
 
-            aboutHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 10 && mouseY <= y + 38;
-            terminalHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 44 && mouseY <= y + 72;
-            fileManagerHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 78 && mouseY <= y + 106;
-            calculatorHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 112 && mouseY <= y + 140;
-            notepadHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 146 && mouseY <= y + 174;
-            badAppleHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 180 && mouseY <= y + 208;
-            rebootHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 214 && mouseY <= y + 242;
-            shutdownHover = mouseX >= x + 10 && mouseX <= x + 190 && mouseY >= y + 248 && mouseY <= y + 276;
+            aboutHover = IsButtonInside(mouseX, mouseY, y, 55);
+            terminalHover = IsButtonInside(mouseX, mouseY, y, 90);
+            fileManagerHover = IsButtonInside(mouseX, mouseY, y, 125);
+            calculatorHover = IsButtonInside(mouseX, mouseY, y, 160);
+            notepadHover = IsButtonInside(mouseX, mouseY, y, 195);
+            badAppleHover = IsButtonInside(mouseX, mouseY, y, 230);
+            taskManagerHover = IsButtonInside(mouseX, mouseY, y, 265);
+            rebootHover = IsButtonInside(mouseX, mouseY, y, 305);
+            shutdownHover = IsButtonInside(mouseX, mouseY, y, 340);
+        }
+
+        private static bool IsButtonInside(int mouseX, int mouseY, int menuY, int buttonY)
+        {
+            int x = MenuX + 10;
+            int y = menuY + buttonY;
+
+            return mouseX >= x &&
+                   mouseX <= x + ButtonWidth &&
+                   mouseY >= y &&
+                   mouseY <= y + ButtonHeight;
         }
 
         public static void Click(int mouseX, int mouseY)
@@ -126,45 +254,45 @@ namespace HolmiumOS.GUI
                 AppManager.Run<Apps.About>(70, 70);
                 Taskbar.MenuOpen = false;
             }
-
-            if (terminalHover)
+            else if (terminalHover)
             {
                 AppManager.Run<Apps.Terminal>(50, 50);
                 Taskbar.MenuOpen = false;
             }
-
-            if (fileManagerHover)
+            else if (fileManagerHover)
             {
                 var fileManager = new Apps.FileManager(UserManager.HomeDirectory);
                 AppManager.Run(fileManager);
                 Taskbar.MenuOpen = false;
             }
-
-            if (calculatorHover)
+            else if (calculatorHover)
             {
                 AppManager.Run<Apps.Calculator>(50, 50);
                 Taskbar.MenuOpen = false;
             }
-
-            if (notepadHover)
+            else if (notepadHover)
             {
                 AppManager.Run<Apps.Notepad>(70, 70);
                 Taskbar.MenuOpen = false;
             }
-
-            if (badAppleHover)
+            else if (badAppleHover)
             {
                 AppManager.Run<Apps.BadApple>(40, 40);
                 Taskbar.MenuOpen = false;
             }
-
-            if (rebootHover)
+            else if (taskManagerHover)
             {
+                AppManager.Run<Apps.TaskManager>(80, 60);
+                Taskbar.MenuOpen = false;
+            }
+            else if (rebootHover)
+            {
+                Taskbar.MenuOpen = false;
                 Power.Reboot();
             }
-
-            if (shutdownHover)
+            else if (shutdownHover)
             {
+                Taskbar.MenuOpen = false;
                 Power.Shutdown();
             }
         }
