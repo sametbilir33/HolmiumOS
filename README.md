@@ -1,6 +1,6 @@
 # HolmiumOS
 
-HolmiumOS is a custom operating system project developed in C# using the CosmosOS.
+HolmiumOS is a operating system project developed with C# using the CosmosOS.
 
 It extends the CosmosOS environment with its own kernel architecture, shell system, command framework, user management, filesystem utilities, graphical user interface, networking components, cryptographic tools, and additional system features.
 
