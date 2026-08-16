@@ -151,7 +151,8 @@ namespace HolmiumOS.GUI
             }
             else if (notepadHover)
             {
-                AppManager.Run<Apps.Notepad>(70, 70);
+                var notepad = new Apps.Notepad(null);
+                AppManager.Run(notepad);
                 Dock.MenuOpen = false;
             }
             else if (badAppleHover)
