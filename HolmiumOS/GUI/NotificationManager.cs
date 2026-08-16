@@ -25,7 +25,7 @@ namespace HolmiumOS.GUI
 
             int screenWidth = (int)canvas.Mode.Width;
             int screenHeight = (int)canvas.Mode.Height;
-            int startY = screenHeight - Taskbar.Height - Padding;
+            int startY = screenHeight - Dock.Height - Padding;
 
             for (int i = 0; i < notifications.Count; i++)
             {
@@ -59,27 +59,35 @@ namespace HolmiumOS.GUI
 
                 string titleLine1 = notif.Title;
                 string titleLine2 = "";
+
                 if (titleLine1.Length > 22)
                 {
                     titleLine2 = titleLine1.Substring(22);
                     titleLine1 = titleLine1.Substring(0, 22);
-                    if (titleLine2.Length > 22) titleLine2 = titleLine2.Substring(0, 20) + "..";
+
+                    if (titleLine2.Length > 22)
+                        titleLine2 = titleLine2.Substring(0, 20) + "..";
                 }
 
                 string msgLine1 = notif.Message;
                 string msgLine2 = "";
+
                 if (msgLine1.Length > 26)
                 {
                     msgLine2 = msgLine1.Substring(26);
                     msgLine1 = msgLine1.Substring(0, 26);
-                    if (msgLine2.Length > 26) msgLine2 = msgLine2.Substring(0, 24) + "..";
+
+                    if (msgLine2.Length > 26)
+                        msgLine2 = msgLine2.Substring(0, 24) + "..";
                 }
 
                 canvas.DrawString(titleLine1, Cosmos.System.Graphics.Fonts.PCScreenFont.Default, Color.White, x + 12, y + 6);
+
                 if (!string.IsNullOrEmpty(titleLine2))
                     canvas.DrawString(titleLine2, Cosmos.System.Graphics.Fonts.PCScreenFont.Default, Color.White, x + 12, y + 18);
 
                 canvas.DrawString(msgLine1, Cosmos.System.Graphics.Fonts.PCScreenFont.Default, Color.LightGray, x + 12, y + 30);
+
                 if (!string.IsNullOrEmpty(msgLine2))
                     canvas.DrawString(msgLine2, Cosmos.System.Graphics.Fonts.PCScreenFont.Default, Color.LightGray, x + 12, y + 42);
             }
@@ -95,7 +103,7 @@ namespace HolmiumOS.GUI
                 int my = (int)MouseManager.Y;
                 int screenWidth = (int)canvas.Mode.Width;
                 int screenHeight = (int)canvas.Mode.Height;
-                int startY = screenHeight - Taskbar.Height - Padding;
+                int startY = screenHeight - Dock.Height - Padding;
 
                 for (int i = 0; i < notifications.Count; i++)
                 {

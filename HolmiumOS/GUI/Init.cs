@@ -59,7 +59,7 @@ namespace HolmiumOS.GUI
 
                 if (isLoggedIn)
                 {
-                    Taskbar.UpdateMouse(canvas);
+                    Dock.UpdateMouse(canvas);
                 }
 
                 DesktopManager.UpdateMouse(canvas);
@@ -71,12 +71,18 @@ namespace HolmiumOS.GUI
                 int y = Clamp((int)MouseManager.Y, 0, screenHeight - cursorHeight);
 
                 canvas.DrawImage(wallpaper, 0, 0);
+
+                if (isLoggedIn)
+                {
+                    StatusBar.Draw(canvas);
+                }
+
                 DesktopManager.Draw(canvas);
                 WindowManager.Draw(canvas);
 
                 if (isLoggedIn)
                 {
-                    Taskbar.Draw(canvas);
+                    Dock.Draw(canvas);
                 }
 
                 NotificationManager.Draw(canvas);
@@ -95,6 +101,7 @@ namespace HolmiumOS.GUI
                     return true;
                 }
             }
+
             return false;
         }
 
