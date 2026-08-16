@@ -6,13 +6,16 @@ It extends the CosmosOS environment with its own kernel architecture, shell syst
 
 ## Screenshots
 
+<p align="center">
+  <img src="Screenshots/1.png" width="60%" alt="1">
+</p>
+
 | | | |
 | :---: | :---: | :---: |
-| ![1](Screenshots/1.png) | ![2](Screenshots/2.png) | ![3](Screenshots/3.png) |
-| ![4](Screenshots/4.png) | ![5](Screenshots/5.png) | ![6](Screenshots/6.png) |
-| ![7](Screenshots/7.png) | ![8](Screenshots/8.png) | ![9](Screenshots/9.png) |
-| ![10](Screenshots/10.png) | ![11](Screenshots/11.png) | ![12](Screenshots/12.png) |
-| ![13](Screenshots/13.png) | | |
+| ![2](Screenshots/2.png) | ![3](Screenshots/3.png) | ![4](Screenshots/4.png) |
+| ![5](Screenshots/5.png) | ![6](Screenshots/6.png) | ![7](Screenshots/7.png) |
+| ![8](Screenshots/8.png) | ![9](Screenshots/9.png) | ![10](Screenshots/10.png) |
+| ![11](Screenshots/11.png) | ![12](Screenshots/12.png) | ![13](Screenshots/13.png) |
 
 > **Note:** You can check out the `Screenshots/badapple.mp4` file in the repository to see HolmiumOS running the Bad Apple demo!
 
