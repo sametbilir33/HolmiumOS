@@ -166,7 +166,7 @@ namespace HolmiumOS.GUI
 
             if (targetX < 0) targetX = 0;
             if (targetX + Width > screenWidth) targetX = screenWidth - Width;
-            if (targetY < 0) targetY = 0;
+            if (targetY < StatusBar.Height) targetY = StatusBar.Height;
             if (targetY + Height > screenHeight) targetY = screenHeight - Height;
 
             dragX = targetX;

@@ -74,6 +74,13 @@ namespace HolmiumOS.GUI
 
             if (isPressed && !wasPressed)
             {
+                if (StatusBar.ContainsClock(mx, my, canvas))
+                {
+                    AppManager.Run<Apps.CalendarClock>(50, 50);
+                    wasPressed = isPressed;
+                    return;
+                }
+
                 for (int i = windows.Count - 1; i >= 0; i--)
                 {
                     if (i >= windows.Count) break;
@@ -134,7 +141,6 @@ namespace HolmiumOS.GUI
 
             wasPressed = isPressed;
         }
-
         public static void HandleKeyboard()
         {
             if (!KeyboardManager.TryReadKey(out KeyEvent keyEvent)) return;

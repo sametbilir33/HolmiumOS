@@ -23,11 +23,11 @@ namespace HolmiumOS.GUI.Apps
 
             titleLabel = new Label("Saat / Tarih", 20, 20);
 
-            string currentRTCDate = $"{RTC.Year:D4}-{RTC.Month:D2}-{RTC.DayOfTheMonth:D2}";
+            string currentRTCDate = $"{RTC.DayOfTheMonth:D2}/{RTC.Month:D2}/{RTC.Year:D4}";
             string currentRTCTime = $"{RTC.Hour:D2}:{RTC.Minute:D2}:{RTC.Second:D2}";
 
-            rtcDateLabel = new Label($"Tarih (RTC): {currentRTCDate}", 20, 60);
-            rtcTimeLabel = new Label($"Saat (RTC): {currentRTCTime}", 20, 95);
+            rtcDateLabel = new Label($"Tarih: {currentRTCDate}", 20, 60);
+            rtcTimeLabel = new Label($"Saat: {currentRTCTime}", 20, 95);
 
             refreshButton = new Button("Saati Guncelle", 20, 140, 160, 30);
             refreshButton.ClickAction = OnRefreshClick;
@@ -45,13 +45,11 @@ namespace HolmiumOS.GUI.Apps
         {
             if (rtcDateLabel == null || rtcTimeLabel == null) return;
 
-            string updatedDate = $"{RTC.Year:D4}-{RTC.Month:D2}-{RTC.DayOfTheMonth:D2}";
+            string updatedDate = $"{RTC.DayOfTheMonth:D2}/{RTC.Month:D2}/{RTC.Year:D4}";
             string updatedTime = $"{RTC.Hour:D2}:{RTC.Minute:D2}:{RTC.Second:D2}";
 
-            rtcDateLabel.Text = $"Tarih (RTC): {updatedDate}";
-            rtcTimeLabel.Text = $"Saat (RTC): {updatedTime}";
-
-            Cosmos.Core.Memory.Heap.Collect();
+            rtcDateLabel.Text = $"Tarih: {updatedDate}";
+            rtcTimeLabel.Text = $"Saat: {updatedTime}";
         }
     }
 }
