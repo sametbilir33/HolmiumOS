@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Cosmos.System;
 using Cosmos.System.Graphics;
 using HolmiumOS.GUI.Controls;
@@ -25,6 +26,32 @@ namespace HolmiumOS.GUI
             }
             windows.Remove(window);
             AppManager.Close(window.App);
+        }
+
+        public static void Minimize(Window window)
+        {
+            if (window == null) return;
+            window.IsMinimized = true;
+
+            if (activeWindow == window)
+            {
+                activeWindow = null;
+                for (int i = windows.Count - 1; i >= 0; i--)
+                {
+                    if (!windows[i].IsMinimized)
+                    {
+                        Focus(windows[i]);
+                        break;
+                    }
+                }
+            }
+        }
+
+        public static void Restore(Window window)
+        {
+            if (window == null) return;
+            window.IsMinimized = false;
+            Focus(window);
         }
 
         public static void Draw(Canvas canvas)
@@ -74,7 +101,7 @@ namespace HolmiumOS.GUI
 
             if (isPressed && !wasPressed)
             {
-                if (StatusBar.ContainsClock(mx, my, canvas))
+                if (Taskbar.ContainsClock(mx, my, canvas))
                 {
                     AppManager.Run<Apps.CalendarClock>(50, 50);
                     wasPressed = isPressed;
@@ -86,11 +113,18 @@ namespace HolmiumOS.GUI
                     if (i >= windows.Count) break;
 
                     Window window = windows[i];
-                    if (window == null) continue;
+                    if (window == null || window.IsMinimized) continue;
 
                     if (window.CloseContains(mx, my))
                     {
                         Remove(window);
+                        wasPressed = isPressed;
+                        return;
+                    }
+
+                    if (window.MinimizeContains(mx, my))
+                    {
+                        Minimize(window);
                         wasPressed = isPressed;
                         return;
                     }
@@ -141,10 +175,12 @@ namespace HolmiumOS.GUI
 
             wasPressed = isPressed;
         }
+
         public static void HandleKeyboard()
         {
             if (!KeyboardManager.TryReadKey(out KeyEvent keyEvent)) return;
-            if (activeWindow == null) return;
+
+            if (activeWindow == null || activeWindow.IsMinimized) return;
 
             int count = activeWindow.Controls.Count;
             for (int i = 0; i < count; i++)

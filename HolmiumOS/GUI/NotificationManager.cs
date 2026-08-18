@@ -9,8 +9,8 @@ namespace HolmiumOS.GUI
     {
         private static List<Notification> notifications = new List<Notification>();
 
-        private const int Width = 220;
-        private const int Height = 60;
+        private const int Width = 230;
+        private const int Height = 65;
         private const int Padding = 10;
         private static bool lastPressed = false;
 
@@ -19,13 +19,24 @@ namespace HolmiumOS.GUI
             notifications.Add(new Notification(title, message, type, durationSeconds));
         }
 
+        private static void DrawRaisedBox(Canvas canvas, int x, int y, int width, int height)
+        {
+            canvas.DrawFilledRectangle(Color.FromArgb(192, 192, 192), x, y, width, height);
+            canvas.DrawLine(Color.FromArgb(255, 255, 255), x, y, x + width - 1, y);
+            canvas.DrawLine(Color.FromArgb(255, 255, 255), x, y, x, y + height - 1);
+            canvas.DrawLine(Color.FromArgb(0, 0, 0), x, y + height - 1, x + width - 1, y + height - 1);
+            canvas.DrawLine(Color.FromArgb(0, 0, 0), x + width - 1, y, x + width - 1, y + height - 1);
+            canvas.DrawLine(Color.FromArgb(128, 128, 128), x + 1, y + height - 2, x + width - 2, y + height - 2);
+            canvas.DrawLine(Color.FromArgb(128, 128, 128), x + width - 2, y + 1, x + width - 2, y + height - 2);
+        }
+
         public static void Draw(Canvas canvas)
         {
             if (notifications.Count == 0) return;
 
             int screenWidth = (int)canvas.Mode.Width;
             int screenHeight = (int)canvas.Mode.Height;
-            int startY = screenHeight - Dock.Height - Padding;
+            int startY = screenHeight - Taskbar.Height - Padding;
 
             for (int i = 0; i < notifications.Count; i++)
             {
@@ -42,54 +53,40 @@ namespace HolmiumOS.GUI
                 int x = screenWidth - Width - Padding;
                 int y = startY - ((i + 1) * (Height + Padding));
 
-                Color accentColor = notif.Type switch
+                DrawRaisedBox(canvas, x, y, Width, Height);
+
+                canvas.DrawFilledRectangle(Color.FromArgb(0, 0, 128), x + 3, y + 3, Width - 6, 16);
+
+                Color typeIndicator = notif.Type switch
                 {
-                    NotificationType.Success => Color.FromArgb(40, 167, 69),
-                    NotificationType.Warning => Color.FromArgb(255, 193, 7),
-                    NotificationType.Error => Color.FromArgb(220, 53, 69),
-                    _ => Color.FromArgb(0, 122, 204)
+                    NotificationType.Success => Color.FromArgb(0, 200, 0),
+                    NotificationType.Warning => Color.FromArgb(220, 220, 0),
+                    NotificationType.Error => Color.FromArgb(220, 0, 0),
+                    _ => Color.FromArgb(0, 128, 255)
                 };
-
-                canvas.DrawFilledRectangle(Color.FromArgb(30, 30, 30), x, y, Width, Height);
-                canvas.DrawFilledRectangle(accentColor, x, y, 4, Height);
-
-                canvas.DrawLine(Color.FromArgb(60, 60, 60), x, y, x + Width, y);
-                canvas.DrawLine(Color.FromArgb(60, 60, 60), x, y + Height, x + Width, y + Height);
-                canvas.DrawLine(Color.FromArgb(60, 60, 60), x + Width, y, x + Width, y + Height);
+                canvas.DrawFilledRectangle(typeIndicator, x + 6, y + 6, 10, 10);
 
                 string titleLine1 = notif.Title;
-                string titleLine2 = "";
-
-                if (titleLine1.Length > 22)
-                {
-                    titleLine2 = titleLine1.Substring(22);
-                    titleLine1 = titleLine1.Substring(0, 22);
-
-                    if (titleLine2.Length > 22)
-                        titleLine2 = titleLine2.Substring(0, 20) + "..";
-                }
+                if (titleLine1.Length > 20)
+                    titleLine1 = titleLine1.Substring(0, 18) + "..";
 
                 string msgLine1 = notif.Message;
                 string msgLine2 = "";
 
-                if (msgLine1.Length > 26)
+                if (msgLine1.Length > 28)
                 {
-                    msgLine2 = msgLine1.Substring(26);
-                    msgLine1 = msgLine1.Substring(0, 26);
+                    msgLine2 = msgLine1.Substring(28);
+                    msgLine1 = msgLine1.Substring(0, 28);
 
-                    if (msgLine2.Length > 26)
-                        msgLine2 = msgLine2.Substring(0, 24) + "..";
+                    if (msgLine2.Length > 28)
+                        msgLine2 = msgLine2.Substring(0, 26) + "..";
                 }
 
-                canvas.DrawString(titleLine1, Cosmos.System.Graphics.Fonts.PCScreenFont.Default, Color.White, x + 12, y + 6);
-
-                if (!string.IsNullOrEmpty(titleLine2))
-                    canvas.DrawString(titleLine2, Cosmos.System.Graphics.Fonts.PCScreenFont.Default, Color.White, x + 12, y + 18);
-
-                canvas.DrawString(msgLine1, Cosmos.System.Graphics.Fonts.PCScreenFont.Default, Color.LightGray, x + 12, y + 30);
+                canvas.DrawString(titleLine1, Cosmos.System.Graphics.Fonts.PCScreenFont.Default, Color.White, x + 20, y + 5);
+                canvas.DrawString(msgLine1, Cosmos.System.Graphics.Fonts.PCScreenFont.Default, Color.Black, x + 8, y + 25);
 
                 if (!string.IsNullOrEmpty(msgLine2))
-                    canvas.DrawString(msgLine2, Cosmos.System.Graphics.Fonts.PCScreenFont.Default, Color.LightGray, x + 12, y + 42);
+                    canvas.DrawString(msgLine2, Cosmos.System.Graphics.Fonts.PCScreenFont.Default, Color.Black, x + 8, y + 42);
             }
         }
 
@@ -103,7 +100,7 @@ namespace HolmiumOS.GUI
                 int my = (int)MouseManager.Y;
                 int screenWidth = (int)canvas.Mode.Width;
                 int screenHeight = (int)canvas.Mode.Height;
-                int startY = screenHeight - Dock.Height - Padding;
+                int startY = screenHeight - Taskbar.Height - Padding;
 
                 for (int i = 0; i < notifications.Count; i++)
                 {

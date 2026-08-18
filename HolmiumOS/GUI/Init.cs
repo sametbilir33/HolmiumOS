@@ -59,11 +59,12 @@ namespace HolmiumOS.GUI
 
                 if (isLoggedIn)
                 {
-                    Dock.UpdateMouse(canvas);
+                    Taskbar.UpdateMouse(canvas);
                 }
 
                 DesktopManager.UpdateMouse(canvas);
                 WindowManager.UpdateMouse(canvas);
+                TaskSwitcherManager.Update();
                 NotificationManager.UpdateMouse(canvas);
                 WindowManager.HandleKeyboard();
 
@@ -72,17 +73,12 @@ namespace HolmiumOS.GUI
 
                 canvas.DrawImage(wallpaper, 0, 0);
 
-                if (isLoggedIn)
-                {
-                    StatusBar.Draw(canvas);
-                }
-
                 DesktopManager.Draw(canvas);
                 WindowManager.Draw(canvas);
 
                 if (isLoggedIn)
                 {
-                    Dock.Draw(canvas);
+                    Taskbar.Draw(canvas);
                 }
 
                 NotificationManager.Draw(canvas);

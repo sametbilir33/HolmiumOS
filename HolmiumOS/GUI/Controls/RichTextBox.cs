@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using Cosmos.System;
 using Cosmos.System.Graphics;
 using Cosmos.System.Graphics.Fonts;
@@ -14,6 +15,11 @@ namespace HolmiumOS.GUI.Controls
         private const int CHAR_HEIGHT = 16;
         private const int PADDING = 5;
 
+        private static readonly Color Win9xWhite = System.Drawing.Color.FromArgb(255, 255, 255);
+        private static readonly Color Win9xDarkGray = System.Drawing.Color.FromArgb(128, 128, 128);
+        private static readonly Color Win9xBlack = System.Drawing.Color.FromArgb(0, 0, 0);
+        private static readonly Color Win9xGray = System.Drawing.Color.FromArgb(192, 192, 192);
+
         public RichTextBox(int x, int y, int width, int height) : base(x, y, width, height)
         {
         }
@@ -22,13 +28,19 @@ namespace HolmiumOS.GUI.Controls
         {
             if (!Visible || canvas == null) return;
 
-            canvas.DrawFilledRectangle(System.Drawing.Color.White, X, Y, Width, Height);
+            canvas.DrawFilledRectangle(Win9xWhite, X, Y, Width, Height);
 
-            System.Drawing.Color borderColor = Focused ? System.Drawing.Color.Blue : System.Drawing.Color.Black;
-            canvas.DrawLine(borderColor, X, Y, X + Width, Y);
-            canvas.DrawLine(borderColor, X, Y + Height, X + Width, Y + Height);
-            canvas.DrawLine(borderColor, X, Y, X, Y + Height);
-            canvas.DrawLine(borderColor, X + Width, Y, X + Width, Y + Height);
+            canvas.DrawLine(Win9xDarkGray, X, Y, X + Width - 1, Y);
+            canvas.DrawLine(Win9xDarkGray, X, Y, X, Y + Height - 1);
+
+            canvas.DrawLine(Win9xBlack, X + 1, Y + 1, X + Width - 2, Y + 1);
+            canvas.DrawLine(Win9xBlack, X + 1, Y + 1, X + 1, Y + Height - 2);
+
+            canvas.DrawLine(Win9xWhite, X, Y + Height, X + Width, Y + Height);
+            canvas.DrawLine(Win9xWhite, X + Width, Y, X + Width, Y + Height);
+
+            canvas.DrawLine(Win9xGray, X + 1, Y + Height - 1, X + Width - 1, Y + Height - 1);
+            canvas.DrawLine(Win9xGray, X + Width - 1, Y + 1, X + Width - 1, Y + Height - 1);
 
             if (Text == null) Text = "";
 
@@ -60,7 +72,7 @@ namespace HolmiumOS.GUI.Controls
                     if (currY > maxBottom) break;
                 }
 
-                canvas.DrawString(c.ToString(), PCScreenFont.Default, System.Drawing.Color.Black, currX, currY);
+                canvas.DrawString(c.ToString(), PCScreenFont.Default, Win9xBlack, currX, currY);
                 currX += CHAR_WIDTH;
             }
 
@@ -71,7 +83,7 @@ namespace HolmiumOS.GUI.Controls
             {
                 if (cursorY <= maxBottom && cursorX <= maxRight + CHAR_WIDTH)
                 {
-                    canvas.DrawLine(System.Drawing.Color.Black, cursorX, cursorY + 1, cursorX, cursorY + CHAR_HEIGHT - 2);
+                    canvas.DrawLine(Win9xBlack, cursorX, cursorY + 1, cursorX, cursorY + CHAR_HEIGHT - 2);
                 }
             }
         }

@@ -16,6 +16,7 @@ namespace HolmiumOS.GUI
 
         public bool Active { get; set; }
         public bool Dragging { get; set; }
+        public bool IsMinimized { get; set; } = false;
 
         public List<Control> Controls { get; set; } = new List<Control>();
 
@@ -78,6 +79,8 @@ namespace HolmiumOS.GUI
 
         public void Draw(Canvas canvas)
         {
+            if (IsMinimized) return;
+
             if (Dragging)
             {
                 Color borderColor = Win9xBlack;
@@ -114,7 +117,6 @@ namespace HolmiumOS.GUI
             int closeSize = 16;
 
             canvas.DrawFilledRectangle(Win9xGray, closeX, closeY, closeSize, closeSize);
-
             canvas.DrawLine(Win9xWhite, closeX, closeY, closeX + closeSize - 1, closeY);
             canvas.DrawLine(Win9xWhite, closeX, closeY, closeX, closeY + closeSize - 1);
             canvas.DrawLine(Win9xBlack, closeX, closeY + closeSize - 1, closeX + closeSize, closeY + closeSize - 1);
@@ -127,6 +129,20 @@ namespace HolmiumOS.GUI
             canvas.DrawLine(xColor, closeX + 4, closeY + 5, closeX + closeSize - 6, closeY + closeSize - 5);
             canvas.DrawLine(xColor, closeX + closeSize - 5, closeY + 4, closeX + 4, closeY + closeSize - 5);
             canvas.DrawLine(xColor, closeX + closeSize - 5, closeY + 5, closeX + 5, closeY + closeSize - 5);
+
+            int minBtnX = closeX - 18;
+            int minBtnY = Y + 5;
+            int minBtnSize = 16;
+
+            canvas.DrawFilledRectangle(Win9xGray, minBtnX, minBtnY, minBtnSize, minBtnSize);
+            canvas.DrawLine(Win9xWhite, minBtnX, minBtnY, minBtnX + minBtnSize - 1, minBtnY);
+            canvas.DrawLine(Win9xWhite, minBtnX, minBtnY, minBtnX, minBtnY + minBtnSize - 1);
+            canvas.DrawLine(Win9xBlack, minBtnX, minBtnY + minBtnSize - 1, minBtnX + minBtnSize, minBtnY + minBtnSize - 1);
+            canvas.DrawLine(Win9xBlack, minBtnX + minBtnSize - 1, minBtnY, minBtnX + minBtnSize - 1, minBtnY + minBtnSize);
+            canvas.DrawLine(Win9xDarkGray, minBtnX + 1, minBtnY + minBtnSize - 2, minBtnX + minBtnSize - 2, minBtnY + minBtnSize - 2);
+            canvas.DrawLine(Win9xDarkGray, minBtnX + minBtnSize - 2, minBtnY + 1, minBtnX + minBtnSize - 2, minBtnY + minBtnSize - 2);
+
+            canvas.DrawLine(Win9xBlack, minBtnX + 4, minBtnY + 11, minBtnX + minBtnSize - 5, minBtnY + 11);
 
             int count = Controls.Count;
             for (int i = 0; i < count; i++)
@@ -165,9 +181,11 @@ namespace HolmiumOS.GUI
             }
         }
 
-        public bool Contains(int mx, int my) => mx >= X && mx <= X + Width && my >= Y && my <= Y + Height;
-        public bool TitleContains(int mx, int my) => mx >= X && mx <= X + Width && my >= Y && my <= Y + 25;
-        public bool CloseContains(int mx, int my) => mx >= X + Width - 22 && mx <= X + Width - 6 && my >= Y + 5 && my <= Y + 21;
+        public bool Contains(int mx, int my) => !IsMinimized && mx >= X && mx <= X + Width && my >= Y && my <= Y + Height;
+        public bool TitleContains(int mx, int my) => !IsMinimized && mx >= X && mx <= X + Width && my >= Y && my <= Y + 25;
+        public bool CloseContains(int mx, int my) => !IsMinimized && mx >= X + Width - 22 && mx <= X + Width - 6 && my >= Y + 5 && my <= Y + 21;
+
+        public bool MinimizeContains(int mx, int my) => !IsMinimized && mx >= X + Width - 40 && mx <= X + Width - 24 && my >= Y + 5 && my <= Y + 21;
 
         public void StartDrag(int mx, int my)
         {
@@ -190,7 +208,7 @@ namespace HolmiumOS.GUI
 
             if (targetX < 0) targetX = 0;
             if (targetX + Width > screenWidth) targetX = screenWidth - Width;
-            if (targetY < StatusBar.Height) targetY = StatusBar.Height;
+            if (targetY < 0) targetY = 0;
             if (targetY + Height > screenHeight) targetY = screenHeight - Height;
 
             dragX = targetX;

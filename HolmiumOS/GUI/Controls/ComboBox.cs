@@ -15,6 +15,12 @@ namespace HolmiumOS.GUI.Controls
 
         private const int ItemHeight = 20;
 
+        private static readonly Color Win9xGray = Color.FromArgb(192, 192, 192);
+        private static readonly Color Win9xWhite = Color.FromArgb(255, 255, 255);
+        private static readonly Color Win9xDarkGray = Color.FromArgb(128, 128, 128);
+        private static readonly Color Win9xBlack = Color.FromArgb(0, 0, 0);
+        private static readonly Color Win9xSelectedBlue = Color.FromArgb(0, 0, 128);
+
         public ComboBox(int x, int y, int width) : base(x, y, width, 22)
         {
         }
@@ -23,45 +29,65 @@ namespace HolmiumOS.GUI.Controls
         {
             if (!Visible || canvas == null) return;
 
-            canvas.DrawFilledRectangle(Color.White, X, Y, Width, Height);
-            Color borderColor = Focused ? Color.Blue : Color.Black;
+            canvas.DrawFilledRectangle(Win9xWhite, X, Y, Width, Height);
 
-            canvas.DrawLine(borderColor, X, Y, X + Width, Y);
-            canvas.DrawLine(borderColor, X, Y + Height, X + Width, Y + Height);
-            canvas.DrawLine(borderColor, X, Y, X, Y + Height);
-            canvas.DrawLine(borderColor, X + Width, Y, X + Width, Y + Height);
+            canvas.DrawLine(Win9xDarkGray, X, Y, X + Width - 1, Y);
+            canvas.DrawLine(Win9xDarkGray, X, Y, X, Y + Height - 1);
 
-            int arrowBoxWidth = 20;
-            int arrowLeft = X + Width - arrowBoxWidth;
-            canvas.DrawFilledRectangle(Color.LightGray, arrowLeft, Y + 1, arrowBoxWidth - 1, Height - 2);
-            canvas.DrawLine(Color.Gray, arrowLeft, Y, arrowLeft, Y + Height);
-            canvas.DrawString("v", PCScreenFont.Default, Color.Black, arrowLeft + 6, Y + 3);
+            canvas.DrawLine(Win9xBlack, X + 1, Y + 1, X + Width - 2, Y + 1);
+            canvas.DrawLine(Win9xBlack, X + 1, Y + 1, X + 1, Y + Height - 2);
+
+            canvas.DrawLine(Win9xWhite, X, Y + Height, X + Width, Y + Height);
+            canvas.DrawLine(Win9xWhite, X + Width, Y, X + Width, Y + Height);
+
+            canvas.DrawLine(Win9xGray, X + 1, Y + Height - 1, X + Width - 1, Y + Height - 1);
+            canvas.DrawLine(Win9xGray, X + Width - 1, Y + 1, X + Width - 1, Y + Height - 1);
+
+            int arrowBoxWidth = 18;
+            int arrowLeft = X + Width - arrowBoxWidth - 1;
+            int arrowTop = Y + 2;
+            int arrowHeight = Height - 4;
+
+            canvas.DrawFilledRectangle(Win9xGray, arrowLeft, arrowTop, arrowBoxWidth, arrowHeight);
+
+            canvas.DrawLine(Win9xWhite, arrowLeft, arrowTop, arrowLeft + arrowBoxWidth - 1, arrowTop);
+            canvas.DrawLine(Win9xWhite, arrowLeft, arrowTop, arrowLeft, arrowTop + arrowHeight - 1);
+            canvas.DrawLine(Win9xBlack, arrowLeft, arrowTop + arrowHeight - 1, arrowLeft + arrowBoxWidth, arrowTop + arrowHeight - 1);
+            canvas.DrawLine(Win9xBlack, arrowLeft + arrowBoxWidth - 1, arrowTop, arrowLeft + arrowBoxWidth - 1, arrowTop + arrowHeight);
+            canvas.DrawLine(Win9xDarkGray, arrowLeft + 1, arrowTop + arrowHeight - 2, arrowLeft + arrowBoxWidth - 2, arrowTop + arrowHeight - 2);
+            canvas.DrawLine(Win9xDarkGray, arrowLeft + arrowBoxWidth - 2, arrowTop + 1, arrowLeft + arrowBoxWidth - 2, arrowTop + arrowHeight - 2);
+
+            canvas.DrawString("v", PCScreenFont.Default, Win9xBlack, arrowLeft + 5, arrowTop + 2);
 
             if (Items.Count > 0 && SelectedIndex >= 0 && SelectedIndex < Items.Count)
             {
-                canvas.DrawString(Items[SelectedIndex], PCScreenFont.Default, Color.Black, X + 5, Y + 3);
+                canvas.DrawString(Items[SelectedIndex], PCScreenFont.Default, Win9xBlack, X + 5, Y + 4);
             }
 
             if (IsDropped)
             {
                 int listHeight = Items.Count * ItemHeight;
-                canvas.DrawFilledRectangle(Color.White, X, Y + Height, Width, listHeight);
 
-                canvas.DrawLine(Color.Black, X, Y + Height, X, Y + Height + listHeight);
-                canvas.DrawLine(Color.Black, X + Width, Y + Height, X + Width, Y + Height + listHeight);
-                canvas.DrawLine(Color.Black, X, Y + Height + listHeight, X + Width, Y + Height + listHeight);
+                canvas.DrawFilledRectangle(Win9xWhite, X, Y + Height, Width, listHeight);
+
+                canvas.DrawLine(Win9xBlack, X, Y + Height, X, Y + Height + listHeight);
+                canvas.DrawLine(Win9xBlack, X + Width, Y + Height, X + Width, Y + Height + listHeight);
+                canvas.DrawLine(Win9xBlack, X, Y + Height + listHeight, X + Width, Y + Height + listHeight);
+
+                canvas.DrawLine(Win9xDarkGray, X + Width + 1, Y + Height + 1, X + Width + 1, Y + Height + listHeight + 1);
+                canvas.DrawLine(Win9xDarkGray, X + 1, Y + Height + listHeight + 1, X + Width + 1, Y + Height + listHeight + 1);
 
                 for (int i = 0; i < Items.Count; i++)
                 {
                     int itemY = Y + Height + (i * ItemHeight);
                     if (i == SelectedIndex)
                     {
-                        canvas.DrawFilledRectangle(Color.Blue, X + 1, itemY, Width - 2, ItemHeight);
-                        canvas.DrawString(Items[i], PCScreenFont.Default, Color.White, X + 5, itemY + 2);
+                        canvas.DrawFilledRectangle(Win9xSelectedBlue, X + 1, itemY, Width - 2, ItemHeight);
+                        canvas.DrawString(Items[i], PCScreenFont.Default, Win9xWhite, X + 5, itemY + 2);
                     }
                     else
                     {
-                        canvas.DrawString(Items[i], PCScreenFont.Default, Color.Black, X + 5, itemY + 2);
+                        canvas.DrawString(Items[i], PCScreenFont.Default, Win9xBlack, X + 5, itemY + 2);
                     }
                 }
             }
