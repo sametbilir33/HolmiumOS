@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Drawing;
 using Cosmos.System.Graphics;
 using HolmiumOS.GUI.Controls;
 
@@ -24,6 +25,13 @@ namespace HolmiumOS.GUI
         private int dragX, dragY;
         private int dragOffsetX, dragOffsetY;
 
+        private static readonly Color Win9xGray = Color.FromArgb(192, 192, 192);
+        private static readonly Color Win9xWhite = Color.FromArgb(255, 255, 255);
+        private static readonly Color Win9xDarkGray = Color.FromArgb(128, 128, 128);
+        private static readonly Color Win9xBlack = Color.FromArgb(0, 0, 0);
+        private static readonly Color Win9xActiveTitle = Color.FromArgb(0, 0, 128);
+        private static readonly Color Win9xInactiveTitle = Color.FromArgb(128, 128, 128);
+
         public Window(AppBase app, string title, int x, int y)
         {
             this.App = app;
@@ -33,7 +41,6 @@ namespace HolmiumOS.GUI
 
             int minWidth = (this.Title.Length * 8) + 60;
             this.Width = minWidth;
-
             this.Height = 40;
         }
 
@@ -66,7 +73,6 @@ namespace HolmiumOS.GUI
         {
             if (control == null) return;
             this.Controls.Add(control);
-
             UpdateSize();
         }
 
@@ -74,35 +80,53 @@ namespace HolmiumOS.GUI
         {
             if (Dragging)
             {
-                System.Drawing.Color borderColor = System.Drawing.Color.Black;
-
+                Color borderColor = Win9xBlack;
                 canvas.DrawLine(borderColor, dragX, dragY, dragX + Width, dragY);
                 canvas.DrawLine(borderColor, dragX, dragY + Height, dragX + Width, dragY + Height);
                 canvas.DrawLine(borderColor, dragX, dragY, dragX, dragY + Height);
                 canvas.DrawLine(borderColor, dragX + Width, dragY, dragX + Width, dragY + Height);
-
                 canvas.DrawLine(borderColor, dragX, dragY + 25, dragX + Width, dragY + 25);
                 return;
             }
 
-            System.Drawing.Color bgColor = System.Drawing.Color.DarkGray;
-            canvas.DrawFilledRectangle(bgColor, X, Y, Width, Height);
+            canvas.DrawFilledRectangle(Win9xGray, X, Y, Width, Height);
 
-            System.Drawing.Color titleColor = Active ? System.Drawing.Color.Blue : System.Drawing.Color.DimGray;
-            canvas.DrawFilledRectangle(titleColor, X, Y, Width, 25);
+            canvas.DrawLine(Win9xWhite, X, Y, X + Width - 1, Y);
+            canvas.DrawLine(Win9xWhite, X, Y, X, Y + Height - 1);
 
-            System.Drawing.Color textColor = Active ? System.Drawing.Color.White : System.Drawing.Color.LightGray;
-            canvas.DrawString(Title, Cosmos.System.Graphics.Fonts.PCScreenFont.Default, textColor, X + 10, Y + 5);
+            canvas.DrawLine(Win9xDarkGray, X + 1, Y + 1, X + Width - 2, Y + 1);
+            canvas.DrawLine(Win9xDarkGray, X + 1, Y + 1, X + 1, Y + Height - 2);
 
-            int closeX = X + Width - 20;
+            canvas.DrawLine(Win9xBlack, X, Y + Height - 1, X + Width, Y + Height - 1);
+            canvas.DrawLine(Win9xBlack, X + Width - 1, Y, X + Width - 1, Y + Height);
+
+            canvas.DrawLine(Win9xDarkGray, X + 1, Y + Height - 2, X + Width - 2, Y + Height - 2);
+            canvas.DrawLine(Win9xDarkGray, X + Width - 2, Y + 1, X + Width - 2, Y + Height - 2);
+
+            Color titleColor = Active ? Win9xActiveTitle : Win9xInactiveTitle;
+            canvas.DrawFilledRectangle(titleColor, X + 2, Y + 2, Width - 4, 23);
+
+            Color textColor = Win9xWhite;
+            canvas.DrawString(Title, Cosmos.System.Graphics.Fonts.PCScreenFont.Default, textColor, X + 8, Y + 6);
+
+            int closeX = X + Width - 22;
             int closeY = Y + 5;
-            int closeSize = 15;
+            int closeSize = 16;
 
-            canvas.DrawFilledRectangle(System.Drawing.Color.Red, closeX, closeY, closeSize, closeSize);
-            System.Drawing.Color xColor = System.Drawing.Color.White;
+            canvas.DrawFilledRectangle(Win9xGray, closeX, closeY, closeSize, closeSize);
 
-            canvas.DrawLine(xColor, closeX + 3, closeY + 3, closeX + closeSize - 4, closeY + closeSize - 4);
-            canvas.DrawLine(xColor, closeX + closeSize - 4, closeY + 3, closeX + 3, closeY + closeSize - 4);
+            canvas.DrawLine(Win9xWhite, closeX, closeY, closeX + closeSize - 1, closeY);
+            canvas.DrawLine(Win9xWhite, closeX, closeY, closeX, closeY + closeSize - 1);
+            canvas.DrawLine(Win9xBlack, closeX, closeY + closeSize - 1, closeX + closeSize, closeY + closeSize - 1);
+            canvas.DrawLine(Win9xBlack, closeX + closeSize - 1, closeY, closeX + closeSize - 1, closeY + closeSize);
+            canvas.DrawLine(Win9xDarkGray, closeX + 1, closeY + closeSize - 2, closeX + closeSize - 2, closeY + closeSize - 2);
+            canvas.DrawLine(Win9xDarkGray, closeX + closeSize - 2, closeY + 1, closeX + closeSize - 2, closeY + closeSize - 2);
+
+            Color xColor = Win9xBlack;
+            canvas.DrawLine(xColor, closeX + 4, closeY + 4, closeX + closeSize - 5, closeY + closeSize - 5);
+            canvas.DrawLine(xColor, closeX + 4, closeY + 5, closeX + closeSize - 6, closeY + closeSize - 5);
+            canvas.DrawLine(xColor, closeX + closeSize - 5, closeY + 4, closeX + 4, closeY + closeSize - 5);
+            canvas.DrawLine(xColor, closeX + closeSize - 5, closeY + 5, closeX + 5, closeY + closeSize - 5);
 
             int count = Controls.Count;
             for (int i = 0; i < count; i++)
@@ -143,7 +167,7 @@ namespace HolmiumOS.GUI
 
         public bool Contains(int mx, int my) => mx >= X && mx <= X + Width && my >= Y && my <= Y + Height;
         public bool TitleContains(int mx, int my) => mx >= X && mx <= X + Width && my >= Y && my <= Y + 25;
-        public bool CloseContains(int mx, int my) => mx >= X + Width - 20 && mx <= X + Width - 5 && my >= Y + 5 && my <= Y + 20;
+        public bool CloseContains(int mx, int my) => mx >= X + Width - 22 && mx <= X + Width - 6 && my >= Y + 5 && my <= Y + 21;
 
         public void StartDrag(int mx, int my)
         {
@@ -241,7 +265,6 @@ namespace HolmiumOS.GUI
                     if (c is ListBox listBox)
                     {
                         listBox.HandleAbsoluteClick(mx, my, absX, absY);
-
                         c.Focused = true;
                         return;
                     }
