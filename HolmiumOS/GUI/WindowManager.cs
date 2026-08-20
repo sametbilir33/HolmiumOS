@@ -88,6 +88,15 @@ namespace HolmiumOS.GUI
             }
         }
 
+        public static void ClearFocus()
+        {
+            if (activeWindow != null)
+            {
+                activeWindow.Active = false;
+                activeWindow = null;
+            }
+        }
+
         public static List<Window> GetWindows()
         {
             return windows;
@@ -113,7 +122,9 @@ namespace HolmiumOS.GUI
                     if (i >= windows.Count) break;
 
                     Window window = windows[i];
-                    if (window == null || window.IsMinimized) continue;
+
+                    if (window == null || window.IsMinimized)
+                        continue;
 
                     if (window.CloseContains(mx, my))
                     {
@@ -146,6 +157,8 @@ namespace HolmiumOS.GUI
                         return;
                     }
                 }
+
+                ClearFocus();
             }
 
             if (isPressed)
