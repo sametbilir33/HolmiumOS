@@ -178,6 +178,12 @@ namespace HolmiumOS.GUI
 
         public static void HandleKeyboard()
         {
+            if (TaskSwitcherManager.IsActive)
+            {
+                TaskSwitcherManager.HandleKeyboard();
+                return;
+            }
+
             if (!KeyboardManager.TryReadKey(out KeyEvent keyEvent)) return;
 
             if (activeWindow == null || activeWindow.IsMinimized) return;

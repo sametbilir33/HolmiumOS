@@ -34,14 +34,20 @@ namespace HolmiumOS.GUI
 
         private static bool wasLeftPressed = false;
         private static bool wasRightPressed = false;
+
         private static string lastUser = "";
+
         private static DesktopIcon selectedIcon = null;
         private static DesktopIcon lastClickedIcon = null;
+
         private static long lastClickTime = 0;
+
         private static bool contextMenuVisible = false;
         private static int contextMenuX;
         private static int contextMenuY;
         private static DesktopIcon contextIcon = null;
+
+        private static int hoveredMenuItem = -1;
 
         private const int IconStartX = 30;
         private const int IconStartY = 30;
@@ -49,6 +55,24 @@ namespace HolmiumOS.GUI
         private const int IconSpacingY = 95;
         private const int MaxColumns = 12;
         private const int DoubleClickMilliseconds = 450;
+
+        private static readonly System.Drawing.Color Win9xGray =
+            System.Drawing.Color.FromArgb(192, 192, 192);
+
+        private static readonly System.Drawing.Color Win9xWhite =
+            System.Drawing.Color.FromArgb(255, 255, 255);
+
+        private static readonly System.Drawing.Color Win9xLightGray =
+            System.Drawing.Color.FromArgb(223, 223, 223);
+
+        private static readonly System.Drawing.Color Win9xDarkGray =
+            System.Drawing.Color.FromArgb(128, 128, 128);
+
+        private static readonly System.Drawing.Color Win9xBlack =
+            System.Drawing.Color.FromArgb(0, 0, 0);
+
+        private static readonly System.Drawing.Color Win9xBlue =
+            System.Drawing.Color.FromArgb(0, 0, 128);
 
         private static int CompareNames(string a, string b)
         {
@@ -59,15 +83,24 @@ namespace HolmiumOS.GUI
                 char ca = a[i];
                 char cb = b[i];
 
-                if (ca >= 'A' && ca <= 'Z') ca = (char)(ca + 32);
-                if (cb >= 'A' && cb <= 'Z') cb = (char)(cb + 32);
+                if (ca >= 'A' && ca <= 'Z')
+                    ca = (char)(ca + 32);
 
-                if (ca < cb) return -1;
-                if (ca > cb) return 1;
+                if (cb >= 'A' && cb <= 'Z')
+                    cb = (char)(cb + 32);
+
+                if (ca < cb)
+                    return -1;
+
+                if (ca > cb)
+                    return 1;
             }
 
-            if (a.Length < b.Length) return -1;
-            if (a.Length > b.Length) return 1;
+            if (a.Length < b.Length)
+                return -1;
+
+            if (a.Length > b.Length)
+                return 1;
 
             return 0;
         }
@@ -75,26 +108,37 @@ namespace HolmiumOS.GUI
         public static void RefreshIcons()
         {
             icons.Clear();
+
             selectedIcon = null;
             lastClickedIcon = null;
             contextIcon = null;
-            contextMenuVisible = false;
 
-            if (!UserManager.IsLoggedIn) return;
+            contextMenuVisible = false;
+            hoveredMenuItem = -1;
+
+            if (!UserManager.IsLoggedIn)
+                return;
 
             string homeDir = UserManager.HomeDirectory;
-            if (string.IsNullOrEmpty(homeDir) || !FileSystemManager.DirectoryExists(homeDir)) return;
+
+            if (string.IsNullOrEmpty(homeDir))
+                return;
+
+            if (!FileSystemManager.DirectoryExists(homeDir))
+                return;
 
             var entryList = new List<(string Path, string Name, bool IsDirectory)>();
 
             try
             {
                 string[] dirs = FileSystemManager.GetDirectories(homeDir);
+
                 foreach (string dir in dirs)
                 {
                     if (!string.IsNullOrEmpty(dir))
                     {
                         string dirName = Path.GetFileName(dir.TrimEnd('/', '\\'));
+
                         if (!string.IsNullOrEmpty(dirName))
                         {
                             string fullPath = homeDir.TrimEnd('/', '\\') + "/" + dirName;
@@ -106,11 +150,13 @@ namespace HolmiumOS.GUI
                 }
 
                 string[] files = FileSystemManager.GetFiles(homeDir);
+
                 foreach (string file in files)
                 {
                     if (!string.IsNullOrEmpty(file))
                     {
                         string fileName = Path.GetFileName(file.TrimEnd('/', '\\'));
+
                         if (!string.IsNullOrEmpty(fileName))
                         {
                             string fullPath = homeDir.TrimEnd('/', '\\') + "/" + fileName;
@@ -152,6 +198,7 @@ namespace HolmiumOS.GUI
                     };
 
                     icons.Add(icon);
+
                     col++;
 
                     if (col >= MaxColumns)
@@ -161,12 +208,14 @@ namespace HolmiumOS.GUI
                     }
                 }
             }
-            catch { }
+            catch
+            {
+            }
         }
-
         private static void OpenIcon(DesktopIcon icon)
         {
-            if (icon == null) return;
+            if (icon == null)
+                return;
 
             if (icon.IsDirectory)
             {
@@ -179,10 +228,10 @@ namespace HolmiumOS.GUI
                 AppManager.Run(notepad);
             }
         }
-
         public static void Draw(Canvas canvas)
         {
-            if (!UserManager.IsLoggedIn) return;
+            if (!UserManager.IsLoggedIn)
+                return;
 
             if (lastUser != UserManager.CurrentUser)
             {
@@ -200,13 +249,19 @@ namespace HolmiumOS.GUI
                 DrawContextMenu(canvas);
             }
         }
-
         private static void DrawIcon(Canvas canvas, DesktopIcon icon)
         {
             if (icon.Selected)
             {
                 var selectionColor = System.Drawing.Color.FromArgb(90, 70, 130, 220);
-                canvas.DrawFilledRectangle(selectionColor, icon.X, icon.Y, icon.Width, icon.Height);
+
+                canvas.DrawFilledRectangle(
+                    selectionColor,
+                    icon.X,
+                    icon.Y,
+                    icon.Width,
+                    icon.Height
+                );
             }
 
             int iconX = icon.X + 20;
@@ -222,6 +277,7 @@ namespace HolmiumOS.GUI
             }
 
             string displayName = icon.Name;
+
             if (displayName.Length > 11)
             {
                 displayName = displayName.Substring(0, 9) + "..";
@@ -235,7 +291,6 @@ namespace HolmiumOS.GUI
                 icon.Y + 50
             );
         }
-
         private static void DrawFolderIcon(Canvas canvas, int x, int y)
         {
             var folderColor = System.Drawing.Color.FromArgb(255, 255, 205, 55);
@@ -267,7 +322,8 @@ namespace HolmiumOS.GUI
 
         public static void UpdateMouse(Canvas canvas)
         {
-            if (!UserManager.IsLoggedIn) return;
+            if (!UserManager.IsLoggedIn)
+                return;
 
             int mouseX = (int)MouseManager.X;
             int mouseY = (int)MouseManager.Y;
@@ -278,6 +334,7 @@ namespace HolmiumOS.GUI
                 {
                     wasLeftPressed = MouseManager.MouseState == MouseState.Left;
                     wasRightPressed = MouseManager.MouseState == MouseState.Right;
+
                     return;
                 }
             }
@@ -285,8 +342,11 @@ namespace HolmiumOS.GUI
             bool leftPressed = MouseManager.MouseState == MouseState.Left;
             bool rightPressed = MouseManager.MouseState == MouseState.Right;
 
+
             if (contextMenuVisible)
             {
+                hoveredMenuItem = GetContextMenuItemAt(mouseX, mouseY);
+
                 if (leftPressed && !wasLeftPressed)
                 {
                     HandleContextMenuClick(canvas, mouseX, mouseY);
@@ -294,27 +354,38 @@ namespace HolmiumOS.GUI
 
                 wasLeftPressed = leftPressed;
                 wasRightPressed = rightPressed;
+
                 return;
             }
+
 
             if (rightPressed && !wasRightPressed)
             {
                 DesktopIcon clickedIcon = GetIconAt(mouseX, mouseY);
+
                 contextIcon = clickedIcon;
 
                 if (clickedIcon != null)
                 {
                     SelectIcon(clickedIcon);
                 }
+                else
+                {
+                    ClearSelection();
+                }
 
                 ShowContextMenu(canvas, mouseX, mouseY);
+
                 wasRightPressed = rightPressed;
+
                 return;
             }
+
 
             if (leftPressed && !wasLeftPressed)
             {
                 DesktopIcon icon = GetIconAt(mouseX, mouseY);
+
                 if (icon != null)
                 {
                     SelectIcon(icon);
@@ -325,9 +396,11 @@ namespace HolmiumOS.GUI
                 }
             }
 
+
             if (!leftPressed && wasLeftPressed)
             {
                 DesktopIcon icon = GetIconAt(mouseX, mouseY);
+
                 if (icon != null)
                 {
                     HandleIconClick(icon);
@@ -337,21 +410,26 @@ namespace HolmiumOS.GUI
             wasLeftPressed = leftPressed;
             wasRightPressed = rightPressed;
         }
+
         private static void HandleIconClick(DesktopIcon icon)
         {
             long now = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
-            bool doubleClick = lastClickedIcon == icon && (now - lastClickTime) <= DoubleClickMilliseconds;
+            bool doubleClick =
+                lastClickedIcon == icon &&
+                (now - lastClickTime) <= DoubleClickMilliseconds;
 
             if (doubleClick)
             {
                 lastClickedIcon = null;
                 lastClickTime = 0;
+
                 OpenIcon(icon);
             }
             else
             {
                 SelectIcon(icon);
+
                 lastClickedIcon = icon;
                 lastClickTime = now;
             }
@@ -363,7 +441,10 @@ namespace HolmiumOS.GUI
             {
                 DesktopIcon icon = icons[i];
 
-                if (x >= icon.X && x <= icon.X + icon.Width && y >= icon.Y && y <= icon.Y + icon.Height)
+                if (x >= icon.X &&
+                    x <= icon.X + icon.Width &&
+                    y >= icon.Y &&
+                    y <= icon.Y + icon.Height)
                 {
                     return icon;
                 }
@@ -379,8 +460,11 @@ namespace HolmiumOS.GUI
                 item.Selected = false;
             }
 
-            icon.Selected = true;
-            selectedIcon = icon;
+            if (icon != null)
+            {
+                icon.Selected = true;
+                selectedIcon = icon;
+            }
         }
 
         private static void ClearSelection()
@@ -397,9 +481,12 @@ namespace HolmiumOS.GUI
         {
             contextMenu.Clear();
 
+            hoveredMenuItem = -1;
+
             if (contextIcon != null)
             {
-                contextMenu.Add(new DesktopMenuItem { Text = "Ac", Y = 0 });
+                contextMenu.Add(new DesktopMenuItem{Text = "Ac", Y = 0});
+
                 contextMenu.Add(new DesktopMenuItem { Text = "Sil", Y = 28 });
                 contextMenu.Add(new DesktopMenuItem { Text = "Yenile", Y = 56 });
                 contextMenu.Add(new DesktopMenuItem { Text = "Ikonlari Sirala", Y = 84 });
@@ -417,68 +504,168 @@ namespace HolmiumOS.GUI
 
             int screenWidth = (int)canvas.Mode.Width;
             int screenHeight = (int)canvas.Mode.Height;
-            int menuWidth = 150;
+
+            int menuWidth = 155;
             int menuHeight = contextMenu.Count * 28;
 
-            if (contextMenuX + menuWidth > screenWidth) contextMenuX = screenWidth - menuWidth;
-            if (contextMenuY + menuHeight > screenHeight) contextMenuY = screenHeight - menuHeight;
-            if (contextMenuX < 0) contextMenuX = 0;
-            if (contextMenuY < 0) contextMenuY = 0;
+            if (contextMenuX + menuWidth > screenWidth)
+            {
+                contextMenuX = screenWidth - menuWidth;
+            }
+
+            if (contextMenuY + menuHeight > screenHeight)
+            {
+                contextMenuY = screenHeight - menuHeight;
+            }
+
+            if (contextMenuX < 0)
+            {
+                contextMenuX = 0;
+            }
+
+            if (contextMenuY < 0)
+            {
+                contextMenuY = 0;
+            }
 
             contextMenuVisible = true;
         }
 
         private static void DrawContextMenu(Canvas canvas)
         {
-            int width = 150;
-            int height = contextMenu.Count * 28;
+            int width = 155;
+            int itemHeight = 28;
+            int height = contextMenu.Count * itemHeight;
 
-            var background = System.Drawing.Color.FromArgb(245, 25, 28, 38);
-            var border = System.Drawing.Color.FromArgb(255, 120, 130, 150);
 
-            canvas.DrawFilledRectangle(background, contextMenuX, contextMenuY, width, height);
+            canvas.DrawFilledRectangle(
+                Win9xGray,
+                contextMenuX,
+                contextMenuY,
+                width,
+                height
+            );
 
-            canvas.DrawLine(border, contextMenuX, contextMenuY, contextMenuX + width, contextMenuY);
-            canvas.DrawLine(border, contextMenuX, contextMenuY + height, contextMenuX + width, contextMenuY + height);
-            canvas.DrawLine(border, contextMenuX, contextMenuY, contextMenuX, contextMenuY + height);
-            canvas.DrawLine(border, contextMenuX + width, contextMenuY, contextMenuX + width, contextMenuY + height);
 
-            foreach (DesktopMenuItem item in contextMenu)
+            canvas.DrawLine(Win9xWhite, contextMenuX, contextMenuY, contextMenuX + width - 1, contextMenuY);
+
+            canvas.DrawLine(Win9xWhite, contextMenuX, contextMenuY, contextMenuX, contextMenuY + height - 1);
+
+            canvas.DrawLine(Win9xLightGray, contextMenuX + 1, contextMenuY + 1, contextMenuX + width - 2, contextMenuY + 1);
+
+            canvas.DrawLine(Win9xLightGray, contextMenuX + 1, contextMenuY + 1, contextMenuX + 1, contextMenuY + height - 2);
+
+            canvas.DrawLine(Win9xBlack, contextMenuX, contextMenuY + height - 1, contextMenuX + width, contextMenuY + height - 1);
+
+            canvas.DrawLine(Win9xBlack, contextMenuX + width - 1, contextMenuY, contextMenuX + width - 1, contextMenuY + height);
+
+            canvas.DrawLine(Win9xDarkGray, contextMenuX + 1, contextMenuY + height - 2, contextMenuX + width - 2, contextMenuY + height - 2);
+
+            canvas.DrawLine(Win9xDarkGray, contextMenuX + width - 2, contextMenuY + 1, contextMenuX + width - 2, contextMenuY + height - 2);
+
+
+            for (int i = 0; i < contextMenu.Count; i++)
             {
-                canvas.DrawString(
-                    item.Text,
-                    Cosmos.System.Graphics.Fonts.PCScreenFont.Default,
-                    System.Drawing.Color.White,
-                    contextMenuX + 10,
-                    contextMenuY + item.Y + 8
-                );
+                DesktopMenuItem item = contextMenu[i];
+
+                int itemY = contextMenuY + item.Y;
+
+                if (i == hoveredMenuItem)
+                {
+                    canvas.DrawFilledRectangle(
+                        Win9xBlue,
+                        contextMenuX + 2,
+                        itemY + 2,
+                        width - 4,
+                        itemHeight
+                    );
+
+                    canvas.DrawString(
+                        item.Text,
+                        Cosmos.System.Graphics.Fonts.PCScreenFont.Default,
+                        Win9xWhite,
+                        contextMenuX + 10,
+                        itemY + 8
+                    );
+                }
+                else
+                {
+                    canvas.DrawString(
+                        item.Text,
+                        Cosmos.System.Graphics.Fonts.PCScreenFont.Default,
+                        Win9xBlack,
+                        contextMenuX + 10,
+                        itemY + 8
+                    );
+                }
             }
+        }
+
+        private static int GetContextMenuItemAt(int x, int y)
+        {
+            int width = 155;
+            int itemHeight = 28;
+            int height = contextMenu.Count * itemHeight;
+
+            if (x < contextMenuX ||
+                x >= contextMenuX + width ||
+                y < contextMenuY ||
+                y >= contextMenuY + height)
+            {
+                return -1;
+            }
+
+            int relativeY = y - contextMenuY;
+            int index = relativeY / itemHeight;
+
+            if (index < 0 || index >= contextMenu.Count)
+            {
+                return -1;
+            }
+
+            return index;
         }
 
         private static void HandleContextMenuClick(Canvas canvas, int x, int y)
         {
-            int width = 150;
+            int width = 155;
             int height = contextMenu.Count * 28;
 
-            if (x < contextMenuX || x > contextMenuX + width || y < contextMenuY || y > contextMenuY + height)
+            if (x < contextMenuX ||
+                x >= contextMenuX + width ||
+                y < contextMenuY ||
+                y >= contextMenuY + height)
             {
                 contextMenuVisible = false;
                 contextIcon = null;
+                hoveredMenuItem = -1;
+
                 return;
             }
 
             int relativeY = y - contextMenuY;
             int index = relativeY / 28;
 
-            if (index < 0 || index >= contextMenu.Count) return;
+            if (index < 0 || index >= contextMenu.Count)
+            {
+                return;
+            }
 
             string action = contextMenu[index].Text;
+
             contextMenuVisible = false;
+            hoveredMenuItem = -1;
+
 
             if (action == "Ac")
             {
-                if (contextIcon != null) OpenIcon(contextIcon);
+                if (contextIcon != null)
+                {
+                    OpenIcon(contextIcon);
+                }
             }
+
+
             else if (action == "Sil")
             {
                 if (contextIcon != null)
@@ -499,14 +686,23 @@ namespace HolmiumOS.GUI
                                 File.Delete(contextIcon.Path);
                             }
                         }
+
                         RefreshIcons();
                     }
-                    catch { }
+                    catch
+                    {
+                    }
                 }
             }
+
+
             else if (action == "Yeni Klasor")
             {
-                string defaultPath = UserManager.IsLoggedIn ? UserManager.HomeDirectory : "0:/home";
+                string defaultPath =
+                    UserManager.IsLoggedIn
+                        ? UserManager.HomeDirectory
+                        : "0:/home";
+
                 var msg = new MessageBox(
                     "Yeni Klasor",
                     "Klasor adi girin:",
@@ -518,20 +714,36 @@ namespace HolmiumOS.GUI
                         {
                             try
                             {
-                                string targetPath = defaultPath.TrimEnd('/', '\\') + "/" + inputName.Trim();
-                                targetPath = FileSystemManager.ResolvePath(targetPath);
+                                string targetPath =
+                                    defaultPath.TrimEnd('/', '\\') +
+                                    "/" +
+                                    inputName.Trim();
+
+                                targetPath =
+                                    FileSystemManager.ResolvePath(targetPath);
+
                                 FileSystemManager.CreateDirectory(targetPath);
+
                                 RefreshIcons();
                             }
-                            catch { }
+                            catch
+                            {
+                            }
                         }
                     }
                 );
+
                 AppManager.Run(msg);
             }
+
+
             else if (action == "Yeni Dosya")
             {
-                string defaultPath = UserManager.IsLoggedIn ? UserManager.HomeDirectory : "0:/home";
+                string defaultPath =
+                    UserManager.IsLoggedIn
+                        ? UserManager.HomeDirectory
+                        : "0:/home";
+
                 var msg = new MessageBox(
                     "Yeni Dosya",
                     "Dosya adi girin (orn: not.txt):",
@@ -543,21 +755,38 @@ namespace HolmiumOS.GUI
                         {
                             try
                             {
-                                string targetPath = defaultPath.TrimEnd('/', '\\') + "/" + inputName.Trim();
-                                targetPath = FileSystemManager.ResolvePath(targetPath);
-                                FileSystemManager.WriteFile(targetPath, "");
+                                string targetPath =
+                                    defaultPath.TrimEnd('/', '\\') +
+                                    "/" +
+                                    inputName.Trim();
+
+                                targetPath =
+                                    FileSystemManager.ResolvePath(targetPath);
+
+                                FileSystemManager.WriteFile(
+                                    targetPath,
+                                    ""
+                                );
+
                                 RefreshIcons();
                             }
-                            catch { }
+                            catch
+                            {
+                            }
                         }
                     }
                 );
+
                 AppManager.Run(msg);
             }
+
+
             else if (action == "Yenile")
             {
                 RefreshIcons();
             }
+
+
             else if (action == "Ikonlari Sirala")
             {
                 ArrangeIcons();
@@ -565,6 +794,7 @@ namespace HolmiumOS.GUI
 
             contextIcon = null;
         }
+
 
         private static void ArrangeIcons()
         {

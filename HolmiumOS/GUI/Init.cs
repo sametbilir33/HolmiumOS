@@ -52,21 +52,16 @@ namespace HolmiumOS.GUI
                 bool isLoggedIn = UserManager.IsLoggedIn;
                 bool isLoginAppOpen = CheckIfLoginIsOpen();
 
-                if (!isLoggedIn && !isLoginAppOpen)
-                {
-                    AppManager.Run<Login>(60, 60);
-                }
+                if (!isLoggedIn && !isLoginAppOpen) AppManager.Run<Login>(60, 60);
 
-                if (isLoggedIn)
-                {
-                    Taskbar.UpdateMouse(canvas);
-                }
+                if (isLoggedIn) Taskbar.UpdateMouse(canvas);
 
                 DesktopManager.UpdateMouse(canvas);
                 WindowManager.UpdateMouse(canvas);
-                TaskSwitcherManager.Update();
                 NotificationManager.UpdateMouse(canvas);
                 WindowManager.HandleKeyboard();
+
+                TaskSwitcherManager.Update();
 
                 int x = Clamp((int)MouseManager.X, 0, screenWidth - cursorWidth);
                 int y = Clamp((int)MouseManager.Y, 0, screenHeight - cursorHeight);
@@ -76,12 +71,12 @@ namespace HolmiumOS.GUI
                 DesktopManager.Draw(canvas);
                 WindowManager.Draw(canvas);
 
-                if (isLoggedIn)
-                {
-                    Taskbar.Draw(canvas);
-                }
+                if (isLoggedIn) Taskbar.Draw(canvas);
 
                 NotificationManager.Draw(canvas);
+
+                TaskSwitcherManager.Draw(canvas);
+
                 DrawCursor(x, y);
 
                 canvas.Display();
