@@ -80,6 +80,8 @@ namespace HolmiumOS
 
             InitializeSystem();
 
+            CommandManager.RegisterCommands();
+
             var mode = Boot.BootMenu.Show();
 
             if (mode == Boot.BootMode.CLI)
@@ -141,7 +143,6 @@ namespace HolmiumOS
 
 
             LoginScreen();
-            CommandManager.RegisterCommands();
 
             Console.WriteLine();
             Console.WriteLine($"HolmiumOS Surum: {OSVERSION}");

@@ -1,120 +1,201 @@
-﻿using HolmiumOS.GUI.Controls;
+﻿using System;
+using System.IO;
+using HolmiumOS.GUI.Controls;
+using HolmiumOS.Shell;
 
 namespace HolmiumOS.GUI.Apps
 {
     public class Terminal : AppBase
     {
+        private const int LineCount = 20;
+
+        private Label[] outputLabels;
+        private Label pathLabel;
+
         private TextBox inputTextBox;
-        private CheckBox termCheckBox;
         private Button submitButton;
-        private Button notificationButton; // <--- Yeni buton eklendi
-        private Label statusLabel;
 
-        private RadioButton radioLightMode;
-        private RadioButton radioDarkMode;
+        private TextWriter previousOutput;
+        private TerminalWriter terminalWriter;
+        private ShellContext shellContext;
 
-        private ProgressBar systemProgressBar;
-        private ListBox itemsListBox;
-        private ComboBox optionsComboBox;
-
-        public Terminal() : base("HolmiumOS Master Terminal")
+        public Terminal() : base("HolmiumOS Terminal")
         {
         }
 
         public override void Load()
         {
-            if (this.Window != null)
-            {
-                this.Window.Title = "HolmiumOS Master Terminal";
-            }
-
-            Label inputTitle = new Label("Kullanici Adi:", 20, 20);
-            inputTextBox = new TextBox(20, 40, 200, 25);
-            inputTextBox.MaxLength = 20;
-
-            termCheckBox = new CheckBox("Beni Hatirla", 20, 75);
-
-            radioLightMode = new RadioButton(this.Window, "Acik Tema", "ThemeGroup", 20, 115);
-            radioDarkMode = new RadioButton(this.Window, "Koyu Tema", "ThemeGroup", 20, 140);
-            radioLightMode.Checked = true;
-
-            Label comboTitle = new Label("Kabuk Secimi:", 240, 20);
-            optionsComboBox = new ComboBox(240, 40, 150);
-            optionsComboBox.Items.Add("Bash Shell");
-            optionsComboBox.Items.Add("Zsh Shell");
-            optionsComboBox.Items.Add("Holmium Core");
-
-            Label listTitle = new Label("Aktif Surecler:", 240, 75);
-            itemsListBox = new ListBox(240, 95, 150, 100);
-            itemsListBox.AddItem("Kernel.bin");
-            itemsListBox.AddItem("GUI_Server");
-            itemsListBox.AddItem("FileSystem");
-            itemsListBox.AddItem("Network.sys");
-
-            Label progressTitle = new Label("Bellek Durumu:", 20, 215);
-            systemProgressBar = new ProgressBar(20, 235, 370, 20);
-            systemProgressBar.Value = 45;
-
-            statusLabel = new Label("Sistem hazir. Tiklama bekleniyor...                 ", 20, 270);
-
-            submitButton = new Button("Verileri Isle ve Derle", 20, 305, 180, 35);
-            submitButton.ClickAction = OnSubmitButtonClick;
-
-            // <--- Bildirim Butonu Tanımlandı --->
-            notificationButton = new Button("Bildirim Gonder", 210, 305, 180, 35);
-            notificationButton.ClickAction = OnNotificationButtonClick;
-
-            if (this.Window != null)
-            {
-                this.Window.AddControl(inputTitle);
-                this.Window.AddControl(inputTextBox);
-                this.Window.AddControl(termCheckBox);
-
-                this.Window.AddControl(radioLightMode);
-                this.Window.AddControl(radioDarkMode);
-
-                this.Window.AddControl(comboTitle);
-                this.Window.AddControl(optionsComboBox);
-                this.Window.AddControl(listTitle);
-                this.Window.AddControl(itemsListBox);
-
-                this.Window.AddControl(progressTitle);
-                this.Window.AddControl(systemProgressBar);
-                this.Window.AddControl(statusLabel);
-                this.Window.AddControl(submitButton);
-                this.Window.AddControl(notificationButton); // <--- Pencereye eklendi
-            }
-        }
-
-        private void OnSubmitButtonClick()
-        {
-            if (statusLabel == null || inputTextBox == null || termCheckBox == null ||
-                radioLightMode == null || optionsComboBox == null || systemProgressBar == null)
+            if (this.Window == null)
                 return;
 
-            string username = string.IsNullOrEmpty(inputTextBox.Text) ? "Anonim" : inputTextBox.Text;
-            string rememberMe = termCheckBox.Checked ? "Evet" : "Hayir";
+            this.Window.Title = "HolmiumOS Terminal";
 
-            string shell = optionsComboBox.SelectedIndex >= 0 ? optionsComboBox.Items[optionsComboBox.SelectedIndex] : "Bilinmiyor";
-            string theme = radioLightMode.Checked ? "Acik" : "Koyu";
+            shellContext = new ShellContext(UserManager.HomeDirectory);
 
-            systemProgressBar.Value = 85;
-            systemProgressBar.BarColor = System.Drawing.Color.Orange;
+            outputLabels = new Label[LineCount];
 
-            statusLabel.Text = $"U: {username} | T: {theme} | S: {shell} | H: {rememberMe}";
+            for (int i = 0; i < LineCount; i++)
+            {
+                outputLabels[i] = new Label("", 10, 10 + (i * 18));
+                this.Window.AddControl(outputLabels[i]);
+            }
 
-            Cosmos.Core.Memory.Heap.Collect();
+            pathLabel = new Label("", 10, 375);
+            this.Window.AddControl(pathLabel);
+
+            inputTextBox = new TextBox(100, 372, 370, 25);
+            inputTextBox.MaxLength = 200;
+
+            submitButton = new Button("Gonder", 480, 372, 90, 25);
+            submitButton.ClickAction = ExecuteInput;
+
+            this.Window.AddControl(inputTextBox);
+            this.Window.AddControl(submitButton);
+
+            previousOutput = Console.Out;
+
+            terminalWriter = new TerminalWriter(
+                AddOutputLine,
+                ClearOutput
+            );
+
+            UpdatePathLabel();
         }
 
-        // <--- Bildirim Butonunun Action Metodu --->
-        private void OnNotificationButtonClick()
+        private string GetShortPath()
         {
-            string username = string.IsNullOrEmpty(inputTextBox?.Text) ? "Anonim" : inputTextBox.Text;
+            string currentPath = shellContext.CurrentDirectory;
+            string homePath = UserManager.HomeDirectory;
 
-            // Farklı türlerde test bildirimleri:
-            SendNotification("İslem Basarili", $"{username} verileri kaydedildi.", NotificationType.Success, 6);
-            SendNotification("Sistem Uyarisi", "Bellek tüketimi yüksek!", NotificationType.Warning, 8);
-            SendNotification("Kritik Hata", "Ag baglantisi koptu!", NotificationType.Error, 10);
+            if (string.IsNullOrEmpty(currentPath))
+                return "~";
+
+            currentPath = currentPath.Replace('/', '\\');
+
+            if (!string.IsNullOrEmpty(homePath))
+            {
+                homePath = homePath.Replace('/', '\\');
+
+                if (currentPath.Equals(homePath, StringComparison.OrdinalIgnoreCase))
+                    return "~";
+
+                if (currentPath.StartsWith(homePath + "\\", StringComparison.OrdinalIgnoreCase))
+                {
+                    string relativePath = currentPath
+                        .Substring(homePath.Length)
+                        .TrimStart('\\')
+                        .Replace('\\', '/');
+
+                    return "~/" + relativePath;
+                }
+            }
+
+            return currentPath.Replace('\\', '/');
+        }
+
+        private void UpdatePathLabel()
+        {
+            if (pathLabel == null)
+                return;
+
+            pathLabel.Text = GetShortPath();
+        }
+
+        private void AddOutputLine(string text)
+        {
+            if (outputLabels == null)
+                return;
+
+            int emptyIndex = -1;
+
+            for (int i = 0; i < LineCount; i++)
+            {
+                if (string.IsNullOrEmpty(outputLabels[i].Text))
+                {
+                    emptyIndex = i;
+                    break;
+                }
+            }
+
+            if (emptyIndex >= 0)
+            {
+                outputLabels[emptyIndex].Text = text;
+                return;
+            }
+
+            for (int i = 0; i < LineCount - 1; i++)
+                outputLabels[i].Text = outputLabels[i + 1].Text;
+
+            outputLabels[LineCount - 1].Text = text;
+        }
+
+        private void ClearOutput()
+        {
+            if (outputLabels == null)
+                return;
+
+            for (int i = 0; i < LineCount; i++)
+                outputLabels[i].Text = "";
+        }
+
+        private void ExecuteInput()
+        {
+            if (inputTextBox == null)
+                return;
+
+            string input = inputTextBox.Text;
+
+            if (string.IsNullOrWhiteSpace(input))
+                return;
+
+            inputTextBox.Text = "";
+
+            ClearOutput();
+
+            TextWriter oldOutput = Console.Out;
+
+            try
+            {
+                FileSystemManager.ActiveContext = shellContext;
+
+                Console.SetOut(terminalWriter);
+                terminalWriter.Activate();
+
+                CommandManager.ExecuteCommand(input.Trim());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Hata: " + ex.Message);
+            }
+            finally
+            {
+                terminalWriter.FlushPending();
+                terminalWriter.Deactivate();
+
+                FileSystemManager.ActiveContext = null;
+                Console.SetOut(oldOutput);
+            }
+
+            UpdatePathLabel();
+        }
+
+        public override void Close()
+        {
+            if (terminalWriter != null)
+            {
+                terminalWriter.FlushPending();
+                terminalWriter.Deactivate();
+            }
+
+            if (FileSystemManager.ActiveContext == shellContext)
+                FileSystemManager.ActiveContext = null;
+
+            if (previousOutput != null)
+                Console.SetOut(previousOutput);
+
+            previousOutput = null;
+            terminalWriter = null;
+            shellContext = null;
         }
     }
 }

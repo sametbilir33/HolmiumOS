@@ -6,7 +6,31 @@ namespace HolmiumOS.Shell
 {
     public static class FileSystemManager
     {
-        public static string CurrentDirectory { get; set; } = @"0:\";
+        private static string currentDirectory = @"0:\";
+
+        public static ShellContext ActiveContext { get; set; }
+
+        public static string CurrentDirectory
+        {
+            get
+            {
+                if (ActiveContext != null)
+                    return ActiveContext.CurrentDirectory;
+
+                return currentDirectory;
+            }
+
+            set
+            {
+                if (ActiveContext != null)
+                {
+                    ActiveContext.CurrentDirectory = value;
+                    return;
+                }
+
+                currentDirectory = value;
+            }
+        }
 
         private static readonly Random deviceRandom = new Random();
 
@@ -201,7 +225,7 @@ namespace HolmiumOS.Shell
             path = ResolvePath(path);
 
             if (IsDeviceFile(path))
-                return; // dev/null, dev/zero, dev/random -> yazma yok sayilir
+                return;
 
             if (!PermissionManager.CanWrite(path))
                 throw new UnauthorizedAccessException("Erisim reddedildi.");

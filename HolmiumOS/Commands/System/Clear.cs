@@ -1,4 +1,5 @@
 ﻿using System;
+using HolmiumOS.Shell;
 
 namespace HolmiumOS.Commands.System
 {
@@ -10,6 +11,12 @@ namespace HolmiumOS.Commands.System
 
         public void Execute(string args)
         {
+            if (TerminalWriter.Current != null)
+            {
+                TerminalWriter.ClearCurrent();
+                return;
+            }
+
             Console.Clear();
         }
     }
