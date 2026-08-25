@@ -1,4 +1,5 @@
 ﻿using Cosmos.System.Graphics;
+using HolmiumOS.GUI;
 
 namespace HolmiumOS.GUI.Controls
 {
@@ -8,11 +9,13 @@ namespace HolmiumOS.GUI.Controls
         public int Y;
         public int Width;
         public int Height;
-        public bool Visible = true;
 
+        public bool Visible = true;
         public bool Focused = false;
 
-        public Control(int x, int y, int width, int height)
+        public CursorType? Cursor { get; set; }
+
+        protected Control(int x, int y, int width, int height)
         {
             X = x;
             Y = y;
@@ -25,7 +28,10 @@ namespace HolmiumOS.GUI.Controls
 
         public bool Contains(int mouseX, int mouseY)
         {
-            return mouseX >= X && mouseX <= X + Width && mouseY >= Y && mouseY <= Y + Height;
+            return mouseX >= X &&
+                   mouseX <= X + Width &&
+                   mouseY >= Y &&
+                   mouseY <= Y + Height;
         }
     }
 }

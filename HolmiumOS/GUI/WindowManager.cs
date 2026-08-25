@@ -104,6 +104,8 @@ namespace HolmiumOS.GUI
 
         public static void UpdateMouse(Canvas canvas)
         {
+            UpdateControlCursor();
+
             int mx = (int)MouseManager.X;
             int my = (int)MouseManager.Y;
             bool isPressed = (MouseManager.MouseState == MouseState.Left);
@@ -187,6 +189,43 @@ namespace HolmiumOS.GUI
             }
 
             wasPressed = isPressed;
+        }
+
+        private static void UpdateControlCursor()
+        {
+            CursorManager.Reset();
+
+            if (activeWindow == null || activeWindow.IsMinimized)
+                return;
+
+            int mx = (int)MouseManager.X;
+            int my = (int)MouseManager.Y;
+
+            if (!activeWindow.Contains(mx, my))
+                return;
+
+            int count = activeWindow.Controls.Count;
+
+            for (int i = count - 1; i >= 0; i--)
+            {
+                if (i >= activeWindow.Controls.Count)
+                    break;
+
+                Control control = activeWindow.Controls[i];
+
+                if (control == null || !control.Visible)
+                    continue;
+
+                if (!control.Contains(mx, my))
+                    continue;
+
+                if (control.Cursor.HasValue)
+                {
+                    CursorManager.Set(control.Cursor.Value);
+                }
+
+                return;
+            }
         }
 
         public static void HandleKeyboard()
