@@ -1,0 +1,14 @@
+# Build output
+**/bin/
+**/obj/
+**/output-x64/
+
+# Disk images
+**/*.img
+
+# Visual Studio
+.vs/
+
+# User-specific files
+*.user
+*.suo

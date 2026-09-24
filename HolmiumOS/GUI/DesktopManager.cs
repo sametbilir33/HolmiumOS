@@ -1,0 +1,863 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using Cosmos.Kernel.System.Graphics;
+using Cosmos.Kernel.System.Graphics.Fonts;
+using Cosmos.Kernel.System.Mouse;
+using HolmiumOS.GUI.Apps;
+using HolmiumOS.Shell;
+
+namespace HolmiumOS.GUI
+{
+    public static class DesktopManager
+    {
+        private class DesktopIcon
+        {
+            public string Path { get; set; }
+            public string Name { get; set; }
+            public bool IsDirectory { get; set; }
+            public int X { get; set; }
+            public int Y { get; set; }
+            public int Width { get; set; } = 80;
+            public int Height { get; set; } = 80;
+            public bool Selected { get; set; }
+        }
+
+        private class DesktopMenuItem
+        {
+            public string Text { get; set; }
+            public int Y { get; set; }
+            public int Height { get; set; } = 28;
+        }
+
+        private static readonly List<DesktopIcon> icons = new List<DesktopIcon>();
+        private static readonly List<DesktopMenuItem> contextMenu = new List<DesktopMenuItem>();
+
+        private static bool wasLeftPressed = false;
+        private static bool wasRightPressed = false;
+
+        private static string lastUser = "";
+
+        private static DesktopIcon selectedIcon = null;
+        private static DesktopIcon lastClickedIcon = null;
+
+        private static long lastClickTime = 0;
+
+        private static bool contextMenuVisible = false;
+        private static int contextMenuX;
+        private static int contextMenuY;
+        private static DesktopIcon contextIcon = null;
+
+        private static int hoveredMenuItem = -1;
+
+        private static bool isSelecting = false;
+        private static int selectionStartX;
+        private static int selectionStartY;
+        private static int selectionEndX;
+        private static int selectionEndY;
+
+        private const int IconStartX = 30;
+        private const int IconStartY = 30;
+        private const int IconSpacingX = 95;
+        private const int IconSpacingY = 95;
+        private const int MaxColumns = 12;
+        private const int DoubleClickMilliseconds = 450;
+
+        private static readonly System.Drawing.Color Win9xGray =
+            System.Drawing.Color.FromArgb(192, 192, 192);
+
+        private static readonly System.Drawing.Color Win9xWhite =
+            System.Drawing.Color.FromArgb(255, 255, 255);
+
+        private static readonly System.Drawing.Color Win9xLightGray =
+            System.Drawing.Color.FromArgb(223, 223, 223);
+
+        private static readonly System.Drawing.Color Win9xDarkGray =
+            System.Drawing.Color.FromArgb(128, 128, 128);
+
+        private static readonly System.Drawing.Color Win9xBlack =
+            System.Drawing.Color.FromArgb(0, 0, 0);
+
+        private static readonly System.Drawing.Color Win9xBlue =
+            System.Drawing.Color.FromArgb(0, 0, 128);
+
+        private static readonly System.Drawing.Color SelectionBoxFill =
+            System.Drawing.Color.FromArgb(70, 70, 130, 220);
+
+        private static readonly System.Drawing.Color SelectionBoxBorder =
+            System.Drawing.Color.FromArgb(180, 100, 160, 255);
+
+        private static int CompareNames(string a, string b)
+        {
+            int length = a.Length < b.Length ? a.Length : b.Length;
+
+            for (int i = 0; i < length; i++)
+            {
+                char ca = a[i];
+                char cb = b[i];
+
+                if (ca >= 'A' && ca <= 'Z')
+                    ca = (char)(ca + 32);
+
+                if (cb >= 'A' && cb <= 'Z')
+                    cb = (char)(cb + 32);
+
+                if (ca < cb)
+                    return -1;
+
+                if (ca > cb)
+                    return 1;
+            }
+
+            if (a.Length < b.Length)
+                return -1;
+
+            if (a.Length > b.Length)
+                return 1;
+
+            return 0;
+        }
+
+        public static void RefreshIcons()
+        {
+            icons.Clear();
+
+            selectedIcon = null;
+            lastClickedIcon = null;
+            contextIcon = null;
+
+            contextMenuVisible = false;
+            hoveredMenuItem = -1;
+            isSelecting = false;
+
+            if (!UserManager.IsLoggedIn)
+                return;
+
+            string homeDir = UserManager.HomeDirectory;
+
+            if (string.IsNullOrEmpty(homeDir))
+                return;
+
+            if (!FileSystemManager.DirectoryExists(homeDir))
+                return;
+
+            var entryList = new List<(string Path, string Name, bool IsDirectory)>();
+
+            try
+            {
+                string[] dirs = FileSystemManager.GetDirectories(homeDir);
+
+                foreach (string dir in dirs)
+                {
+                    if (!string.IsNullOrEmpty(dir))
+                    {
+                        string dirName = Path.GetFileName(dir.TrimEnd('/', '\\'));
+
+                        if (!string.IsNullOrEmpty(dirName))
+                        {
+                            string fullPath = homeDir.TrimEnd('/', '\\') + "/" + dirName;
+                            fullPath = FileSystemManager.ResolvePath(fullPath);
+
+                            entryList.Add((fullPath, dirName, true));
+                        }
+                    }
+                }
+
+                string[] files = FileSystemManager.GetFiles(homeDir);
+
+                foreach (string file in files)
+                {
+                    if (!string.IsNullOrEmpty(file))
+                    {
+                        string fileName = Path.GetFileName(file.TrimEnd('/', '\\'));
+
+                        if (!string.IsNullOrEmpty(fileName))
+                        {
+                            string fullPath = homeDir.TrimEnd('/', '\\') + "/" + fileName;
+                            fullPath = FileSystemManager.ResolvePath(fullPath);
+
+                            entryList.Add((fullPath, fileName, false));
+                        }
+                    }
+                }
+
+                for (int i = 0; i < entryList.Count - 1; i++)
+                {
+                    for (int j = i + 1; j < entryList.Count; j++)
+                    {
+                        if (CompareNames(entryList[i].Name, entryList[j].Name) > 0)
+                        {
+                            var temp = entryList[i];
+                            entryList[i] = entryList[j];
+                            entryList[j] = temp;
+                        }
+                    }
+                }
+
+                int col = 0;
+                int row = 0;
+
+                foreach (var entry in entryList)
+                {
+                    DesktopIcon icon = new DesktopIcon
+                    {
+                        Path = entry.Path,
+                        Name = entry.Name,
+                        IsDirectory = entry.IsDirectory,
+                        X = IconStartX + (col * IconSpacingX),
+                        Y = IconStartY + (row * IconSpacingY),
+                        Width = 80,
+                        Height = 80,
+                        Selected = false
+                    };
+
+                    icons.Add(icon);
+
+                    col++;
+
+                    if (col >= MaxColumns)
+                    {
+                        col = 0;
+                        row++;
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        private static void OpenIcon(DesktopIcon icon)
+        {
+            if (icon == null)
+                return;
+
+            if (icon.IsDirectory)
+            {
+                var fileManager = new FileManager(icon.Path);
+                AppManager.Run(fileManager);
+            }
+            else
+            {
+                var notepad = new Notepad(icon.Path);
+                AppManager.Run(notepad);
+            }
+        }
+
+        public static void Draw(Canvas canvas)
+        {
+            if (!UserManager.IsLoggedIn)
+                return;
+
+            if (lastUser != UserManager.CurrentUser)
+            {
+                lastUser = UserManager.CurrentUser;
+                RefreshIcons();
+            }
+
+            if (isSelecting)
+            {
+                DrawSelectionBox(canvas);
+            }
+
+            foreach (DesktopIcon icon in icons)
+            {
+                DrawIcon(canvas, icon);
+            }
+
+            if (contextMenuVisible)
+            {
+                DrawContextMenu(canvas);
+            }
+        }
+
+        private static void DrawIcon(Canvas canvas, DesktopIcon icon)
+        {
+            if (icon.Selected)
+            {
+                var selectionColor = System.Drawing.Color.FromArgb(90, 70, 130, 220);
+
+                canvas.DrawFilledRectangle(selectionColor, icon.X, icon.Y, icon.Width, icon.Height);
+            }
+
+            int iconX = icon.X + 20;
+            int iconY = icon.Y + 5;
+
+            if (icon.IsDirectory)
+            {
+                DrawFolderIcon(canvas, iconX, iconY);
+            }
+            else
+            {
+                DrawFileIcon(canvas, iconX, iconY);
+            }
+
+            string displayName = icon.Name;
+
+            if (displayName.Length > 11)
+            {
+                displayName = displayName.Substring(0, 9) + "..";
+            }
+
+            canvas.DrawString(displayName, PCScreenFont.DefaultFont, System.Drawing.Color.White, icon.X + 4, icon.Y + 50);
+        }
+
+        private static void DrawFolderIcon(Canvas canvas, int x, int y)
+        {
+            var folderColor = System.Drawing.Color.FromArgb(255, 255, 205, 55);
+            var folderTopColor = System.Drawing.Color.FromArgb(255, 245, 190, 35);
+            var folderBorder = System.Drawing.Color.FromArgb(255, 190, 145, 20);
+
+            canvas.DrawFilledRectangle(folderTopColor, x + 4, y, 18, 8);
+            canvas.DrawFilledRectangle(folderColor, x, y + 6, 44, 30);
+
+            canvas.DrawLine(folderBorder, x, y + 6, x + 44, y + 6);
+            canvas.DrawLine(folderBorder, x, y + 36, x + 44, y + 36);
+            canvas.DrawLine(folderBorder, x, y + 6, x, y + 36);
+            canvas.DrawLine(folderBorder, x + 44, y + 6, x + 44, y + 36);
+        }
+
+        private static void DrawFileIcon(Canvas canvas, int x, int y)
+        {
+            var fileColor = System.Drawing.Color.FromArgb(255, 245, 245, 245);
+            var borderColor = System.Drawing.Color.FromArgb(255, 170, 175, 185);
+
+            canvas.DrawFilledRectangle(fileColor, x + 6, y, 32, 38);
+
+            canvas.DrawLine(borderColor, x + 6, y, x + 38, y);
+            canvas.DrawLine(borderColor, x + 6, y + 38, x + 38, y + 38);
+            canvas.DrawLine(borderColor, x + 6, y, x + 6, y + 38);
+            canvas.DrawLine(borderColor, x + 38, y, x + 38, y + 38);
+            canvas.DrawLine(borderColor, x + 28, y, x + 38, y + 10);
+        }
+
+        private static void DrawSelectionBox(Canvas canvas)
+        {
+            int x = selectionStartX;
+            int y = selectionStartY;
+            int width = selectionEndX - selectionStartX;
+            int height = selectionEndY - selectionStartY;
+
+            if (width < 0)
+            {
+                x = selectionEndX;
+                width = -width;
+            }
+
+            if (height < 0)
+            {
+                y = selectionEndY;
+                height = -height;
+            }
+
+            if (width <= 0 || height <= 0)
+                return;
+
+            canvas.DrawFilledRectangle(SelectionBoxFill, x, y, width, height);
+
+            canvas.DrawLine(SelectionBoxBorder, x, y, x + width, y);
+            canvas.DrawLine(SelectionBoxBorder, x, y, x, y + height);
+            canvas.DrawLine(SelectionBoxBorder, x + width, y, x + width, y + height);
+            canvas.DrawLine(SelectionBoxBorder, x, y + height, x + width, y + height);
+        }
+
+        public static void UpdateMouse(Canvas canvas)
+        {
+            if (!UserManager.IsLoggedIn)
+                return;
+
+            int mouseX = (int)MouseManager.X;
+            int mouseY = (int)MouseManager.Y;
+
+            bool leftPressed = MouseManager.LeftButton;
+            bool rightPressed = MouseManager.RightButton;
+
+            foreach (var window in WindowManager.GetWindows())
+            {
+                if (window != null && window.Contains(mouseX, mouseY))
+                {
+                    wasLeftPressed = leftPressed;
+                    wasRightPressed = rightPressed;
+                    return;
+                }
+            }
+
+            if (contextMenuVisible)
+            {
+                hoveredMenuItem = GetContextMenuItemAt(mouseX, mouseY);
+
+                if (leftPressed && !wasLeftPressed)
+                {
+                    HandleContextMenuClick(canvas, mouseX, mouseY);
+                }
+
+                wasLeftPressed = leftPressed;
+                wasRightPressed = rightPressed;
+
+                return;
+            }
+
+            if (rightPressed && !wasRightPressed)
+            {
+                DesktopIcon clickedIcon = GetIconAt(mouseX, mouseY);
+
+                contextIcon = clickedIcon;
+
+                if (clickedIcon != null)
+                {
+                    SelectIcon(clickedIcon);
+                    WindowManager.ClearFocus();
+                }
+                else
+                {
+                    ClearSelection();
+                    WindowManager.ClearFocus();
+                }
+
+                ShowContextMenu(canvas, mouseX, mouseY);
+
+                wasRightPressed = rightPressed;
+                return;
+            }
+
+            if (leftPressed && !wasLeftPressed)
+            {
+                DesktopIcon icon = GetIconAt(mouseX, mouseY);
+
+                if (icon != null)
+                {
+                    SelectIcon(icon);
+                    WindowManager.ClearFocus();
+                }
+                else
+                {
+                    isSelecting = true;
+
+                    selectionStartX = mouseX;
+                    selectionStartY = mouseY;
+                    selectionEndX = mouseX;
+                    selectionEndY = mouseY;
+
+                    ClearSelection();
+                    WindowManager.ClearFocus();
+                }
+            }
+
+            if (leftPressed && isSelecting)
+            {
+                selectionEndX = mouseX;
+                selectionEndY = mouseY;
+
+                UpdateBoxSelection();
+            }
+
+            if (!leftPressed && wasLeftPressed)
+            {
+                if (isSelecting)
+                {
+                    selectionEndX = mouseX;
+                    selectionEndY = mouseY;
+
+                    UpdateBoxSelection();
+
+                    isSelecting = false;
+                }
+                else
+                {
+                    DesktopIcon icon = GetIconAt(mouseX, mouseY);
+
+                    if (icon != null)
+                    {
+                        HandleIconClick(icon);
+                    }
+                }
+            }
+
+            wasLeftPressed = leftPressed;
+            wasRightPressed = rightPressed;
+        }
+
+        private static void HandleIconClick(DesktopIcon icon)
+        {
+            long now = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+
+            bool doubleClick =
+                lastClickedIcon == icon &&
+                (now - lastClickTime) <= DoubleClickMilliseconds;
+
+            if (doubleClick)
+            {
+                lastClickedIcon = null;
+                lastClickTime = 0;
+
+                OpenIcon(icon);
+            }
+            else
+            {
+                SelectIcon(icon);
+
+                lastClickedIcon = icon;
+                lastClickTime = now;
+            }
+        }
+
+        private static DesktopIcon GetIconAt(int x, int y)
+        {
+            for (int i = icons.Count - 1; i >= 0; i--)
+            {
+                DesktopIcon icon = icons[i];
+
+                if (x >= icon.X &&
+                    x <= icon.X + icon.Width &&
+                    y >= icon.Y &&
+                    y <= icon.Y + icon.Height)
+                {
+                    return icon;
+                }
+            }
+
+            return null;
+        }
+
+        private static void UpdateBoxSelection()
+        {
+            int left = selectionStartX;
+            int right = selectionEndX;
+            int top = selectionStartY;
+            int bottom = selectionEndY;
+
+            if (left > right)
+            {
+                int temp = left;
+                left = right;
+                right = temp;
+            }
+
+            if (top > bottom)
+            {
+                int temp = top;
+                top = bottom;
+                bottom = temp;
+            }
+
+            foreach (DesktopIcon icon in icons)
+            {
+                int iconLeft = icon.X;
+                int iconRight = icon.X + icon.Width;
+                int iconTop = icon.Y;
+                int iconBottom = icon.Y + icon.Height;
+
+                bool intersects =
+                    iconRight >= left &&
+                    iconLeft <= right &&
+                    iconBottom >= top &&
+                    iconTop <= bottom;
+
+                icon.Selected = intersects;
+            }
+
+            selectedIcon = null;
+
+            foreach (DesktopIcon icon in icons)
+            {
+                if (icon.Selected)
+                {
+                    selectedIcon = icon;
+                    break;
+                }
+            }
+        }
+
+        private static void SelectIcon(DesktopIcon icon)
+        {
+            foreach (DesktopIcon item in icons)
+            {
+                item.Selected = false;
+            }
+
+            if (icon != null)
+            {
+                icon.Selected = true;
+                selectedIcon = icon;
+            }
+        }
+
+        private static void ClearSelection()
+        {
+            foreach (DesktopIcon icon in icons)
+            {
+                icon.Selected = false;
+            }
+
+            selectedIcon = null;
+        }
+
+        private static void ShowContextMenu(Canvas canvas, int x, int y)
+        {
+            contextMenu.Clear();
+
+            hoveredMenuItem = -1;
+
+            if (contextIcon != null)
+            {
+                contextMenu.Add(new DesktopMenuItem { Text = "Ac", Y = 0 });
+                contextMenu.Add(new DesktopMenuItem { Text = "Sil", Y = 28 });
+                contextMenu.Add(new DesktopMenuItem { Text = "Yenile", Y = 56 });
+                contextMenu.Add(new DesktopMenuItem { Text = "Ikonlari Sirala", Y = 84 });
+            }
+            else
+            {
+                contextMenu.Add(new DesktopMenuItem { Text = "Yeni Klasor", Y = 0 });
+                contextMenu.Add(new DesktopMenuItem { Text = "Yeni Dosya", Y = 28 });
+                contextMenu.Add(new DesktopMenuItem { Text = "Yenile", Y = 56 });
+                contextMenu.Add(new DesktopMenuItem { Text = "Ikonlari Sirala", Y = 84 });
+            }
+
+            contextMenuX = x;
+            contextMenuY = y;
+
+            int screenWidth = (int)canvas.Mode.Width;
+            int screenHeight = (int)canvas.Mode.Height;
+
+            int menuWidth = 155;
+            int menuHeight = contextMenu.Count * 28;
+
+            if (contextMenuX + menuWidth > screenWidth)
+                contextMenuX = screenWidth - menuWidth;
+
+            if (contextMenuY + menuHeight > screenHeight)
+                contextMenuY = screenHeight - menuHeight;
+
+            if (contextMenuX < 0)
+                contextMenuX = 0;
+
+            if (contextMenuY < 0)
+                contextMenuY = 0;
+
+            contextMenuVisible = true;
+        }
+
+        private static void DrawContextMenu(Canvas canvas)
+        {
+            int width = 155;
+            int itemHeight = 28;
+            int height = contextMenu.Count * itemHeight;
+
+            canvas.DrawFilledRectangle(Win9xGray, contextMenuX, contextMenuY, width, height);
+
+            canvas.DrawLine(Win9xWhite, contextMenuX, contextMenuY, contextMenuX + width - 1, contextMenuY);
+            canvas.DrawLine(Win9xWhite, contextMenuX, contextMenuY, contextMenuX, contextMenuY + height - 1);
+            canvas.DrawLine(Win9xLightGray, contextMenuX + 1, contextMenuY + 1, contextMenuX + width - 2, contextMenuY + 1);
+            canvas.DrawLine(Win9xLightGray, contextMenuX + 1, contextMenuY + 1, contextMenuX + 1, contextMenuY + height - 2);
+            canvas.DrawLine(Win9xBlack, contextMenuX, contextMenuY + height - 1, contextMenuX + width, contextMenuY + height - 1);
+            canvas.DrawLine(Win9xBlack, contextMenuX + width - 1, contextMenuY, contextMenuX + width - 1, contextMenuY + height);
+            canvas.DrawLine(Win9xDarkGray, contextMenuX + 1, contextMenuY + height - 2, contextMenuX + width - 2, contextMenuY + height - 2);
+            canvas.DrawLine(Win9xDarkGray, contextMenuX + width - 2, contextMenuY + 1, contextMenuX + width - 2, contextMenuY + height - 2);
+
+            for (int i = 0; i < contextMenu.Count; i++)
+            {
+                DesktopMenuItem item = contextMenu[i];
+
+                int itemY = contextMenuY + item.Y;
+
+                if (i == hoveredMenuItem)
+                {
+                    canvas.DrawFilledRectangle(Win9xBlue, contextMenuX + 2, itemY + 2, width - 4, itemHeight);
+
+                    canvas.DrawString(
+                        item.Text,
+                        PCScreenFont.DefaultFont,
+                        Win9xWhite,
+                        contextMenuX + 10,
+                        itemY + 8
+                    );
+                }
+                else
+                {
+                    canvas.DrawString(
+                        item.Text,
+                        PCScreenFont.DefaultFont,
+                        Win9xBlack,
+                        contextMenuX + 10,
+                        itemY + 8
+                    );
+                }
+            }
+        }
+
+        private static int GetContextMenuItemAt(int x, int y)
+        {
+            int width = 155;
+            int itemHeight = 28;
+            int height = contextMenu.Count * itemHeight;
+
+            if (x < contextMenuX ||
+                x >= contextMenuX + width ||
+                y < contextMenuY ||
+                y >= contextMenuY + height)
+            {
+                return -1;
+            }
+
+            int relativeY = y - contextMenuY;
+            int index = relativeY / itemHeight;
+
+            if (index < 0 || index >= contextMenu.Count)
+                return -1;
+
+            return index;
+        }
+
+        private static void HandleContextMenuClick(Canvas canvas, int x, int y)
+        {
+            int width = 155;
+            int height = contextMenu.Count * 28;
+
+            if (x < contextMenuX ||
+                x >= contextMenuX + width ||
+                y < contextMenuY ||
+                y >= contextMenuY + height)
+            {
+                contextMenuVisible = false;
+                contextIcon = null;
+                hoveredMenuItem = -1;
+
+                return;
+            }
+
+            int relativeY = y - contextMenuY;
+            int index = relativeY / 28;
+
+            if (index < 0 || index >= contextMenu.Count)
+                return;
+
+            string action = contextMenu[index].Text;
+
+            contextMenuVisible = false;
+            hoveredMenuItem = -1;
+
+            if (action == "Ac")
+            {
+                if (contextIcon != null)
+                    OpenIcon(contextIcon);
+            }
+            else if (action == "Sil")
+            {
+                if (contextIcon != null)
+                {
+                    try
+                    {
+                        if (contextIcon.IsDirectory)
+                        {
+                            if (Directory.Exists(contextIcon.Path))
+                                Directory.Delete(contextIcon.Path, true);
+                        }
+                        else
+                        {
+                            if (File.Exists(contextIcon.Path))
+                                File.Delete(contextIcon.Path);
+                        }
+
+                        RefreshIcons();
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+            else if (action == "Yeni Klasor")
+            {
+                string defaultPath =
+                    UserManager.IsLoggedIn
+                        ? UserManager.HomeDirectory
+                        : "/home";
+
+                var msg = new MessageBox(
+                    "Yeni Klasor",
+                    "Klasor adi girin:",
+                    true,
+                    "YeniKlasor",
+                    (inputName) =>
+                    {
+                        if (!string.IsNullOrEmpty(inputName))
+                        {
+                            try
+                            {
+                                string targetPath =
+                                    defaultPath.TrimEnd('/', '\\') +
+                                    "/" +
+                                    inputName.Trim();
+
+                                targetPath =
+                                    FileSystemManager.ResolvePath(targetPath);
+
+                                FileSystemManager.CreateDirectory(targetPath);
+
+                                RefreshIcons();
+                            }
+                            catch
+                            {
+                            }
+                        }
+                    }
+                );
+
+                AppManager.Run(msg);
+            }
+            else if (action == "Yeni Dosya")
+            {
+                string defaultPath =
+                    UserManager.IsLoggedIn
+                        ? UserManager.HomeDirectory
+                        : "/home";
+
+                var msg = new MessageBox(
+                    "Yeni Dosya",
+                    "Dosya adi girin (orn: not.txt):",
+                    true,
+                    "yeni.txt",
+                    (inputName) =>
+                    {
+                        if (!string.IsNullOrEmpty(inputName))
+                        {
+                            try
+                            {
+                                string targetPath =
+                                    defaultPath.TrimEnd('/', '\\') +
+                                    "/" +
+                                    inputName.Trim();
+
+                                targetPath =
+                                    FileSystemManager.ResolvePath(targetPath);
+
+                                FileSystemManager.WriteFile(targetPath, "");
+
+                                RefreshIcons();
+                            }
+                            catch
+                            {
+                            }
+                        }
+                    }
+                );
+
+                AppManager.Run(msg);
+            }
+            else if (action == "Yenile")
+            {
+                RefreshIcons();
+            }
+            else if (action == "Ikonlari Sirala")
+            {
+                ArrangeIcons();
+            }
+
+            contextIcon = null;
+        }
+
+        private static void ArrangeIcons()
+        {
+            RefreshIcons();
+        }
+    }
+}
