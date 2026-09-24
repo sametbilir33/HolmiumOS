@@ -7,8 +7,12 @@ namespace HolmiumOS.Commands.Network
     public class Curl : ICommand
     {
         public string Name => "curl";
-        public string Description => "HTTP icerigini gosterir.";
-        public string Usage => "curl <url>";
+
+        public string Description =>
+            "HTTP icerigini gosterir.";
+
+        public string Usage =>
+            "curl <url>";
 
         public void Execute(string args)
         {
@@ -20,17 +24,32 @@ namespace HolmiumOS.Commands.Network
 
             try
             {
-                HTTPClient client = new(args);
+                string[] parts =
+                    args.Split(
+                        ' ',
+                        StringSplitOptions.RemoveEmptyEntries);
 
-                byte[] response = client.Get();
+                string url = parts[0];
+
+                HTTPClient client = new(url);
+
+                HTTPResponse response = client.Get();
+
+                if (response.Body == null ||
+                    response.Body.Length == 0)
+                {
+                    Console.WriteLine(
+                        "Sunucu bos cevap dondu.");
+                    return;
+                }
 
                 Console.WriteLine(
-                    Encoding.UTF8.GetString(response)
-                );
+                    Encoding.UTF8.GetString(response.Body));
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"curl error: {ex.Message}");
+                Console.WriteLine(
+                    $"curl error: {ex.Message}");
             }
         }
     }

@@ -46,13 +46,6 @@ namespace HolmiumOS
         {
             KeyboardManager.SetKeyLayout(new TRStandardLayout());
 
-            /*
-             * Önce storage hazırlanıyor.
-             *
-             * Disk yoksa burada sistem durur.
-             * Disk var fakat partition yoksa kullanıcıdan
-             * MBR/GPT ve partition kurulumu istenir.
-             */
             if (!InitializeStorage())
             {
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -64,9 +57,6 @@ namespace HolmiumOS
                 return;
             }
 
-            /*
-             * Artık /mnt kullanılabilir.
-             */
             InitializeSystem();
 
             CommandManager.RegisterCommands();
@@ -149,11 +139,6 @@ namespace HolmiumOS
             Console.WriteLine();
         }
 
-        /*
-         * ============================================================
-         * STORAGE
-         * ============================================================
-         */
 
         private bool InitializeStorage()
         {
@@ -163,9 +148,6 @@ namespace HolmiumOS
             Console.WriteLine("=== HolmiumOS Storage Manager ===");
             Console.ResetColor();
 
-            /*
-             * Cosmos'un storage katmanının birincil diskini al.
-             */
             IBlockDevice? disk = StorageManager.PrimaryDevice;
 
             if (disk == null)
@@ -190,15 +172,6 @@ namespace HolmiumOS
             Console.WriteLine("Block size: " + disk.BlockSize);
             Console.WriteLine("Block count: " + disk.BlockCount);
 
-            /*
-             * Partition listesi bos mu?
-             *
-             * Bos olması:
-             *   - disk var
-             *   - fakat partition bulunmuyor
-             *
-             * anlamına gelebilir.
-             */
             if (StorageManager.Partitions == null ||
                 StorageManager.Partitions.Count == 0)
             {
@@ -214,19 +187,11 @@ namespace HolmiumOS
             }
             else
             {
-                /*
-                 * Mevcut partitionlar var.
-                 * Kullanıcıya hangisinin kullanılacağını sor.
-                 */
                 if (!SelectExistingPartition())
                 {
                     return false;
                 }
             }
-
-            /*
-             * FAT filesystem sürücüsünü kaydet.
-             */
             if (!RegisterAndMountFilesystem())
             {
                 return false;
@@ -234,12 +199,6 @@ namespace HolmiumOS
 
             return true;
         }
-
-        /*
-         * ============================================================
-         * PARTITION SETUP
-         * ============================================================
-         */
 
         private bool CreatePartitionLayout(IBlockDevice disk)
         {
@@ -259,9 +218,6 @@ namespace HolmiumOS
 
             Console.WriteLine();
 
-            /*
-             * Eğer zaten GPT veya MBR varsa kullanıcıya bilgi ver.
-             */
             bool isGpt = false;
             bool isMbr = false;
 
@@ -296,9 +252,6 @@ namespace HolmiumOS
                 Console.WriteLine("Partition tablosu bulunamadi.");
             }
 
-            /*
-             * Partition scheme seçimi.
-             */
             Console.WriteLine();
             Console.WriteLine("[1] GPT");
             Console.WriteLine("[2] MBR");
@@ -315,14 +268,6 @@ namespace HolmiumOS
                 return false;
             }
 
-            /*
-             * DİKKAT:
-             *
-             * Gpt.Create / Mbr.Create mevcut partition tablosunu
-             * değiştirebilir / silebilir.
-             *
-             * Kullanıcıdan açık onay alıyoruz.
-             */
             Console.WriteLine();
 
             Console.ForegroundColor = ConsoleColor.Red;
@@ -341,9 +286,6 @@ namespace HolmiumOS
                 return false;
             }
 
-            /*
-             * Partition tablosunu oluştur.
-             */
             try
             {
                 if (schemeChoice == 1)
@@ -377,15 +319,6 @@ namespace HolmiumOS
                 return false;
             }
 
-            /*
-             * İlk 2048 sector'u boş bırakıyoruz.
-             *
-             * 512 byte sector varsayımıyla:
-             *
-             * 2048 * 512 = 1 MiB
-             *
-             * Böylece partition 1 MiB hizalı başlar.
-             */
             ulong startSector = 2048;
 
             if (disk.BlockCount <= startSector)
@@ -397,9 +330,6 @@ namespace HolmiumOS
 
             ulong sectorCount = disk.BlockCount - startSector;
 
-            /*
-             * Çok küçük bir disk için taşmayı önle.
-             */
             if (sectorCount == 0)
             {
                 Console.WriteLine(
@@ -440,14 +370,6 @@ namespace HolmiumOS
                 return false;
             }
 
-            /*
-             * ÇOK ÖNEMLİ:
-             *
-             * Yeni partition StorageManager.Partitions'a
-             * otomatik olarak gelmez.
-             *
-             * Rescan gerekiyor.
-             */
             Console.WriteLine("Partition tablosu yeniden taraniyor...");
 
             try
@@ -481,17 +403,9 @@ namespace HolmiumOS
                 "Partition basariyla olusturuldu.");
             Console.ResetColor();
 
-            /*
-             * Yeni partition'u seç.
-             */
             return true;
         }
 
-        /*
-         * ============================================================
-         * EXISTING PARTITION SELECT
-         * ============================================================
-         */
 
         private bool SelectExistingPartition()
         {
@@ -520,12 +434,6 @@ namespace HolmiumOS
                 0,
                 count - 1);
 
-            /*
-             * Seçilen partition'ı listenin başına taşımıyoruz.
-             *
-             * Bunun yerine Mount sırasında doğrudan seçilen
-             * partition nesnesini kullanacağız.
-             */
             SelectedPartitionIndex = selected;
 
             Console.WriteLine();
@@ -537,11 +445,6 @@ namespace HolmiumOS
 
         private int SelectedPartitionIndex = 0;
 
-        /*
-         * ============================================================
-         * FILESYSTEM
-         * ============================================================
-         */
 
         private bool RegisterAndMountFilesystem()
         {
@@ -574,10 +477,6 @@ namespace HolmiumOS
             if (SelectedPartitionIndex < 0 ||
                 SelectedPartitionIndex >= StorageManager.Partitions.Count)
             {
-                /*
-                 * Yeni partition oluşturduysak normalde [0]
-                 * olacaktır.
-                 */
                 SelectedPartitionIndex = 0;
             }
 
@@ -588,10 +487,6 @@ namespace HolmiumOS
             Console.WriteLine(
                 $"Partition [{SelectedPartitionIndex}] mount ediliyor...");
 
-            /*
-             * Önce mevcut filesystem'in mount edilebilir olup
-             * olmadığını deniyoruz.
-             */
             if (VfsManager.TryMount(
                 "fat",
                 partition,
@@ -620,12 +515,6 @@ namespace HolmiumOS
                 return false;
             }
 
-            /*
-             * Mount başarısızsa partition muhtemelen FAT formatlı
-             * değildir.
-             *
-             * Burada kullanıcıya formatlama seçeneği sunuyoruz.
-             */
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine();
             Console.WriteLine(
@@ -671,9 +560,6 @@ namespace HolmiumOS
                 "FAT32 formatlama tamamlandi.");
             Console.ResetColor();
 
-            /*
-             * Format sonrası tekrar mount et.
-             */
             if (!VfsManager.TryMount(
                 "fat",
                 partition,
@@ -701,11 +587,6 @@ namespace HolmiumOS
             return true;
         }
 
-        /*
-         * ============================================================
-         * SYSTEM INITIALIZATION
-         * ============================================================
-         */
 
         private void InitializeSystem()
         {
@@ -824,11 +705,6 @@ namespace HolmiumOS
             Sys.Power.Reboot();
         }
 
-        /*
-         * ============================================================
-         * LOGIN
-         * ============================================================
-         */
 
         private void LoginScreen()
         {
@@ -874,11 +750,6 @@ namespace HolmiumOS
             }
         }
 
-        /*
-         * ============================================================
-         * SHELL PROMPT
-         * ============================================================
-         */
 
         private void WritePrompt()
         {
@@ -913,11 +784,6 @@ namespace HolmiumOS
             Console.ResetColor();
         }
 
-        /*
-         * ============================================================
-         * RUN
-         * ============================================================
-         */
 
         protected override void Run()
         {
@@ -945,11 +811,6 @@ namespace HolmiumOS
             }
         }
 
-        /*
-         * ============================================================
-         * HELPERS
-         * ============================================================
-         */
 
         private int ReadNumber(
             string prompt,

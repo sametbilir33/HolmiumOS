@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Net.Sockets;
+using CosmosNetworkManager = Cosmos.Kernel.System.Network.NetworkManager;
 using Cosmos.Kernel.System.Network;
 using Cosmos.Kernel.System.Network.Config;
 using Cosmos.Kernel.System.Network.DNS;
 using Cosmos.Kernel.System.Network.IPv4;
 using Cosmos.Kernel.System.Network.IPv4.DHCP;
-using Cosmos.Kernel.System.Timer;
 
 namespace HolmiumOS.Network;
 
@@ -13,47 +12,52 @@ public static class NetworkManager
 {
     public static DnsClient DNSClient { get; private set; } = null!;
 
-    public static ulong Ping(Address address)
+    public static int Ping(Address address, int timeout = 5000)
     {
-        ulong start = GetMilliseconds();
-
         try
         {
-            using TcpClient client = new();
+            IcmpClient icmp = new();
 
-            client.Connect(address.ToString(), 80);
+            icmp.Connect(address);
+            icmp.SendEcho();
 
-            return GetMilliseconds() - start;
+            Cosmos.Kernel.System.Network.EndPoint source =
+                new Cosmos.Kernel.System.Network.EndPoint(address, 0);
+
+            int elapsed = icmp.Receive(ref source, timeout);
+
+            icmp.Close();
+
+            return elapsed;
         }
         catch
         {
-            return 0;
+            return -1;
         }
-    }
-
-    private static ulong GetMilliseconds()
-    {
-        // Cosmos Gen3'te RTC tabanlı eski Cosmos.HAL.Global.PIT
-        // zamanlamasına bağlı kalmıyoruz.
-        //
-        // TimerManager.Wait için gereken kernel timer altyapısı
-        // Gen3 tarafından yönetiliyor. Burada basit bir monotonic
-        // sayaç olmadığı için mevcut API ile saniye tabanlı ölçüm
-        // kullanılıyor.
-        //
-        // Ping yalnızca yardımcı bir API olduğundan hata durumunda 0
-        // döndürülüyor.
-
-        return 0;
     }
 
     public static void Init()
     {
         try
         {
+            Console.WriteLine("Initializing network...");
+
             NetworkStack.RemoveAllConfigIP();
 
+            if (CosmosNetworkManager.DeviceCount == 0)
+            {
+                Console.WriteLine("No network device found.");
+                return;
+            }
+
+            Console.WriteLine("Network device found.");
+            Console.WriteLine("Device: " + CosmosNetworkManager.Name);
+            Console.WriteLine("MAC: " + CosmosNetworkManager.MacAddress);
+            Console.WriteLine("Link up: " + CosmosNetworkManager.LinkUp);
+            Console.WriteLine("Ready: " + CosmosNetworkManager.Ready);
+
             DhcpClient dhcpClient = new();
+
             int result = dhcpClient.SendDiscoverPacket();
 
             if (result < 0)
@@ -63,6 +67,16 @@ public static class NetworkManager
             }
 
             Console.WriteLine("DHCP configuration completed.");
+
+            IPConfig? config =
+                CosmosNetworkManager.Primary.IPConfig;
+
+            if (config is not null)
+            {
+                Console.WriteLine("IP address: " + config.Address);
+                Console.WriteLine("Subnet: " + config.SubnetMask);
+                Console.WriteLine("Gateway: " + config.DefaultGateway);
+            }
 
             Address4 dnsServer = new(1, 1, 1, 1);
 
@@ -89,11 +103,20 @@ public static class NetworkManager
 
         try
         {
-            if (Address.Parse(host) is Address directAddress)
-            {
-                return directAddress;
-            }
+            Address? address = Address.Parse(host);
 
+            if (address is not null)
+            {
+                return address;
+            }
+        }
+        catch
+        {
+            // Hostname, continue with DNS.
+        }
+
+        try
+        {
             if (DNSClient is null)
             {
                 return null;
@@ -117,7 +140,6 @@ public static class NetworkManager
         }
         catch
         {
-            // DNS bağlantısı kapatılırken oluşan hatalar yok sayılır.
         }
 
         try
@@ -126,7 +148,6 @@ public static class NetworkManager
         }
         catch
         {
-            // Network stack zaten temizlenmiş olabilir.
         }
     }
 }

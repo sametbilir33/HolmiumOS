@@ -1,4 +1,6 @@
 ﻿using System;
+using Cosmos.Kernel.System.Network;
+using HolmiumNetworkManager = HolmiumOS.Network.NetworkManager;
 
 namespace HolmiumOS.Commands.Network
 {
@@ -20,11 +22,43 @@ namespace HolmiumOS.Commands.Network
                 return;
             }
 
-            Console.WriteLine(
-                "Ping, Cosmos Gen3'te mevcut NetworkManager API'si tarafindan desteklenmiyor.");
+            try
+            {
+                string input = args.Trim();
 
-            Console.WriteLine(
-                "ICMP ping desteği daha sonra eklenebilir.");
+                Address? address =
+                    Address.Parse(input);
+
+                if (address is null)
+                {
+                    Console.WriteLine(
+                        "Gecersiz IP adresi.");
+
+                    return;
+                }
+
+                Console.WriteLine(
+                    $"PING {address}");
+
+                int elapsed =
+    HolmiumNetworkManager.Ping(address);
+
+                if (elapsed >= 0)
+                {
+                    Console.WriteLine(
+                        $"Reply from {address}: time={elapsed}ms");
+                }
+                else
+                {
+                    Console.WriteLine(
+                        "Request timed out.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(
+                    $"ping error: {ex.Message}");
+            }
         }
     }
 }

@@ -9,6 +9,26 @@ namespace HolmiumOS.Shell
 
         public static ShellContext ActiveContext { get; set; }
 
+        /*
+         * Kullanıcının gördüğü sanal filesystem:
+         *
+         * /
+         * /home
+         * /home/samet
+         * /dev
+         * /tmp
+         *
+         * Cosmos'un gerçek filesystem'i:
+         *
+         * /mnt
+         * /mnt/home
+         * /mnt/home/samet
+         * /mnt/dev
+         * /mnt/tmp
+         */
+
+        private const string MountPoint = "/mnt";
+
         public static string CurrentDirectory
         {
             get
@@ -29,7 +49,7 @@ namespace HolmiumOS.Shell
 
                 currentDirectory = string.IsNullOrWhiteSpace(value)
                     ? "/"
-                    : value;
+                    : NormalizePath(value);
             }
         }
 
@@ -39,6 +59,17 @@ namespace HolmiumOS.Shell
         private const string DevZero = "/dev/zero";
         private const string DevRandom = "/dev/random";
 
+        /*
+         * Kullanıcı tarafından verilen yolu
+         * sanal filesystem yoluna çevirir.
+         *
+         * Örnek:
+         *
+         * "test.txt"       -> "/home/samet/test.txt"
+         * "~"              -> "/home/samet"
+         * "~/test.txt"     -> "/home/samet/test.txt"
+         * "/tmp/test.txt"  -> "/tmp/test.txt"
+         */
         public static string ResolvePath(string path)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -47,15 +78,17 @@ namespace HolmiumOS.Shell
             path = path.Trim();
 
             if (path == "~")
-                return UserManager.HomeDirectory;
+                return NormalizePath(UserManager.HomeDirectory);
 
             if (path.StartsWith("~/", StringComparison.Ordinal))
-                return Path.Combine(
+            {
+                return CombinePath(
                     UserManager.HomeDirectory,
                     path.Substring(2));
+            }
 
             if (path == ".")
-                return CurrentDirectory;
+                return NormalizePath(CurrentDirectory);
 
             if (path == "..")
                 return GetParentDirectory(CurrentDirectory);
@@ -85,7 +118,31 @@ namespace HolmiumOS.Shell
             return CombinePath(CurrentDirectory, path);
         }
 
-        private static string CombinePath(string basePath, string relativePath)
+        /*
+         * Sanal filesystem yolunu Cosmos'un gerçek
+         * /mnt filesystem yoluna çevirir.
+         *
+         * "/"               -> "/mnt"
+         * "/home"           -> "/mnt/home"
+         * "/home/samet"     -> "/mnt/home/samet"
+         * "/dev/null"       -> "/mnt/dev/null"
+         */
+        private static string ToRealPath(string virtualPath)
+{
+    virtualPath = NormalizePath(virtualPath);
+
+    if (virtualPath == "/")
+        return "/mnt";
+
+    if (virtualPath.StartsWith("/mnt/", StringComparison.Ordinal))
+        return virtualPath;
+
+    return "/mnt" + virtualPath;
+}
+
+        private static string CombinePath(
+            string basePath,
+            string relativePath)
         {
             if (string.IsNullOrEmpty(relativePath))
                 return NormalizePath(basePath);
@@ -96,7 +153,8 @@ namespace HolmiumOS.Shell
             if (string.IsNullOrEmpty(basePath) || basePath == "/")
                 return NormalizePath("/" + relativePath);
 
-            return NormalizePath(basePath.TrimEnd('/') + "/" + relativePath);
+            return NormalizePath(
+                basePath.TrimEnd('/') + "/" + relativePath);
         }
 
         private static string NormalizePath(string path)
@@ -178,116 +236,140 @@ namespace HolmiumOS.Shell
 
         public static bool DirectoryExists(string path)
         {
-            return Directory.Exists(ResolvePath(path));
+            string virtualPath = ResolvePath(path);
+            string realPath = ToRealPath(virtualPath);
+
+            return Directory.Exists(realPath);
         }
 
         public static bool FileExists(string path)
         {
-            string resolved = ResolvePath(path);
+            string virtualPath = ResolvePath(path);
 
-            if (IsDeviceFile(resolved))
+            if (IsDeviceFile(virtualPath))
                 return true;
 
-            return File.Exists(resolved);
+            string realPath = ToRealPath(virtualPath);
+
+            return File.Exists(realPath);
         }
 
         public static bool ChangeDirectory(string path)
         {
-            path = ResolvePath(path);
+            string virtualPath = ResolvePath(path);
+            string realPath = ToRealPath(virtualPath);
 
-            if (!PermissionManager.CanEnter(path))
-                throw new UnauthorizedAccessException("Erisim reddedildi.");
+            if (!PermissionManager.CanEnter(virtualPath))
+                throw new UnauthorizedAccessException(
+                    "Erisim reddedildi.");
 
-            if (!Directory.Exists(path))
+            if (!Directory.Exists(realPath))
                 return false;
 
-            CurrentDirectory = NormalizePath(path);
+            CurrentDirectory = virtualPath;
 
             return true;
         }
 
         public static void CreateDirectory(string path)
         {
-            path = ResolvePath(path);
+            string virtualPath = ResolvePath(path);
+            string realPath = ToRealPath(virtualPath);
 
-            if (!PermissionManager.CanCreate(path))
-                throw new UnauthorizedAccessException("Erisim reddedildi.");
+            if (!PermissionManager.CanCreate(virtualPath))
+                throw new UnauthorizedAccessException(
+                    "Erisim reddedildi.");
 
-            if (Directory.Exists(path) || File.Exists(path))
+            if (Directory.Exists(realPath) ||
+                File.Exists(realPath))
+            {
                 throw new IOException(
                     "Ayni adda dosya veya klasor zaten var.");
+            }
 
-            Directory.CreateDirectory(path);
+            Directory.CreateDirectory(realPath);
         }
 
         public static void DeleteDirectory(
             string path,
             bool recursive = true)
         {
-            path = ResolvePath(path);
+            string virtualPath = ResolvePath(path);
+            string realPath = ToRealPath(virtualPath);
 
-            if (!PermissionManager.CanDelete(path))
-                throw new UnauthorizedAccessException("Erisim reddedildi.");
+            if (!PermissionManager.CanDelete(virtualPath))
+                throw new UnauthorizedAccessException(
+                    "Erisim reddedildi.");
 
-            if (!Directory.Exists(path))
+            if (!Directory.Exists(realPath))
                 throw new DirectoryNotFoundException();
 
-            Directory.Delete(path, recursive);
+            Directory.Delete(realPath, recursive);
         }
 
         public static void CreateFile(string path)
         {
-            path = ResolvePath(path);
+            string virtualPath = ResolvePath(path);
 
-            if (IsDeviceFile(path))
+            if (IsDeviceFile(virtualPath))
+            {
                 throw new IOException(
                     "Bu bir aygit dosyasidir, olusturulamaz.");
+            }
 
-            if (!PermissionManager.CanCreate(path))
-                throw new UnauthorizedAccessException("Erisim reddedildi.");
+            string realPath = ToRealPath(virtualPath);
 
-            if (File.Exists(path))
+            if (!PermissionManager.CanCreate(virtualPath))
+                throw new UnauthorizedAccessException(
+                    "Erisim reddedildi.");
+
+            if (File.Exists(realPath))
                 throw new IOException("Dosya zaten var.");
 
-            File.Create(path).Dispose();
+            File.Create(realPath).Dispose();
         }
 
         public static void DeleteFile(string path)
         {
-            path = ResolvePath(path);
+            string virtualPath = ResolvePath(path);
 
-            if (IsDeviceFile(path))
+            if (IsDeviceFile(virtualPath))
+            {
                 throw new IOException(
                     "Bu bir aygit dosyasidir, silinemez.");
+            }
 
-            if (!PermissionManager.CanDelete(path))
-                throw new UnauthorizedAccessException("Erisim reddedildi.");
+            string realPath = ToRealPath(virtualPath);
 
-            if (!File.Exists(path))
+            if (!PermissionManager.CanDelete(virtualPath))
+                throw new UnauthorizedAccessException(
+                    "Erisim reddedildi.");
+
+            if (!File.Exists(realPath))
                 throw new FileNotFoundException();
 
-            File.Delete(path);
+            File.Delete(realPath);
         }
 
         public static string ReadFile(string path)
         {
-            path = ResolvePath(path);
+            string virtualPath = ResolvePath(path);
 
-            if (path.Equals(
+            if (virtualPath.Equals(
                     DevNull,
                     StringComparison.OrdinalIgnoreCase))
             {
                 return string.Empty;
             }
 
-            if (path.Equals(
+            if (virtualPath.Equals(
                     DevZero,
                     StringComparison.OrdinalIgnoreCase))
             {
                 return new string('0', 64);
             }
 
-            if (path.Equals(
+            if (virtualPath.Equals(
                     DevRandom,
                     StringComparison.OrdinalIgnoreCase))
             {
@@ -302,52 +384,81 @@ namespace HolmiumOS.Shell
                 return new string(chars);
             }
 
-            if (!PermissionManager.CanRead(path))
-                throw new UnauthorizedAccessException("Erisim reddedildi.");
+            if (!PermissionManager.CanRead(virtualPath))
+                throw new UnauthorizedAccessException(
+                    "Erisim reddedildi.");
 
-            if (!File.Exists(path))
+            string realPath = ToRealPath(virtualPath);
+
+            if (!File.Exists(realPath))
                 throw new FileNotFoundException();
 
-            return File.ReadAllText(path);
+            return File.ReadAllText(realPath);
         }
 
         public static byte[] ReadBytes(string path)
         {
-            path = ResolvePath(path);
+            string virtualPath = ResolvePath(path);
 
-            if (!PermissionManager.CanRead(path))
-                throw new UnauthorizedAccessException("Erisim reddedildi.");
+            if (!PermissionManager.CanRead(virtualPath))
+                throw new UnauthorizedAccessException(
+                    "Erisim reddedildi.");
 
-            if (!File.Exists(path))
+            string realPath = ToRealPath(virtualPath);
+
+            if (!File.Exists(realPath))
                 throw new FileNotFoundException();
 
-            return File.ReadAllBytes(path);
+            return File.ReadAllBytes(realPath);
         }
 
-        public static void WriteFile(string path, string content)
+        public static void WriteFile(
+            string path,
+            string content)
         {
-            path = ResolvePath(path);
+            string virtualPath = ResolvePath(path);
 
-            if (IsDeviceFile(path))
+            if (IsDeviceFile(virtualPath))
                 return;
 
-            if (!PermissionManager.CanWrite(path))
-                throw new UnauthorizedAccessException("Erisim reddedildi.");
+            if (!PermissionManager.CanWrite(virtualPath))
+                throw new UnauthorizedAccessException(
+                    "Erisim reddedildi.");
 
-            File.WriteAllText(path, content);
+            string realPath = ToRealPath(virtualPath);
+
+            File.WriteAllText(realPath, content);
         }
 
-        public static void AppendFile(string path, string content)
-        {
-            path = ResolvePath(path);
+public static void WriteBytes(string path, byte[] data)
+{
+    string virtualPath = ResolvePath(path);
 
-            if (IsDeviceFile(path))
+    if (!PermissionManager.CanWrite(virtualPath))
+        throw new UnauthorizedAccessException(
+            "Erisim reddedildi.");
+
+    string realPath = ToRealPath(virtualPath);
+
+    File.WriteAllBytes(realPath, data);
+}
+
+        public static void AppendFile(
+            string path,
+            string content)
+        {
+            string virtualPath = ResolvePath(path);
+
+            if (IsDeviceFile(virtualPath))
                 return;
 
-            if (!PermissionManager.CanWrite(path))
-                throw new UnauthorizedAccessException("Erisim reddedildi.");
+            if (!PermissionManager.CanWrite(virtualPath))
+                throw new UnauthorizedAccessException(
+                    "Erisim reddedildi.");
 
-            File.AppendAllText(path, content);
+            string realPath = ToRealPath(virtualPath);
+
+            File.AppendAllText(realPath, content);
         }
 
         public static void CopyFile(
@@ -355,53 +466,76 @@ namespace HolmiumOS.Shell
             string destination,
             bool overwrite = true)
         {
-            source = ResolvePath(source);
-            destination = ResolvePath(destination);
+            string sourceVirtual = ResolvePath(source);
+            string destinationVirtual = ResolvePath(destination);
 
-            if (!PermissionManager.CanRead(source))
-                throw new UnauthorizedAccessException("Erisim reddedildi.");
+            if (!PermissionManager.CanRead(sourceVirtual))
+                throw new UnauthorizedAccessException(
+                    "Erisim reddedildi.");
 
-            if (!PermissionManager.CanCreate(destination))
-                throw new UnauthorizedAccessException("Erisim reddedildi.");
+            if (!PermissionManager.CanCreate(destinationVirtual))
+                throw new UnauthorizedAccessException(
+                    "Erisim reddedildi.");
 
-            File.Copy(source, destination, overwrite);
+            string sourceReal = ToRealPath(sourceVirtual);
+            string destinationReal = ToRealPath(destinationVirtual);
+
+            File.Copy(
+                sourceReal,
+                destinationReal,
+                overwrite);
         }
 
         public static void MoveFile(
             string source,
             string destination)
         {
-            source = ResolvePath(source);
-            destination = ResolvePath(destination);
+            string sourceVirtual = ResolvePath(source);
+            string destinationVirtual = ResolvePath(destination);
 
-            if (!PermissionManager.CanDelete(source))
-                throw new UnauthorizedAccessException("Erisim reddedildi.");
+            if (!PermissionManager.CanDelete(sourceVirtual))
+                throw new UnauthorizedAccessException(
+                    "Erisim reddedildi.");
 
-            if (!PermissionManager.CanCreate(destination))
-                throw new UnauthorizedAccessException("Erisim reddedildi.");
+            if (!PermissionManager.CanCreate(destinationVirtual))
+                throw new UnauthorizedAccessException(
+                    "Erisim reddedildi.");
 
-            File.Copy(source, destination, true);
-            File.Delete(source);
+            string sourceReal = ToRealPath(sourceVirtual);
+            string destinationReal = ToRealPath(destinationVirtual);
+
+            File.Copy(
+                sourceReal,
+                destinationReal,
+                true);
+
+            File.Delete(sourceReal);
         }
 
         public static string[] GetFiles(string path = null)
         {
-            path = ResolvePath(path);
+            string virtualPath = ResolvePath(path);
 
-            if (!PermissionManager.CanRead(path))
-                throw new UnauthorizedAccessException("Erisim reddedildi.");
+            if (!PermissionManager.CanRead(virtualPath))
+                throw new UnauthorizedAccessException(
+                    "Erisim reddedildi.");
 
-            return Directory.GetFiles(path);
+            string realPath = ToRealPath(virtualPath);
+
+            return Directory.GetFiles(realPath);
         }
 
         public static string[] GetDirectories(string path = null)
         {
-            path = ResolvePath(path);
+            string virtualPath = ResolvePath(path);
 
-            if (!PermissionManager.CanRead(path))
-                throw new UnauthorizedAccessException("Erisim reddedildi.");
+            if (!PermissionManager.CanRead(virtualPath))
+                throw new UnauthorizedAccessException(
+                    "Erisim reddedildi.");
 
-            return Directory.GetDirectories(path);
+            string realPath = ToRealPath(virtualPath);
+
+            return Directory.GetDirectories(realPath);
         }
 
         public static string GetDisplayPath()
