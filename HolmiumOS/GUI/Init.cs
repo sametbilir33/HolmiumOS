@@ -81,10 +81,6 @@ namespace HolmiumOS.GUI
             string[] paths =
             {
                 "/mnt/boot/Walpaper.bmp",
-                "/mnt/Walpaper.bmp",
-                "/mnt/resources/Walpaper.bmp",
-                "/mnt/Resources/Walpaper.bmp",
-                "/mnt/etc/Walpaper.bmp"
             };
 
             foreach (string path in paths)

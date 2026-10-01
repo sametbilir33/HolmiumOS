@@ -20,11 +20,8 @@ namespace HolmiumOS.GUI
         public static void Initialize()
         {
             defaultCursor = LoadBitmap(
-                "/mnt/boot/Cursor.bmp",
-                "/mnt/Cursor.bmp",
-                "/mnt/resources/Cursor.bmp",
-                "/mnt/Resources/Cursor.bmp",
-                "/mnt/etc/Cursor.bmp");
+                "/mnt/boot/Cursor.bmp"
+                );
 
             Current = CursorType.Default;
         }

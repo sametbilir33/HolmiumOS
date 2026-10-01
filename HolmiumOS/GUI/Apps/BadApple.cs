@@ -45,11 +45,6 @@ namespace HolmiumOS.GUI.Apps
             string[] paths =
             {
                 "/mnt/boot/bad_apple.bad",
-                "/mnt/bad_apple.bad",
-                "/mnt/resources/bad_apple.bad",
-                "/mnt/Resources/bad_apple.bad",
-                "/mnt/resources/bad_apple/bad",
-                "/mnt/Resources/bad_apple/bad"
             };
 
             foreach (string path in paths)
