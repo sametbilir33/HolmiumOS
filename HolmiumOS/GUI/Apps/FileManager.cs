@@ -20,7 +20,8 @@ namespace HolmiumOS.GUI.Apps
         private string currentPath = "/";
 
         private int scrollOffset = 0;
-        private const int PAGE_SIZE = 12;
+
+        private const int PAGE_SIZE = 7;
 
         private string initialPathOverride = null;
 
@@ -28,7 +29,8 @@ namespace HolmiumOS.GUI.Apps
         {
         }
 
-        public FileManager(string initialPath = null) : base("Dosya Yoneticisi")
+        public FileManager(string initialPath = null)
+            : base("Dosya Yoneticisi")
         {
             initialPathOverride = initialPath;
         }
@@ -39,7 +41,8 @@ namespace HolmiumOS.GUI.Apps
             {
                 if (Window != null)
                 {
-                    Window.Title = "Dosya Yoneticisi";
+                    Window.Title =
+                        "Dosya Yoneticisi";
                 }
 
                 InitUserPath();
@@ -48,17 +51,17 @@ namespace HolmiumOS.GUI.Apps
                     "<-",
                     10,
                     10,
-                    45,
-                    30)
+                    65,
+                    55)
                 {
                     ClickAction = DoNavigateBack
                 };
 
                 txtPath = new TextBox(
-                    60,
+                    85,
                     10,
                     360,
-                    30)
+                    55)
                 {
                     Text = currentPath,
                     MaxLength = 100
@@ -66,19 +69,19 @@ namespace HolmiumOS.GUI.Apps
 
                 btnGo = new Button(
                     "Go",
-                    425,
+                    455,
                     10,
-                    65,
-                    30)
+                    75,
+                    55)
                 {
                     ClickAction = DoNavigateGo
                 };
 
                 btnUp = new Button(
                     "^",
-                    450,
-                    50,
-                    40,
+                    455,
+                    80,
+                    75,
                     140)
                 {
                     ClickAction = ScrollUp
@@ -86,9 +89,9 @@ namespace HolmiumOS.GUI.Apps
 
                 btnDown = new Button(
                     "v",
-                    450,
-                    195,
-                    40,
+                    455,
+                    230,
+                    75,
                     140)
                 {
                     ClickAction = ScrollDown
@@ -97,7 +100,7 @@ namespace HolmiumOS.GUI.Apps
                 lblStatus = new Label(
                     "Hazir",
                     10,
-                    360);
+                    390);
 
                 if (Window != null)
                 {
@@ -113,7 +116,8 @@ namespace HolmiumOS.GUI.Apps
             }
             catch
             {
-                SetStatus("Baslatma hatasi!");
+                SetStatus(
+                    "Baslatma hatasi!");
             }
         }
 
@@ -121,18 +125,21 @@ namespace HolmiumOS.GUI.Apps
         {
             try
             {
-                if (!string.IsNullOrEmpty(initialPathOverride) &&
-                    FileSystemManager.DirectoryExists(initialPathOverride))
+                if (!string.IsNullOrEmpty(
+                        initialPathOverride) &&
+                    FileSystemManager.DirectoryExists(
+                        initialPathOverride))
                 {
                     currentPath =
                         FileSystemManager.ResolvePath(
                             initialPathOverride);
                 }
-                else if (UserManager.IsLoggedIn &&
-                         !string.IsNullOrEmpty(
-                             UserManager.HomeDirectory) &&
-                         FileSystemManager.DirectoryExists(
-                             UserManager.HomeDirectory))
+                else if (
+                    UserManager.IsLoggedIn &&
+                    !string.IsNullOrEmpty(
+                        UserManager.HomeDirectory) &&
+                    FileSystemManager.DirectoryExists(
+                        UserManager.HomeDirectory))
                 {
                     currentPath =
                         FileSystemManager.ResolvePath(
@@ -153,20 +160,24 @@ namespace HolmiumOS.GUI.Apps
 
         private void FixPath()
         {
-            if (string.IsNullOrWhiteSpace(currentPath))
+            if (string.IsNullOrWhiteSpace(
+                    currentPath))
             {
                 currentPath = "/";
                 return;
             }
 
             currentPath =
-                FileSystemManager.ResolvePath(currentPath);
+                FileSystemManager.ResolvePath(
+                    currentPath);
         }
 
-        private void LoadDirectory(string path)
+        private void LoadDirectory(
+            string path)
         {
             currentPath =
-                FileSystemManager.ResolvePath(path);
+                FileSystemManager.ResolvePath(
+                    path);
 
             FixPath();
 
@@ -175,11 +186,13 @@ namespace HolmiumOS.GUI.Apps
                 txtPath.Text = currentPath;
             }
 
-            if (lstFiles != null && Window != null)
+            if (lstFiles != null &&
+                Window != null)
             {
                 try
                 {
-                    Window.Controls.Remove(lstFiles);
+                    Window.Controls.Remove(
+                        lstFiles);
                 }
                 catch
                 {
@@ -190,18 +203,21 @@ namespace HolmiumOS.GUI.Apps
 
             lstFiles = new ListBox(
                 10,
-                50,
+                80,
                 435,
-                285);
+                280);
 
             List<ItemEntry> items =
                 new List<ItemEntry>();
 
             try
             {
-                if (!PermissionManager.CanRead(currentPath))
+                if (!PermissionManager.CanRead(
+                        currentPath))
                 {
-                    SetStatus("Erisim Yetkisi Yok!");
+                    SetStatus(
+                        "Erisim Yetkisi Yok!");
+
                     AttachListBoxToWindow();
                     return;
                 }
@@ -218,9 +234,12 @@ namespace HolmiumOS.GUI.Apps
 
                 if (dirs != null)
                 {
-                    for (int i = 0; i < dirs.Length; i++)
+                    for (int i = 0;
+                         i < dirs.Length;
+                         i++)
                     {
-                        if (!string.IsNullOrEmpty(dirs[i]))
+                        if (!string.IsNullOrEmpty(
+                                dirs[i]))
                         {
                             items.Add(
                                 new ItemEntry
@@ -244,9 +263,12 @@ namespace HolmiumOS.GUI.Apps
 
                 if (files != null)
                 {
-                    for (int i = 0; i < files.Length; i++)
+                    for (int i = 0;
+                         i < files.Length;
+                         i++)
                     {
-                        if (!string.IsNullOrEmpty(files[i]))
+                        if (!string.IsNullOrEmpty(
+                                files[i]))
                         {
                             items.Add(
                                 new ItemEntry
@@ -271,7 +293,9 @@ namespace HolmiumOS.GUI.Apps
             }
 
             if (scrollOffset >
-                Math.Max(0, items.Count - PAGE_SIZE))
+                Math.Max(
+                    0,
+                    items.Count - PAGE_SIZE))
             {
                 scrollOffset =
                     Math.Max(
@@ -298,13 +322,13 @@ namespace HolmiumOS.GUI.Apps
                 {
                     lstFiles.AddItem(
                         "[DIR]  " +
-                        Shorten(cleanName, 32));
+                        Shorten(cleanName, 26));
                 }
                 else
                 {
                     lstFiles.AddItem(
                         "[FILE] " +
-                        Shorten(cleanName, 31));
+                        Shorten(cleanName, 25));
                 }
 
                 visibleItems.Add(entry);
@@ -325,7 +349,8 @@ namespace HolmiumOS.GUI.Apps
                 SetStatus(
                     items.Count == 0
                         ? "Klasor bos."
-                        : "Toplam: " + items.Count);
+                        : "Toplam: " +
+                          items.Count);
             }
 
             lstFiles.OnSelectedIndexChanged =
@@ -345,7 +370,8 @@ namespace HolmiumOS.GUI.Apps
                                 FileSystemManager.ResolvePath(
                                     selected.Path);
 
-                            LoadDirectory(newPath);
+                            LoadDirectory(
+                                newPath);
                         }
                         else
                         {
@@ -357,13 +383,17 @@ namespace HolmiumOS.GUI.Apps
                                 ExtractName(filePath);
 
                             var notepad =
-                                new Notepad(filePath);
+                                new Notepad(
+                                    filePath);
 
-                            AppManager.Run(notepad);
+                            AppManager.Run(
+                                notepad);
 
                             SetStatus(
                                 "Dosya: " +
-                                Shorten(fileName, 30));
+                                Shorten(
+                                    fileName,
+                                    25));
                         }
                     }
                 };
@@ -383,7 +413,6 @@ namespace HolmiumOS.GUI.Apps
         private void ScrollDown()
         {
             scrollOffset++;
-
             LoadDirectory(currentPath);
         }
 
@@ -392,7 +421,8 @@ namespace HolmiumOS.GUI.Apps
             if (Window != null &&
                 lstFiles != null)
             {
-                Window.AddControl(lstFiles);
+                Window.AddControl(
+                    lstFiles);
             }
         }
 
@@ -453,9 +483,11 @@ namespace HolmiumOS.GUI.Apps
             }
 
             string resolved =
-                FileSystemManager.ResolvePath(target);
+                FileSystemManager.ResolvePath(
+                    target);
 
-            if (FileSystemManager.DirectoryExists(resolved))
+            if (FileSystemManager.DirectoryExists(
+                    resolved))
             {
                 scrollOffset = 0;
                 LoadDirectory(resolved);
@@ -467,9 +499,11 @@ namespace HolmiumOS.GUI.Apps
             }
         }
 
-        private string ExtractName(string fullPath)
+        private string ExtractName(
+            string fullPath)
         {
-            if (string.IsNullOrEmpty(fullPath))
+            if (string.IsNullOrEmpty(
+                    fullPath))
             {
                 return "";
             }
@@ -488,7 +522,8 @@ namespace HolmiumOS.GUI.Apps
             if (index >= 0 &&
                 index < path.Length - 1)
             {
-                return path.Substring(index + 1);
+                return path.Substring(
+                    index + 1);
             }
 
             return path;
@@ -513,7 +548,8 @@ namespace HolmiumOS.GUI.Apps
                 maxLen - 3) + "...";
         }
 
-        private void SetStatus(string msg)
+        private void SetStatus(
+            string msg)
         {
             if (lblStatus != null)
             {

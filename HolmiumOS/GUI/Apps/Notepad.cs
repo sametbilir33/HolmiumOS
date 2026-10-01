@@ -22,7 +22,8 @@ namespace HolmiumOS.GUI.Apps
         {
         }
 
-        public Notepad(string filePath = null) : base("Not Defteri")
+        public Notepad(string filePath = null)
+            : base("Not Defteri")
         {
             initialFilePath = filePath;
         }
@@ -34,21 +35,62 @@ namespace HolmiumOS.GUI.Apps
                 Window.Title = "Not Defteri";
             }
 
-            txtEditor = new RichTextBox(10, 10, 370, 230);
+            txtEditor =
+                new RichTextBox(
+                    10,
+                    10,
+                    560,
+                    360);
 
-            btnNew = new Button("Yeni", 10, 250, 60, 25);
-            btnNew.ClickAction = NewClick;
+            btnNew =
+                new Button(
+                    "Yeni",
+                    10,
+                    385,
+                    85,
+                    55);
 
-            btnOpen = new Button("Ac", 80, 250, 60, 25);
-            btnOpen.ClickAction = OpenClick;
+            btnNew.ClickAction =
+                NewClick;
 
-            btnSave = new Button("Kaydet", 150, 250, 70, 25);
-            btnSave.ClickAction = SaveClick;
+            btnOpen =
+                new Button(
+                    "Ac",
+                    105,
+                    385,
+                    85,
+                    55);
 
-            btnSaveAs = new Button("Farkli Kaydet", 230, 250, 110, 25);
-            btnSaveAs.ClickAction = SaveAsClick;
+            btnOpen.ClickAction =
+                OpenClick;
 
-            lblStatus = new Label("Hazir", 10, 285);
+            btnSave =
+                new Button(
+                    "Kaydet",
+                    200,
+                    385,
+                    110,
+                    55);
+
+            btnSave.ClickAction =
+                SaveClick;
+
+            btnSaveAs =
+                new Button(
+                    "Farkli Kaydet",
+                    320,
+                    385,
+                    180,
+                    55);
+
+            btnSaveAs.ClickAction =
+                SaveAsClick;
+
+            lblStatus =
+                new Label(
+                    "Hazir",
+                    10,
+                    455);
 
             if (Window != null)
             {
@@ -60,69 +102,97 @@ namespace HolmiumOS.GUI.Apps
                 Window.AddControl(lblStatus);
             }
 
-            // Arayüz yüklendiği an eğer dışarıdan dosya yolu verildiyse içeriği yükle
-            if (!string.IsNullOrEmpty(initialFilePath))
+            // Arayüz yüklendiği an eğer dışarıdan
+            // dosya yolu verildiyse içeriği yükle
+            if (!string.IsNullOrEmpty(
+                    initialFilePath))
             {
-                OpenFileDirectly(initialFilePath);
+                OpenFileDirectly(
+                    initialFilePath);
             }
         }
 
         private void NewClick()
         {
-            if (txtEditor == null) return;
+            if (txtEditor == null)
+                return;
 
             txtEditor.Text = "";
             currentFile = null;
-            SetStatus("Yeni belge olusturuldu.");
+
+            SetStatus(
+                "Yeni belge olusturuldu.");
         }
 
         private void OpenClick()
         {
-            string defaultPath = NormalizePath(
-                UserManager.IsLoggedIn ? $"{UserManager.HomeDirectory}/" : "/home/"
-            );
+            string defaultPath =
+                NormalizePath(
+                    UserManager.IsLoggedIn
+                        ? $"{UserManager.HomeDirectory}/"
+                        : "/home/"
+                );
 
-            var msg = new MessageBox(
-                "Dosya Ac",
-                "Acilacak dosya yolunu girin:",
-                true,
-                defaultPath,
-                OnOpenConfirm,
-                OnCancel
-            );
+            var msg =
+                new MessageBox(
+                    "Dosya Ac",
+                    "Acilacak dosya yolunu girin:",
+                    true,
+                    defaultPath,
+                    OnOpenConfirm,
+                    OnCancel
+                );
 
             AppManager.Run(msg);
         }
 
-        private void OnOpenConfirm(string path)
+        private void OnOpenConfirm(
+            string path)
         {
-            if (string.IsNullOrEmpty(path)) return;
+            if (string.IsNullOrEmpty(path))
+                return;
 
-            path = NormalizePath(path.Trim());
+            path =
+                NormalizePath(
+                    path.Trim());
 
             try
             {
-                string resolvedPath = FileSystemManager.ResolvePath(path);
+                string resolvedPath =
+                    FileSystemManager.ResolvePath(
+                        path);
 
-                if (!FileSystemManager.FileExists(resolvedPath))
+                if (!FileSystemManager.FileExists(
+                        resolvedPath))
                 {
-                    SetStatus("Dosya bulunamadi!");
+                    SetStatus(
+                        "Dosya bulunamadi!");
+
                     return;
                 }
 
-                txtEditor.Text = FileSystemManager.ReadFile(resolvedPath);
-                currentFile = resolvedPath;
-                SetStatus("Acildi: " + ExtractName(currentFile));
+                txtEditor.Text =
+                    FileSystemManager.ReadFile(
+                        resolvedPath);
+
+                currentFile =
+                    resolvedPath;
+
+                SetStatus(
+                    "Acildi: " +
+                    ExtractName(currentFile));
             }
             catch
             {
-                SetStatus("Dosya acilırken hata olustu!");
+                SetStatus(
+                    "Dosya acilirken hata olustu!");
             }
         }
 
         private void SaveClick()
         {
-            if (string.IsNullOrEmpty(currentFile))
+            if (string.IsNullOrEmpty(
+                    currentFile))
             {
                 SaveAsClick();
                 return;
@@ -130,66 +200,91 @@ namespace HolmiumOS.GUI.Apps
 
             try
             {
-                currentFile = NormalizePath(FileSystemManager.ResolvePath(currentFile));
+                currentFile =
+                    NormalizePath(
+                        FileSystemManager.ResolvePath(
+                            currentFile));
 
-                FileSystemManager.WriteFile(currentFile, txtEditor.Text);
+                FileSystemManager.WriteFile(
+                    currentFile,
+                    txtEditor.Text);
 
                 DesktopManager.RefreshIcons();
 
-                SetStatus("Kaydedildi.");
+                SetStatus(
+                    "Kaydedildi.");
             }
             catch
             {
-                SetStatus("Kaydetme hatasi!");
+                SetStatus(
+                    "Kaydetme hatasi!");
             }
         }
 
         private void SaveAsClick()
         {
-            string defaultPath = NormalizePath(
-                UserManager.IsLoggedIn ? $"{UserManager.HomeDirectory}/not.txt" : "/home/not.txt"
-            );
+            string defaultPath =
+                NormalizePath(
+                    UserManager.IsLoggedIn
+                        ? $"{UserManager.HomeDirectory}/not.txt"
+                        : "/home/not.txt"
+                );
 
-            var msg = new MessageBox(
-                "Farkli Kaydet",
-                "Dosya yolunu girin:",
-                true,
-                defaultPath,
-                OnSaveAsConfirm,
-                OnCancel
-            );
+            var msg =
+                new MessageBox(
+                    "Farkli Kaydet",
+                    "Dosya yolunu girin:",
+                    true,
+                    defaultPath,
+                    OnSaveAsConfirm,
+                    OnCancel
+                );
 
             AppManager.Run(msg);
         }
 
-        private void OnSaveAsConfirm(string path)
+        private void OnSaveAsConfirm(
+            string path)
         {
-            if (string.IsNullOrEmpty(path)) return;
+            if (string.IsNullOrEmpty(path))
+                return;
 
-            path = NormalizePath(path.Trim());
+            path =
+                NormalizePath(
+                    path.Trim());
 
             try
             {
-                currentFile = NormalizePath(FileSystemManager.ResolvePath(path));
+                currentFile =
+                    NormalizePath(
+                        FileSystemManager.ResolvePath(
+                            path));
 
-                FileSystemManager.WriteFile(currentFile, txtEditor.Text);
+                FileSystemManager.WriteFile(
+                    currentFile,
+                    txtEditor.Text);
 
                 DesktopManager.RefreshIcons();
 
-                SetStatus("Kaydedildi: " + ExtractName(currentFile));
+                SetStatus(
+                    "Kaydedildi: " +
+                    ExtractName(currentFile));
             }
             catch
             {
-                SetStatus("Kaydetme hatasi!");
+                SetStatus(
+                    "Kaydetme hatasi!");
             }
         }
 
         private void OnCancel()
         {
-            SetStatus("Islem iptal edildi.");
+            SetStatus(
+                "Islem iptal edildi.");
         }
 
-        private void SetStatus(string msg)
+        private void SetStatus(
+            string msg)
         {
             if (lblStatus != null)
             {
@@ -197,46 +292,82 @@ namespace HolmiumOS.GUI.Apps
             }
         }
 
-        public void OpenFileDirectly(string path)
+        public void OpenFileDirectly(
+            string path)
         {
             try
             {
-                string resolvedPath = NormalizePath(FileSystemManager.ResolvePath(path));
+                string resolvedPath =
+                    NormalizePath(
+                        FileSystemManager.ResolvePath(
+                            path));
 
-                if (FileSystemManager.FileExists(resolvedPath))
+                if (FileSystemManager.FileExists(
+                        resolvedPath))
                 {
-                    string content = FileSystemManager.ReadFile(resolvedPath);
+                    string content =
+                        FileSystemManager.ReadFile(
+                            resolvedPath);
+
                     if (txtEditor != null)
                     {
-                        txtEditor.Text = content ?? "";
+                        txtEditor.Text =
+                            content ?? "";
                     }
-                    currentFile = resolvedPath;
-                    SetStatus("Acildi: " + ExtractName(currentFile));
+
+                    currentFile =
+                        resolvedPath;
+
+                    SetStatus(
+                        "Acildi: " +
+                        ExtractName(currentFile));
                 }
                 else
                 {
-                    SetStatus("Dosya bulunamadi: " + path);
+                    SetStatus(
+                        "Dosya bulunamadi: " +
+                        path);
                 }
             }
             catch
             {
-                SetStatus("Dosya acilirken hata olustu!");
+                SetStatus(
+                    "Dosya acilirken hata olustu!");
             }
         }
 
-        private string ExtractName(string fullPath)
+        private string ExtractName(
+            string fullPath)
         {
-            if (string.IsNullOrEmpty(fullPath)) return "";
-            string p = NormalizePath(fullPath).TrimEnd('/');
-            int idx = p.LastIndexOf('/');
+            if (string.IsNullOrEmpty(
+                    fullPath))
+            {
+                return "";
+            }
 
-            return (idx >= 0 && idx < p.Length - 1) ? p.Substring(idx + 1) : p;
+            string p =
+                NormalizePath(
+                    fullPath).TrimEnd('/');
+
+            int idx =
+                p.LastIndexOf('/');
+
+            return
+                (idx >= 0 &&
+                 idx < p.Length - 1)
+                    ? p.Substring(idx + 1)
+                    : p;
         }
 
-        private string NormalizePath(string path)
+        private string NormalizePath(
+            string path)
         {
-            if (string.IsNullOrEmpty(path)) return "";
-            return path.Replace('\\', '/');
+            if (string.IsNullOrEmpty(path))
+                return "";
+
+            return path.Replace(
+                '\\',
+                '/');
         }
     }
 }

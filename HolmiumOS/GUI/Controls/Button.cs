@@ -25,8 +25,12 @@ namespace HolmiumOS.GUI.Controls
         {
             if (!Visible || canvas == null) return;
 
-            canvas.DrawFilledRectangle(Win9xGray, X, Y, Width, Height);
-
+            canvas.DrawFilledRectangle(
+                Win9xGray,
+                X,
+                Y,
+                Width,
+                Height);
 
             canvas.DrawLine(Win9xWhite, X, Y, X + Width - 1, Y);
             canvas.DrawLine(Win9xWhite, X, Y, X, Y + Height - 1);
@@ -40,10 +44,20 @@ namespace HolmiumOS.GUI.Controls
             canvas.DrawLine(Win9xDarkGray, X + 1, Y + Height - 2, X + Width - 2, Y + Height - 2);
             canvas.DrawLine(Win9xDarkGray, X + Width - 2, Y + 1, X + Width - 2, Y + Height - 2);
 
-            int textX = X + 8;
-            int textY = Y + (Height / 2) - 4;
+            Font font = PCScreenFont.DefaultFont;
 
-            canvas.DrawString(Text, PCScreenFont.DefaultFont, Win9xBlack, textX, textY);
+            int textWidth = font.MeasureString(Text);
+            int textHeight = font.Height;
+
+            int textX = X + (Width - textWidth) / 2;
+            int textY = Y + (Height - textHeight) / 2;
+
+            canvas.DrawString(
+                Text,
+                font,
+                Win9xBlack,
+                textX,
+                textY);
         }
 
         public override void Click()

@@ -9,7 +9,7 @@ namespace HolmiumOS.GUI.Controls
         public string Text;
 
         public Label(string text, int x, int y)
-            : base(x, y, (text ?? "").Length * 8, 16)
+            : base(x, y, (text ?? "").Length * 16, 32)
         {
             Text = text ?? "";
         }

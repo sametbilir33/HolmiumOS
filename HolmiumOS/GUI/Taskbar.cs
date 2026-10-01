@@ -14,13 +14,13 @@ namespace HolmiumOS.GUI
         private static bool startHover;
         private static bool clockHover;
 
-        private const int height = 40;
+        private const int height = 48;
         private const int bottomMargin = 0;
         private const int dockPadding = 4;
 
-        private const int startWidth = 75;
-        private const int buttonWidth = 130;
-        private const int buttonHeight = 28;
+        private const int startWidth = 90;
+        private const int buttonWidth = 180;
+        private const int buttonHeight = 40;
         private const int buttonSpacing = 4;
 
         public static int Height => height + bottomMargin;
@@ -34,12 +34,17 @@ namespace HolmiumOS.GUI
         {
             int count = 0;
 
-            for (int i = 0; i < AppManager.apps.Count; i++)
+            for (int i = 0;
+                 i < AppManager.apps.Count;
+                 i++)
             {
                 var app = AppManager.apps[i];
 
-                if (app == null || app.Window == null)
+                if (app == null ||
+                    app.Window == null)
+                {
                     continue;
+                }
 
                 count++;
             }
@@ -47,60 +52,243 @@ namespace HolmiumOS.GUI
             return count;
         }
 
-        private static void DrawRaisedBox(Canvas canvas, int x, int y, int width, int height)
+        private static string FitTitle(
+            string title,
+            Font font,
+            int maxWidth)
         {
-            canvas.DrawFilledRectangle(Color.FromArgb(192, 192, 192), x, y, width, height);
-            canvas.DrawLine(Color.FromArgb(255, 255, 255), x, y, x + width - 1, y);
-            canvas.DrawLine(Color.FromArgb(255, 255, 255), x, y, x, y + height - 1);
-            canvas.DrawLine(Color.FromArgb(0, 0, 0), x, y + height - 1, x + width - 1, y + height - 1);
-            canvas.DrawLine(Color.FromArgb(0, 0, 0), x + width - 1, y, x + width - 1, y + height - 1);
-            canvas.DrawLine(Color.FromArgb(128, 128, 128), x + 1, y + height - 2, x + width - 2, y + height - 2);
-            canvas.DrawLine(Color.FromArgb(128, 128, 128), x + width - 2, y + 1, x + width - 2, y + height - 2);
+            if (string.IsNullOrEmpty(title))
+                return "";
+
+            if (font.MeasureString(title) <= maxWidth)
+                return title;
+
+            string result = title;
+
+            while (result.Length > 2 &&
+                   font.MeasureString(result + "..") >
+                   maxWidth)
+            {
+                result =
+                    result.Substring(
+                        0,
+                        result.Length - 1);
+            }
+
+            return result + "..";
         }
 
-        private static void DrawSunkenBox(Canvas canvas, int x, int y, int width, int height)
+        private static void DrawRaisedBox(
+            Canvas canvas,
+            int x,
+            int y,
+            int width,
+            int height)
         {
-            canvas.DrawFilledRectangle(Color.FromArgb(192, 192, 192), x, y, width, height);
-            canvas.DrawLine(Color.FromArgb(128, 128, 128), x, y, x + width - 1, y);
-            canvas.DrawLine(Color.FromArgb(128, 128, 128), x, y, x, y + height - 1);
-            canvas.DrawLine(Color.FromArgb(0, 0, 0), x + 1, y + 1, x + width - 2, y + 1);
-            canvas.DrawLine(Color.FromArgb(0, 0, 0), x + 1, y + 1, x + 1, y + height - 2);
-            canvas.DrawLine(Color.FromArgb(255, 255, 255), x, y + height - 1, x + width - 1, y + height - 1);
-            canvas.DrawLine(Color.FromArgb(255, 255, 255), x + width - 1, y, x + width - 1, y + height - 1);
+            canvas.DrawFilledRectangle(
+                Color.FromArgb(192, 192, 192),
+                x,
+                y,
+                width,
+                height);
+
+            canvas.DrawLine(
+                Color.FromArgb(255, 255, 255),
+                x,
+                y,
+                x + width - 1,
+                y);
+
+            canvas.DrawLine(
+                Color.FromArgb(255, 255, 255),
+                x,
+                y,
+                x,
+                y + height - 1);
+
+            canvas.DrawLine(
+                Color.FromArgb(0, 0, 0),
+                x,
+                y + height - 1,
+                x + width - 1,
+                y + height - 1);
+
+            canvas.DrawLine(
+                Color.FromArgb(0, 0, 0),
+                x + width - 1,
+                y,
+                x + width - 1,
+                y + height - 1);
+
+            canvas.DrawLine(
+                Color.FromArgb(128, 128, 128),
+                x + 1,
+                y + height - 2,
+                x + width - 2,
+                y + height - 2);
+
+            canvas.DrawLine(
+                Color.FromArgb(128, 128, 128),
+                x + width - 2,
+                y + 1,
+                x + width - 2,
+                y + height - 2);
+        }
+
+        private static void DrawSunkenBox(
+            Canvas canvas,
+            int x,
+            int y,
+            int width,
+            int height)
+        {
+            canvas.DrawFilledRectangle(
+                Color.FromArgb(192, 192, 192),
+                x,
+                y,
+                width,
+                height);
+
+            canvas.DrawLine(
+                Color.FromArgb(128, 128, 128),
+                x,
+                y,
+                x + width - 1,
+                y);
+
+            canvas.DrawLine(
+                Color.FromArgb(128, 128, 128),
+                x,
+                y,
+                x,
+                y + height - 1);
+
+            canvas.DrawLine(
+                Color.FromArgb(0, 0, 0),
+                x + 1,
+                y + 1,
+                x + width - 2,
+                y + 1);
+
+            canvas.DrawLine(
+                Color.FromArgb(0, 0, 0),
+                x + 1,
+                y + 1,
+                x + 1,
+                y + height - 2);
+
+            canvas.DrawLine(
+                Color.FromArgb(255, 255, 255),
+                x,
+                y + height - 1,
+                x + width - 1,
+                y + height - 1);
+
+            canvas.DrawLine(
+                Color.FromArgb(255, 255, 255),
+                x + width - 1,
+                y,
+                x + width - 1,
+                y + height - 1);
         }
 
         public static void Draw(Canvas canvas)
         {
-            int screenWidth = (int)canvas.Mode.Width;
-            int taskbarY = (int)canvas.Mode.Height - height - bottomMargin;
+            Font font =
+                PCScreenFont.DefaultFont;
 
-            canvas.DrawFilledRectangle(Color.FromArgb(192, 192, 192), 0, taskbarY, screenWidth, height);
-            canvas.DrawLine(Color.FromArgb(255, 255, 255), 0, taskbarY, screenWidth, taskbarY);
+            int screenWidth =
+                (int)canvas.Mode.Width;
 
-            bool startPressed = MenuOpen || startHover;
+            int taskbarY =
+                (int)canvas.Mode.Height -
+                height -
+                bottomMargin;
+
+            canvas.DrawFilledRectangle(
+                Color.FromArgb(192, 192, 192),
+                0,
+                taskbarY,
+                screenWidth,
+                height);
+
+            canvas.DrawLine(
+                Color.FromArgb(255, 255, 255),
+                0,
+                taskbarY,
+                screenWidth,
+                taskbarY);
+
+            bool startPressed =
+                MenuOpen ||
+                startHover;
+
+            int startY =
+                taskbarY +
+                (height - buttonHeight) / 2;
 
             if (startPressed)
-                DrawSunkenBox(canvas, dockPadding, taskbarY + 6, startWidth, buttonHeight);
+            {
+                DrawSunkenBox(
+                    canvas,
+                    dockPadding,
+                    startY,
+                    startWidth,
+                    buttonHeight);
+            }
             else
-                DrawRaisedBox(canvas, dockPadding, taskbarY + 6, startWidth, buttonHeight);
+            {
+                DrawRaisedBox(
+                    canvas,
+                    dockPadding,
+                    startY,
+                    startWidth,
+                    buttonHeight);
+            }
+
+            int startTextWidth =
+                font.MeasureString("Start");
+
+            int startTextX =
+                dockPadding +
+                (startWidth - startTextWidth) / 2;
+
+            int startTextY =
+                startY +
+                (buttonHeight - font.Height) / 2;
 
             canvas.DrawString(
                 "Start",
-                PCScreenFont.DefaultFont,
+                font,
                 Color.Black,
-                dockPadding + 16,
-                taskbarY + 12
-            );
+                startTextX,
+                startTextY);
 
-            int appCount = GetAppCount();
-            int separatorX = dockPadding + startWidth + 8;
+            int appCount =
+                GetAppCount();
 
-            DateTime now = DateTime.Now;
-            string timeString = $"{now.Hour:D2}:{now.Minute:D2}";
-            int clockBoxWidth = 64;
+            int separatorX =
+                dockPadding +
+                startWidth +
+                8;
+
+            DateTime now =
+                DateTime.Now;
+
+            string timeString =
+                $"{now.Hour:D2}:{now.Minute:D2}";
+
+            int clockBoxWidth = 90;
             int clockBoxHeight = buttonHeight;
-            int clockX = screenWidth - clockBoxWidth - 8;
-            int clockY = taskbarY + 6;
+
+            int clockX =
+                screenWidth -
+                clockBoxWidth -
+                8;
+
+            int clockY =
+                taskbarY +
+                (height - buttonHeight) / 2;
 
             if (appCount > 0)
             {
@@ -109,67 +297,138 @@ namespace HolmiumOS.GUI
                     separatorX,
                     taskbarY + 7,
                     separatorX,
-                    taskbarY + height - 7
-                );
+                    taskbarY + height - 7);
 
                 canvas.DrawLine(
                     Color.FromArgb(255, 255, 255),
                     separatorX + 1,
                     taskbarY + 7,
                     separatorX + 1,
-                    taskbarY + height - 7
-                );
+                    taskbarY + height - 7);
 
-                int currentButtonX = separatorX + 6;
-                int maxButtonAllowedX = clockX - 10;
+                int currentButtonX =
+                    separatorX + 6;
 
-                for (int i = 0; i < AppManager.apps.Count; i++)
+                int maxButtonAllowedX =
+                    clockX - 10;
+
+                for (int i = 0;
+                     i < AppManager.apps.Count;
+                     i++)
                 {
-                    var app = AppManager.apps[i];
+                    var app =
+                        AppManager.apps[i];
 
-                    if (app == null || app.Window == null)
+                    if (app == null ||
+                        app.Window == null)
+                    {
                         continue;
+                    }
 
-                    if (currentButtonX + buttonWidth > maxButtonAllowedX)
+                    if (currentButtonX +
+                        buttonWidth >
+                        maxButtonAllowedX)
+                    {
                         break;
+                    }
 
-                    var win = app.Window;
-                    bool active = WindowManager.activeWindow == win && !win.IsMinimized;
+                    var win =
+                        app.Window;
+
+                    bool active =
+                        WindowManager.activeWindow ==
+                            win &&
+                        !win.IsMinimized;
+
+                    int buttonY =
+                        taskbarY +
+                        (height - buttonHeight) / 2;
 
                     if (active)
-                        DrawSunkenBox(canvas, currentButtonX, taskbarY + 6, buttonWidth, buttonHeight);
+                    {
+                        DrawSunkenBox(
+                            canvas,
+                            currentButtonX,
+                            buttonY,
+                            buttonWidth,
+                            buttonHeight);
+                    }
                     else
-                        DrawRaisedBox(canvas, currentButtonX, taskbarY + 6, buttonWidth, buttonHeight);
+                    {
+                        DrawRaisedBox(
+                            canvas,
+                            currentButtonX,
+                            buttonY,
+                            buttonWidth,
+                            buttonHeight);
+                    }
 
-                    string title = win.Title;
+                    string title =
+                        FitTitle(
+                            win.Title,
+                            font,
+                            buttonWidth - 16);
 
-                    if (title.Length > 14)
-                        title = title.Substring(0, 14);
+                    int titleWidth =
+                        font.MeasureString(title);
+
+                    int titleX =
+                        currentButtonX +
+                        (buttonWidth - titleWidth) / 2;
+
+                    int titleY =
+                        buttonY +
+                        (buttonHeight - font.Height) / 2;
 
                     canvas.DrawString(
                         title,
-                        PCScreenFont.DefaultFont,
+                        font,
                         Color.Black,
-                        currentButtonX + 8,
-                        taskbarY + 12
-                    );
+                        titleX,
+                        titleY);
 
-                    currentButtonX += buttonWidth + buttonSpacing;
+                    currentButtonX +=
+                        buttonWidth +
+                        buttonSpacing;
                 }
             }
 
             if (clockHover)
-                DrawSunkenBox(canvas, clockX, clockY, clockBoxWidth, clockBoxHeight);
+            {
+                DrawSunkenBox(
+                    canvas,
+                    clockX,
+                    clockY,
+                    clockBoxWidth,
+                    clockBoxHeight);
+            }
             else
-                DrawRaisedBox(canvas, clockX, clockY, clockBoxWidth, clockBoxHeight);
+            {
+                DrawRaisedBox(
+                    canvas,
+                    clockX,
+                    clockY,
+                    clockBoxWidth,
+                    clockBoxHeight);
+            }
+
+            int clockTextWidth =
+                font.MeasureString(timeString);
+
+            int clockTextX =
+                clockX +
+                (clockBoxWidth - clockTextWidth) / 2;
+
+            int clockTextY =
+                clockY +
+                (clockBoxHeight - font.Height) / 2;
 
             canvas.DrawString(
                 timeString,
-                PCScreenFont.DefaultFont,
+                font,
                 Color.Black,
-                clockX + 10,
-                taskbarY + 12
-            );
+                clockTextX,
+                clockTextY);
 
             if (MenuOpen)
             {
@@ -177,15 +436,31 @@ namespace HolmiumOS.GUI
             }
         }
 
-        public static bool ContainsClock(int mx, int my, Canvas canvas)
+        public static bool ContainsClock(
+            int mx,
+            int my,
+            Canvas canvas)
         {
-            int screenWidth = (int)canvas.Mode.Width;
-            int taskbarY = (int)canvas.Mode.Height - Height;
+            int screenWidth =
+                (int)canvas.Mode.Width;
 
-            int clockBoxWidth = 64;
-            int clockX = screenWidth - clockBoxWidth - 8;
-            int clockY = taskbarY + 6;
-            int clockHeight = buttonHeight;
+            int taskbarY =
+                (int)canvas.Mode.Height -
+                Height;
+
+            int clockBoxWidth = 90;
+
+            int clockX =
+                screenWidth -
+                clockBoxWidth -
+                8;
+
+            int clockY =
+                taskbarY +
+                (height - buttonHeight) / 2;
+
+            int clockHeight =
+                buttonHeight;
 
             return mx >= clockX &&
                    mx <= clockX + clockBoxWidth &&
@@ -193,34 +468,60 @@ namespace HolmiumOS.GUI
                    my <= clockY + clockHeight;
         }
 
-        public static void UpdateMouse(Canvas canvas)
+        public static void UpdateMouse(
+            Canvas canvas)
         {
-            int mx = (int)MouseManager.X;
-            int my = (int)MouseManager.Y;
+            int mx =
+                (int)MouseManager.X;
 
-            int screenWidth = (int)canvas.Mode.Width;
-            int taskbarY = (int)canvas.Mode.Height - height - bottomMargin;
-            int separatorX = dockPadding + startWidth + 8;
+            int my =
+                (int)MouseManager.Y;
 
-            int clockBoxWidth = 64;
-            int clockX = screenWidth - clockBoxWidth - 8;
+            int screenWidth =
+                (int)canvas.Mode.Width;
+
+            int taskbarY =
+                (int)canvas.Mode.Height -
+                height -
+                bottomMargin;
+
+            int separatorX =
+                dockPadding +
+                startWidth +
+                8;
+
+            int clockBoxWidth = 90;
+
+            int clockX =
+                screenWidth -
+                clockBoxWidth -
+                8;
+
+            int buttonY =
+                taskbarY +
+                (height - buttonHeight) / 2;
 
             startHover =
                 mx >= dockPadding &&
                 mx <= dockPadding + startWidth &&
-                my >= taskbarY + 6 &&
-                my <= taskbarY + 6 + buttonHeight;
+                my >= buttonY &&
+                my <= buttonY + buttonHeight;
 
             clockHover =
                 mx >= clockX &&
                 mx <= clockX + clockBoxWidth &&
-                my >= taskbarY + 6 &&
-                my <= taskbarY + 6 + buttonHeight;
+                my >= buttonY &&
+                my <= buttonY + buttonHeight;
 
             if (MenuOpen)
-                TaskbarMenu.UpdateHover(mx, my);
+            {
+                TaskbarMenu.UpdateHover(
+                    mx,
+                    my);
+            }
 
-            bool pressed = MouseManager.LeftButton;
+            bool pressed =
+                MouseManager.LeftButton;
 
             if (pressed && !lastPressed)
             {
@@ -230,63 +531,100 @@ namespace HolmiumOS.GUI
                 }
                 else
                 {
-                    int appCount = GetAppCount();
+                    int appCount =
+                        GetAppCount();
 
                     if (appCount > 0)
                     {
-                        int currentButtonX = separatorX + 6;
-                        bool clickedWindow = false;
+                        int currentButtonX =
+                            separatorX + 6;
 
-                        for (int i = 0; i < AppManager.apps.Count; i++)
+                        bool clickedWindow =
+                            false;
+
+                        for (int i = 0;
+                             i < AppManager.apps.Count;
+                             i++)
                         {
-                            var app = AppManager.apps[i];
+                            var app =
+                                AppManager.apps[i];
 
-                            if (app == null || app.Window == null)
+                            if (app == null ||
+                                app.Window == null)
+                            {
                                 continue;
+                            }
 
                             if (
                                 mx >= currentButtonX &&
-                                mx <= currentButtonX + buttonWidth &&
-                                my >= taskbarY + 6 &&
-                                my <= taskbarY + 6 + buttonHeight
+                                mx <= currentButtonX +
+                                      buttonWidth &&
+                                my >= buttonY &&
+                                my <= buttonY +
+                                      buttonHeight
                             )
                             {
-                                var win = app.Window;
+                                var win =
+                                    app.Window;
 
                                 if (win.IsMinimized)
                                 {
-                                    WindowManager.Restore(win);
+                                    WindowManager.Restore(
+                                        win);
                                 }
-                                else if (WindowManager.activeWindow == win)
+                                else if (
+                                    WindowManager.activeWindow ==
+                                    win)
                                 {
-                                    WindowManager.Minimize(win);
+                                    WindowManager.Minimize(
+                                        win);
                                 }
                                 else
                                 {
-                                    WindowManager.Focus(win);
+                                    WindowManager.Focus(
+                                        win);
                                 }
 
                                 clickedWindow = true;
                                 break;
                             }
 
-                            currentButtonX += buttonWidth + buttonSpacing;
+                            currentButtonX +=
+                                buttonWidth +
+                                buttonSpacing;
                         }
 
-                        if (!clickedWindow && MenuOpen)
+                        if (!clickedWindow &&
+                            MenuOpen)
                         {
-                            if (TaskbarMenu.IsInside(mx, my))
-                                TaskbarMenu.Click(mx, my);
+                            if (TaskbarMenu.IsInside(
+                                    mx,
+                                    my))
+                            {
+                                TaskbarMenu.Click(
+                                    mx,
+                                    my);
+                            }
                             else
+                            {
                                 MenuOpen = false;
+                            }
                         }
                     }
                     else if (MenuOpen)
                     {
-                        if (TaskbarMenu.IsInside(mx, my))
-                            TaskbarMenu.Click(mx, my);
+                        if (TaskbarMenu.IsInside(
+                                mx,
+                                my))
+                        {
+                            TaskbarMenu.Click(
+                                mx,
+                                my);
+                        }
                         else
+                        {
                             MenuOpen = false;
+                        }
                     }
                 }
             }

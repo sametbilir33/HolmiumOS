@@ -13,7 +13,7 @@ namespace HolmiumOS.GUI.Controls
         public bool IsDropped { get; private set; } = false;
         public Action<string> OnSelectedIndexChanged;
 
-        private const int ItemHeight = 20;
+        private const int ItemHeight = 36;
 
         private static readonly Color Win9xGray = Color.FromArgb(192, 192, 192);
         private static readonly Color Win9xWhite = Color.FromArgb(255, 255, 255);
@@ -21,7 +21,8 @@ namespace HolmiumOS.GUI.Controls
         private static readonly Color Win9xBlack = Color.FromArgb(0, 0, 0);
         private static readonly Color Win9xSelectedBlue = Color.FromArgb(0, 0, 128);
 
-        public ComboBox(int x, int y, int width) : base(x, y, width, 22)
+        public ComboBox(int x, int y, int width)
+            : base(x, y, width, 36)
         {
         }
 
@@ -29,65 +30,226 @@ namespace HolmiumOS.GUI.Controls
         {
             if (!Visible || canvas == null) return;
 
-            canvas.DrawFilledRectangle(Win9xWhite, X, Y, Width, Height);
+            Font font = PCScreenFont.DefaultFont;
 
-            canvas.DrawLine(Win9xDarkGray, X, Y, X + Width - 1, Y);
-            canvas.DrawLine(Win9xDarkGray, X, Y, X, Y + Height - 1);
+            canvas.DrawFilledRectangle(
+                Win9xWhite,
+                X,
+                Y,
+                Width,
+                Height);
 
-            canvas.DrawLine(Win9xBlack, X + 1, Y + 1, X + Width - 2, Y + 1);
-            canvas.DrawLine(Win9xBlack, X + 1, Y + 1, X + 1, Y + Height - 2);
+            canvas.DrawLine(
+                Win9xDarkGray,
+                X,
+                Y,
+                X + Width - 1,
+                Y);
 
-            canvas.DrawLine(Win9xWhite, X, Y + Height, X + Width, Y + Height);
-            canvas.DrawLine(Win9xWhite, X + Width, Y, X + Width, Y + Height);
+            canvas.DrawLine(
+                Win9xDarkGray,
+                X,
+                Y,
+                X,
+                Y + Height - 1);
 
-            canvas.DrawLine(Win9xGray, X + 1, Y + Height - 1, X + Width - 1, Y + Height - 1);
-            canvas.DrawLine(Win9xGray, X + Width - 1, Y + 1, X + Width - 1, Y + Height - 1);
+            canvas.DrawLine(
+                Win9xBlack,
+                X + 1,
+                Y + 1,
+                X + Width - 2,
+                Y + 1);
 
-            int arrowBoxWidth = 18;
+            canvas.DrawLine(
+                Win9xBlack,
+                X + 1,
+                Y + 1,
+                X + 1,
+                Y + Height - 2);
+
+            canvas.DrawLine(
+                Win9xWhite,
+                X,
+                Y + Height,
+                X + Width,
+                Y + Height);
+
+            canvas.DrawLine(
+                Win9xWhite,
+                X + Width,
+                Y,
+                X + Width,
+                Y + Height);
+
+            canvas.DrawLine(
+                Win9xGray,
+                X + 1,
+                Y + Height - 1,
+                X + Width - 1,
+                Y + Height - 1);
+
+            canvas.DrawLine(
+                Win9xGray,
+                X + Width - 1,
+                Y + 1,
+                X + Width - 1,
+                Y + Height - 1);
+
+            int arrowBoxWidth = 30;
             int arrowLeft = X + Width - arrowBoxWidth - 1;
             int arrowTop = Y + 2;
             int arrowHeight = Height - 4;
 
-            canvas.DrawFilledRectangle(Win9xGray, arrowLeft, arrowTop, arrowBoxWidth, arrowHeight);
+            canvas.DrawFilledRectangle(
+                Win9xGray,
+                arrowLeft,
+                arrowTop,
+                arrowBoxWidth,
+                arrowHeight);
 
-            canvas.DrawLine(Win9xWhite, arrowLeft, arrowTop, arrowLeft + arrowBoxWidth - 1, arrowTop);
-            canvas.DrawLine(Win9xWhite, arrowLeft, arrowTop, arrowLeft, arrowTop + arrowHeight - 1);
-            canvas.DrawLine(Win9xBlack, arrowLeft, arrowTop + arrowHeight - 1, arrowLeft + arrowBoxWidth, arrowTop + arrowHeight - 1);
-            canvas.DrawLine(Win9xBlack, arrowLeft + arrowBoxWidth - 1, arrowTop, arrowLeft + arrowBoxWidth - 1, arrowTop + arrowHeight);
-            canvas.DrawLine(Win9xDarkGray, arrowLeft + 1, arrowTop + arrowHeight - 2, arrowLeft + arrowBoxWidth - 2, arrowTop + arrowHeight - 2);
-            canvas.DrawLine(Win9xDarkGray, arrowLeft + arrowBoxWidth - 2, arrowTop + 1, arrowLeft + arrowBoxWidth - 2, arrowTop + arrowHeight - 2);
+            canvas.DrawLine(
+                Win9xWhite,
+                arrowLeft,
+                arrowTop,
+                arrowLeft + arrowBoxWidth - 1,
+                arrowTop);
 
-            canvas.DrawString("v", PCScreenFont.DefaultFont, Win9xBlack, arrowLeft + 5, arrowTop + 2);
+            canvas.DrawLine(
+                Win9xWhite,
+                arrowLeft,
+                arrowTop,
+                arrowLeft,
+                arrowTop + arrowHeight - 1);
 
-            if (Items.Count > 0 && SelectedIndex >= 0 && SelectedIndex < Items.Count)
+            canvas.DrawLine(
+                Win9xBlack,
+                arrowLeft,
+                arrowTop + arrowHeight - 1,
+                arrowLeft + arrowBoxWidth,
+                arrowTop + arrowHeight - 1);
+
+            canvas.DrawLine(
+                Win9xBlack,
+                arrowLeft + arrowBoxWidth - 1,
+                arrowTop,
+                arrowLeft + arrowBoxWidth - 1,
+                arrowTop + arrowHeight);
+
+            canvas.DrawLine(
+                Win9xDarkGray,
+                arrowLeft + 1,
+                arrowTop + arrowHeight - 2,
+                arrowLeft + arrowBoxWidth - 2,
+                arrowTop + arrowHeight - 2);
+
+            canvas.DrawLine(
+                Win9xDarkGray,
+                arrowLeft + arrowBoxWidth - 2,
+                arrowTop + 1,
+                arrowLeft + arrowBoxWidth - 2,
+                arrowTop + arrowHeight - 2);
+
+            int arrowTextY = arrowTop + (arrowHeight - font.Height) / 2;
+
+            canvas.DrawString(
+                "v",
+                font,
+                Win9xBlack,
+                arrowLeft + 7,
+                arrowTextY);
+
+            if (Items.Count > 0 &&
+                SelectedIndex >= 0 &&
+                SelectedIndex < Items.Count)
             {
-                canvas.DrawString(Items[SelectedIndex], PCScreenFont.DefaultFont, Win9xBlack, X + 5, Y + 4);
+                int textY = Y + (Height - font.Height) / 2;
+
+                canvas.DrawString(
+                    Items[SelectedIndex],
+                    font,
+                    Win9xBlack,
+                    X + 5,
+                    textY);
             }
 
             if (IsDropped)
             {
                 int listHeight = Items.Count * ItemHeight;
 
-                canvas.DrawFilledRectangle(Win9xWhite, X, Y + Height, Width, listHeight);
+                canvas.DrawFilledRectangle(
+                    Win9xWhite,
+                    X,
+                    Y + Height,
+                    Width,
+                    listHeight);
 
-                canvas.DrawLine(Win9xBlack, X, Y + Height, X, Y + Height + listHeight);
-                canvas.DrawLine(Win9xBlack, X + Width, Y + Height, X + Width, Y + Height + listHeight);
-                canvas.DrawLine(Win9xBlack, X, Y + Height + listHeight, X + Width, Y + Height + listHeight);
+                canvas.DrawLine(
+                    Win9xBlack,
+                    X,
+                    Y + Height,
+                    X,
+                    Y + Height + listHeight);
 
-                canvas.DrawLine(Win9xDarkGray, X + Width + 1, Y + Height + 1, X + Width + 1, Y + Height + listHeight + 1);
-                canvas.DrawLine(Win9xDarkGray, X + 1, Y + Height + listHeight + 1, X + Width + 1, Y + Height + listHeight + 1);
+                canvas.DrawLine(
+                    Win9xBlack,
+                    X + Width,
+                    Y + Height,
+                    X + Width,
+                    Y + Height + listHeight);
+
+                canvas.DrawLine(
+                    Win9xBlack,
+                    X,
+                    Y + Height + listHeight,
+                    X + Width,
+                    Y + Height + listHeight);
+
+                canvas.DrawLine(
+                    Win9xDarkGray,
+                    X + Width + 1,
+                    Y + Height + 1,
+                    X + Width + 1,
+                    Y + Height + listHeight + 1);
+
+                canvas.DrawLine(
+                    Win9xDarkGray,
+                    X + 1,
+                    Y + Height + listHeight + 1,
+                    X + Width + 1,
+                    Y + Height + listHeight + 1);
 
                 for (int i = 0; i < Items.Count; i++)
                 {
                     int itemY = Y + Height + (i * ItemHeight);
+
                     if (i == SelectedIndex)
                     {
-                        canvas.DrawFilledRectangle(Win9xSelectedBlue, X + 1, itemY, Width - 2, ItemHeight);
-                        canvas.DrawString(Items[i], PCScreenFont.DefaultFont, Win9xWhite, X + 5, itemY + 2);
+                        canvas.DrawFilledRectangle(
+                            Win9xSelectedBlue,
+                            X + 1,
+                            itemY,
+                            Width - 2,
+                            ItemHeight);
+
+                        int textY = itemY + (ItemHeight - font.Height) / 2;
+
+                        canvas.DrawString(
+                            Items[i],
+                            font,
+                            Win9xWhite,
+                            X + 5,
+                            textY);
                     }
                     else
                     {
-                        canvas.DrawString(Items[i], PCScreenFont.DefaultFont, Win9xBlack, X + 5, itemY + 2);
+                        int textY = itemY + (ItemHeight - font.Height) / 2;
+
+                        canvas.DrawString(
+                            Items[i],
+                            font,
+                            Win9xBlack,
+                            X + 5,
+                            textY);
                     }
                 }
             }
@@ -95,40 +257,49 @@ namespace HolmiumOS.GUI.Controls
 
         public override void Click()
         {
-            this.Focused = true;
-            this.IsDropped = !this.IsDropped;
+            Focused = true;
+            IsDropped = !IsDropped;
         }
 
         public void CloseDropdown()
         {
-            this.IsDropped = false;
+            IsDropped = false;
         }
 
-        public void HandleAbsoluteClick(int windowX, int windowY, int mx, int my)
+        public void HandleAbsoluteClick(
+            int windowX,
+            int windowY,
+            int mx,
+            int my)
         {
-            int absX = windowX + this.X;
-            int absY = windowY + 25 + this.Y;
+            int absX = windowX + X;
+            int absY = windowY + 25 + Y;
 
             int listTop = absY + Height;
             int listBottom = listTop + (Items.Count * ItemHeight);
 
-            if (mx >= absX && mx <= absX + Width && my >= listTop && my <= listBottom)
+            if (mx >= absX &&
+                mx <= absX + Width &&
+                my >= listTop &&
+                my <= listBottom)
             {
                 int relativeY = my - listTop;
                 int clickedIndex = relativeY / ItemHeight;
 
-                if (clickedIndex >= 0 && clickedIndex < Items.Count)
+                if (clickedIndex >= 0 &&
+                    clickedIndex < Items.Count)
                 {
-                    this.SelectedIndex = clickedIndex;
+                    SelectedIndex = clickedIndex;
 
                     if (OnSelectedIndexChanged != null)
                     {
-                        OnSelectedIndexChanged.Invoke(Items[SelectedIndex]);
+                        OnSelectedIndexChanged.Invoke(
+                            Items[SelectedIndex]);
                     }
                 }
             }
 
-            this.IsDropped = false;
+            IsDropped = false;
         }
     }
 }

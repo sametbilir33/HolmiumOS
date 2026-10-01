@@ -19,7 +19,7 @@ namespace HolmiumOS.GUI
         {
             isGuiLoopRunning = true;
 
-            canvas = Canvas.GetFullScreen();
+            Canvas canvas = Canvas.GetFullScreen();
 
             CursorManager.Initialize();
 
@@ -48,8 +48,6 @@ namespace HolmiumOS.GUI
                 NotificationManager.UpdateMouse(canvas);
                 WindowManager.HandleKeyboard();
 
-                TaskSwitcherManager.Update();
-
                 if (wallpaper is not null)
                 {
                     canvas.DrawImage(
@@ -67,8 +65,6 @@ namespace HolmiumOS.GUI
                 }
 
                 NotificationManager.Draw(canvas);
-
-                TaskSwitcherManager.Draw(canvas);
 
                 CursorManager.Draw(canvas);
 

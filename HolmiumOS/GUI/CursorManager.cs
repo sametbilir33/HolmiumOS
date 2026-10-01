@@ -21,7 +21,7 @@ namespace HolmiumOS.GUI
         {
             defaultCursor = LoadBitmap(
                 "/mnt/boot/Cursor.bmp"
-                );
+            );
 
             Current = CursorType.Default;
         }
@@ -38,22 +38,26 @@ namespace HolmiumOS.GUI
 
         public static void Draw(Canvas canvas)
         {
-            if (defaultCursor is null)
+            if (defaultCursor is null ||
+                canvas == null)
             {
                 return;
             }
 
-            Bitmap cursor = GetCurrentCursor();
+            Bitmap cursor =
+                GetCurrentCursor();
 
-            int x = Clamp(
-                (int)MouseManager.X,
-                0,
-                (int)canvas.Mode.Width - (int)cursor.Width);
+            int x =
+                Clamp(
+                    (int)MouseManager.X,
+                    0,
+                    (int)canvas.Mode.Width - 1);
 
-            int y = Clamp(
-                (int)MouseManager.Y,
-                0,
-                (int)canvas.Mode.Height - (int)cursor.Height);
+            int y =
+                Clamp(
+                    (int)MouseManager.Y,
+                    0,
+                    (int)canvas.Mode.Height - 1);
 
             canvas.DrawImageAlpha(
                 cursor,
@@ -63,7 +67,8 @@ namespace HolmiumOS.GUI
 
         public static int GetWidth()
         {
-            Bitmap? cursor = defaultCursor;
+            Bitmap? cursor =
+                defaultCursor;
 
             return cursor is null
                 ? 0
@@ -72,7 +77,8 @@ namespace HolmiumOS.GUI
 
         public static int GetHeight()
         {
-            Bitmap? cursor = defaultCursor;
+            Bitmap? cursor =
+                defaultCursor;
 
             return cursor is null
                 ? 0
@@ -86,7 +92,8 @@ namespace HolmiumOS.GUI
                     "Cursor bitmap yüklenemedi.");
         }
 
-        private static Bitmap? LoadBitmap(params string[] paths)
+        private static Bitmap? LoadBitmap(
+            params string[] paths)
         {
             foreach (string path in paths)
             {

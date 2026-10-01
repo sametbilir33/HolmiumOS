@@ -14,14 +14,13 @@ namespace HolmiumOS.GUI.Controls
         public int SelectedIndex { get; private set; } = -1;
         public Action<int, string> OnSelectedIndexChanged;
 
-        private const int ItemHeight = 20;
+        private const int ItemHeight = 36;
 
-        // Windows 9x Klasik Renk Paleti
         private static readonly Color Win9xWhite = Color.FromArgb(255, 255, 255);
         private static readonly Color Win9xDarkGray = Color.FromArgb(128, 128, 128);
         private static readonly Color Win9xBlack = Color.FromArgb(0, 0, 0);
         private static readonly Color Win9xGray = Color.FromArgb(192, 192, 192);
-        private static readonly Color Win9xSelectedBlue = Color.FromArgb(0, 0, 128); // Klasik Win9x Koyu Mavi
+        private static readonly Color Win9xSelectedBlue = Color.FromArgb(0, 0, 128);
 
         public ListBox(int x, int y, int width, int height)
             : base(x, y, width, height)
@@ -69,58 +68,103 @@ namespace HolmiumOS.GUI.Controls
         {
             if (!Visible || canvas == null) return;
 
-            // 1. Liste Arka Planı (Beyaz)
-            canvas.DrawFilledRectangle(Win9xWhite, X, Y, Width, Height);
+            Font font = PCScreenFont.DefaultFont;
 
-            // 2. Win9x Sunken (İçeri Çökük) 3D Çerçeve Efekti
-            canvas.DrawLine(Win9xDarkGray, X, Y, X + Width - 1, Y);
-            canvas.DrawLine(Win9xDarkGray, X, Y, X, Y + Height - 1);
+            canvas.DrawFilledRectangle(
+                Win9xWhite,
+                X,
+                Y,
+                Width,
+                Height);
 
-            canvas.DrawLine(Win9xBlack, X + 1, Y + 1, X + Width - 2, Y + 1);
-            canvas.DrawLine(Win9xBlack, X + 1, Y + 1, X + 1, Y + Height - 2);
+            canvas.DrawLine(
+                Win9xDarkGray,
+                X,
+                Y,
+                X + Width - 1,
+                Y);
 
-            canvas.DrawLine(Win9xWhite, X, Y + Height, X + Width, Y + Height);
-            canvas.DrawLine(Win9xWhite, X + Width, Y, X + Width, Y + Height);
+            canvas.DrawLine(
+                Win9xDarkGray,
+                X,
+                Y,
+                X,
+                Y + Height - 1);
 
-            canvas.DrawLine(Win9xGray, X + 1, Y + Height - 1, X + Width - 1, Y + Height - 1);
-            canvas.DrawLine(Win9xGray, X + Width - 1, Y + 1, X + Width - 1, Y + Height - 1);
+            canvas.DrawLine(
+                Win9xBlack,
+                X + 1,
+                Y + 1,
+                X + Width - 2,
+                Y + 1);
+
+            canvas.DrawLine(
+                Win9xBlack,
+                X + 1,
+                Y + 1,
+                X + 1,
+                Y + Height - 2);
+
+            canvas.DrawLine(
+                Win9xWhite,
+                X,
+                Y + Height,
+                X + Width,
+                Y + Height);
+
+            canvas.DrawLine(
+                Win9xWhite,
+                X + Width,
+                Y,
+                X + Width,
+                Y + Height);
+
+            canvas.DrawLine(
+                Win9xGray,
+                X + 1,
+                Y + Height - 1,
+                X + Width - 1,
+                Y + Height - 1);
+
+            canvas.DrawLine(
+                Win9xGray,
+                X + Width - 1,
+                Y + 1,
+                X + Width - 1,
+                Y + Height - 1);
 
             int visibleCount = Height / ItemHeight;
 
-            // 3. Liste Öğelerinin Çizimi
             for (int i = 0; i < visibleCount && i < items.Count; i++)
             {
-                int itemY = Y + 2 + (i * ItemHeight); // İç çerçeve payı için küçük bir kaydırma (+2)
+                int itemY = Y + 2 + (i * ItemHeight);
+
+                int textY = itemY + (ItemHeight - font.Height) / 2;
 
                 if (i == SelectedIndex)
                 {
-                    // Seçili Öğe (Klasik Win9x Koyu Mavi Arka Plan, Beyaz Metin)
                     canvas.DrawFilledRectangle(
                         Win9xSelectedBlue,
                         X + 2,
                         itemY,
                         Width - 4,
-                        ItemHeight
-                    );
+                        ItemHeight);
 
                     canvas.DrawString(
                         items[i],
-                        PCScreenFont.DefaultFont,
+                        font,
                         Win9xWhite,
                         X + 6,
-                        itemY + 2
-                    );
+                        textY);
                 }
                 else
                 {
-                    // Normal Öğe (Beyaz Arka Plan, Siyah Metin)
                     canvas.DrawString(
                         items[i],
-                        PCScreenFont.DefaultFont,
+                        font,
                         Win9xBlack,
                         X + 6,
-                        itemY + 2
-                    );
+                        textY);
                 }
             }
         }
@@ -142,7 +186,11 @@ namespace HolmiumOS.GUI.Controls
                 OnSelectedIndexChanged(index, items[index]);
         }
 
-        public void HandleAbsoluteClick(int absoluteX, int absoluteY, int absoluteListX, int absoluteListY)
+        public void HandleAbsoluteClick(
+            int absoluteX,
+            int absoluteY,
+            int absoluteListX,
+            int absoluteListY)
         {
             int relativeX = absoluteX - absoluteListX;
             int relativeY = absoluteY - absoluteListY;

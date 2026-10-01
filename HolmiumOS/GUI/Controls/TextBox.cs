@@ -37,6 +37,8 @@ namespace HolmiumOS.GUI.Controls
             if (!Visible || canvas == null)
                 return;
 
+            Font font = PCScreenFont.DefaultFont;
+
             canvas.DrawFilledRectangle(
                 Win9xWhite,
                 X,
@@ -100,12 +102,15 @@ namespace HolmiumOS.GUI.Controls
                 X + Width - 1,
                 Y + Height - 1);
 
+            int textY =
+                Y + (Height - font.Height) / 2;
+
             canvas.DrawString(
                 Text ?? "",
-                PCScreenFont.DefaultFont,
+                font,
                 Win9xBlack,
                 X + 5,
-                Y + (Height / 2) - 8);
+                textY);
 
             if (Focused)
             {
@@ -115,19 +120,25 @@ namespace HolmiumOS.GUI.Controls
                 if (showCursor)
                 {
                     int textWidth =
-                        (Text != null ? Text.Length : 0) * 8;
+                        font.MeasureString(Text ?? "");
 
                     int cursorX =
                         X + 5 + textWidth;
+
+                    int cursorTop =
+                        Y + (Height - font.Height) / 2;
+
+                    int cursorBottom =
+                        cursorTop + font.Height - 1;
 
                     if (cursorX < X + Width - 6)
                     {
                         canvas.DrawLine(
                             Win9xBlack,
                             cursorX,
-                            Y + 4,
+                            cursorTop,
                             cursorX,
-                            Y + Height - 5);
+                            cursorBottom);
                     }
                 }
             }

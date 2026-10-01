@@ -16,8 +16,17 @@ namespace HolmiumOS.GUI.Controls
         private static readonly Color Win9xBlack = Color.FromArgb(0, 0, 0);
         private static readonly Color Win9xGray = Color.FromArgb(192, 192, 192);
 
-        public RadioButton(Window parentWindow, string text, string groupName, int x, int y)
-            : base(x, y, (text ?? "").Length * 8 + 22, 16)
+        public RadioButton(
+            Window parentWindow,
+            string text,
+            string groupName,
+            int x,
+            int y)
+            : base(
+                x,
+                y,
+                (text ?? "").Length * 16 + 40,
+                32)
         {
             this._parentWindow = parentWindow;
             this.Text = text ?? "";
@@ -29,62 +38,131 @@ namespace HolmiumOS.GUI.Controls
         {
             if (!Visible || canvas == null) return;
 
-            int boxSize = 12;
+            Font font = PCScreenFont.DefaultFont;
+
+            int boxSize = 24;
             int boxX = X;
             int boxY = Y + (Height - boxSize) / 2;
 
+            canvas.DrawFilledRectangle(
+                Win9xWhite,
+                boxX + 4,
+                boxY + 4,
+                boxSize - 8,
+                boxSize - 8);
 
-            canvas.DrawFilledRectangle(Win9xWhite, boxX + 2, boxY + 2, boxSize - 4, boxSize - 4);
-            canvas.DrawFilledRectangle(Win9xWhite, boxX + 1, boxY + 3, boxSize - 2, boxSize - 6);
-            canvas.DrawFilledRectangle(Win9xWhite, boxX + 3, boxY + 1, boxSize - 6, boxSize - 2);
+            canvas.DrawFilledRectangle(
+                Win9xWhite,
+                boxX + 2,
+                boxY + 6,
+                boxSize - 4,
+                boxSize - 12);
 
-            canvas.DrawLine(Win9xDarkGray, boxX + 3, boxY, boxX + boxSize - 3, boxY);
-            canvas.DrawLine(Win9xDarkGray, boxX, boxY + 3, boxX, boxY + boxSize - 3);
-            canvas.DrawLine(Win9xBlack, boxX + 3, boxY + 1, boxX + boxSize - 3, boxY + 1);
-            canvas.DrawLine(Win9xBlack, boxX + 1, boxY + 3, boxX + 1, boxY + boxSize - 3);
+            canvas.DrawFilledRectangle(
+                Win9xWhite,
+                boxX + 6,
+                boxY + 2,
+                boxSize - 12,
+                boxSize - 4);
 
-            canvas.DrawLine(Win9xWhite, boxX + 3, boxY + boxSize, boxX + boxSize - 3, boxY + boxSize);
-            canvas.DrawLine(Win9xWhite, boxX + boxSize, boxY + 3, boxX + boxSize, boxY + boxSize - 3);
-            canvas.DrawLine(Win9xGray, boxX + 2, boxY + boxSize - 1, boxX + boxSize - 2, boxY + boxSize - 1);
-            canvas.DrawLine(Win9xGray, boxX + boxSize - 1, boxY + 2, boxX + boxSize - 1, boxY + boxSize - 2);
+            canvas.DrawLine(
+                Win9xDarkGray,
+                boxX + 6,
+                boxY,
+                boxX + boxSize - 6,
+                boxY);
 
-            canvas.DrawPoint(Win9xDarkGray, boxX + 2, boxY + 1);
-            canvas.DrawPoint(Win9xDarkGray, boxX + 1, boxY + 2);
-            canvas.DrawPoint(Win9xDarkGray, boxX + boxSize - 2, boxY + 1);
-            canvas.DrawPoint(Win9xDarkGray, boxX + boxSize - 1, boxY + 2);
-            canvas.DrawPoint(Win9xWhite, boxX + 1, boxY + boxSize - 2);
-            canvas.DrawPoint(Win9xWhite, boxX + 2, boxY + boxSize - 1);
-            canvas.DrawPoint(Win9xWhite, boxX + boxSize - 2, boxY + boxSize - 1);
-            canvas.DrawPoint(Win9xWhite, boxX + boxSize - 1, boxY + boxSize - 2);
+            canvas.DrawLine(
+                Win9xDarkGray,
+                boxX,
+                boxY + 6,
+                boxX,
+                boxY + boxSize - 6);
+
+            canvas.DrawLine(
+                Win9xBlack,
+                boxX + 6,
+                boxY + 1,
+                boxX + boxSize - 6,
+                boxY + 1);
+
+            canvas.DrawLine(
+                Win9xBlack,
+                boxX + 1,
+                boxY + 6,
+                boxX + 1,
+                boxY + boxSize - 6);
+
+            canvas.DrawLine(
+                Win9xWhite,
+                boxX + 6,
+                boxY + boxSize,
+                boxX + boxSize - 6,
+                boxY + boxSize);
+
+            canvas.DrawLine(
+                Win9xWhite,
+                boxX + boxSize,
+                boxY + 6,
+                boxX + boxSize,
+                boxY + boxSize - 6);
+
+            canvas.DrawLine(
+                Win9xGray,
+                boxX + 4,
+                boxY + boxSize - 1,
+                boxX + boxSize - 4,
+                boxY + boxSize - 1);
+
+            canvas.DrawLine(
+                Win9xGray,
+                boxX + boxSize - 1,
+                boxY + 4,
+                boxX + boxSize - 1,
+                boxY + boxSize - 4);
 
             if (Checked)
             {
-                canvas.DrawFilledRectangle(Win9xBlack, boxX + 4, boxY + 4, 4, 4);
-                canvas.DrawPoint(Win9xBlack, boxX + 3, boxY + 5);
-                canvas.DrawPoint(Win9xBlack, boxX + 3, boxY + 6);
-                canvas.DrawPoint(Win9xBlack, boxX + 8, boxY + 5);
-                canvas.DrawPoint(Win9xBlack, boxX + 8, boxY + 6);
-                canvas.DrawPoint(Win9xBlack, boxX + 5, boxY + 3);
-                canvas.DrawPoint(Win9xBlack, boxX + 6, boxY + 3);
-                canvas.DrawPoint(Win9xBlack, boxX + 5, boxY + 8);
-                canvas.DrawPoint(Win9xBlack, boxX + 6, boxY + 8);
+                int dotSize = 10;
+                int dotX = boxX + (boxSize - dotSize) / 2;
+                int dotY = boxY + (boxSize - dotSize) / 2;
+
+                canvas.DrawFilledRectangle(
+                    Win9xBlack,
+                    dotX,
+                    dotY,
+                    dotSize,
+                    dotSize);
             }
 
-            canvas.DrawString(Text, PCScreenFont.DefaultFont, Win9xBlack, X + 18, Y + 1);
+            int textX = X + boxSize + 10;
+            int textY = Y + (Height - font.Height) / 2;
+
+            canvas.DrawString(
+                Text,
+                font,
+                Win9xBlack,
+                textX,
+                textY);
         }
 
         public override void Click()
         {
             this.Focused = true;
-            if (this.Checked) return;
+
+            if (this.Checked)
+                return;
 
             if (_parentWindow != null)
             {
                 int totalControls = _parentWindow.Controls.Count;
+
                 for (int i = 0; i < totalControls; i++)
                 {
                     var ctrl = _parentWindow.Controls[i];
-                    if (ctrl is RadioButton rb && rb.GroupName == this.GroupName)
+
+                    if (ctrl is RadioButton rb &&
+                        rb.GroupName == this.GroupName)
                     {
                         rb.Checked = false;
                     }

@@ -7,10 +7,15 @@ namespace HolmiumOS.GUI.Apps
     {
         public string Message { get; set; }
         public bool ShowInput { get; set; }
-        public string InputText => txtInput != null ? txtInput.Text : "";
+
+        public string InputText =>
+            txtInput != null
+                ? txtInput.Text
+                : "";
 
         private Label lblMessage;
         private TextBox txtInput;
+
         private Action<string> onConfirm;
         private Action onCancel;
 
@@ -18,57 +23,107 @@ namespace HolmiumOS.GUI.Apps
         private string confirmBtnText;
         private string cancelBtnText;
 
-        public MessageBox(string title, string message, bool showInput = false, string defaultInput = "",
-                             Action<string> onConfirm = null, Action onCancel = null,
-                             string confirmBtnText = "Tamam", string cancelBtnText = "Iptal")
+        public MessageBox(
+            string title,
+            string message,
+            bool showInput = false,
+            string defaultInput = "",
+            Action<string> onConfirm = null,
+            Action onCancel = null,
+            string confirmBtnText = "Tamam",
+            string cancelBtnText = "Iptal")
             : base(title ?? "Bilgi")
         {
             this.Message = message ?? "";
             this.ShowInput = showInput;
-            this.defaultInput = defaultInput ?? "";
+            this.defaultInput =
+                defaultInput ?? "";
+
             this.onConfirm = onConfirm;
             this.onCancel = onCancel;
-            this.confirmBtnText = confirmBtnText;
-            this.cancelBtnText = cancelBtnText;
+
+            this.confirmBtnText =
+                confirmBtnText;
+
+            this.cancelBtnText =
+                cancelBtnText;
         }
 
         public override void Load()
         {
             if (this.Window != null)
             {
-                this.Window.Title = this.Name;
+                this.Window.Title =
+                    this.Name;
             }
 
             int currentY = 15;
 
-            lblMessage = new Label(Message, 15, currentY);
-            currentY += 25;
+            lblMessage =
+                new Label(
+                    Message,
+                    15,
+                    currentY);
+
+            currentY += 40;
 
             if (ShowInput)
             {
-                txtInput = new TextBox(15, currentY, 250, 25);
-                txtInput.Text = defaultInput;
-                txtInput.Focused = true;
-                currentY += 35;
+                txtInput =
+                    new TextBox(
+                        15,
+                        currentY,
+                        300,
+                        42);
+
+                txtInput.Text =
+                    defaultInput;
+
+                txtInput.Focused =
+                    true;
+
+                currentY += 55;
             }
 
-            Button btnConfirm = new Button(confirmBtnText, 15, currentY, 80, 25);
-            btnConfirm.ClickAction = OnConfirmClicked;
+            Button btnConfirm =
+                new Button(
+                    confirmBtnText,
+                    15,
+                    currentY,
+                    130,
+                    55);
 
-            Button btnCancel = new Button(cancelBtnText, 105, currentY, 80, 25);
-            btnCancel.ClickAction = OnCancelClicked;
+            btnConfirm.ClickAction =
+                OnConfirmClicked;
+
+            Button btnCancel =
+                new Button(
+                    cancelBtnText,
+                    155,
+                    currentY,
+                    130,
+                    55);
+
+            btnCancel.ClickAction =
+                OnCancelClicked;
 
             if (this.Window != null)
             {
-                this.Window.AddControl(lblMessage);
+                this.Window.AddControl(
+                    lblMessage);
 
-                if (ShowInput && txtInput != null)
+                if (ShowInput &&
+                    txtInput != null)
                 {
-                    this.Window.AddControl(txtInput);
+                    this.Window.AddControl(
+                        txtInput);
                 }
 
-                this.Window.AddControl(btnConfirm);
-                this.Window.AddControl(btnCancel);
+                this.Window.AddControl(
+                    btnConfirm);
+
+                this.Window.AddControl(
+                    btnCancel);
             }
         }
 
@@ -78,6 +133,7 @@ namespace HolmiumOS.GUI.Apps
             {
                 onConfirm(InputText);
             }
+
             CloseApp();
         }
 
@@ -87,6 +143,7 @@ namespace HolmiumOS.GUI.Apps
             {
                 onCancel();
             }
+
             CloseApp();
         }
 

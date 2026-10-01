@@ -11,6 +11,12 @@ namespace HolmiumOS.GUI.Apps
     {
         private const string CosmosVersion = "3.0.86";
 
+        private const int LeftX = 20;
+        private const int RightX = 500;
+
+        private const int LineHeight = 32;
+        private const int SectionGap = 18;
+
         public About() : base("Hakkinda")
         {
         }
@@ -19,7 +25,7 @@ namespace HolmiumOS.GUI.Apps
         {
             if (Window != null)
             {
-                Window.Title = "HolmiumOS Gen3 System Intelligence";
+                Window.Title = "HolmiumOS Hakkinda";
             }
 
             AddHeader();
@@ -35,18 +41,18 @@ namespace HolmiumOS.GUI.Apps
         {
             Label title = new Label(
                 "HOLMIUMOS",
-                20,
+                LeftX,
                 15);
 
             Label subtitle = new Label(
-                "GEN3 SYSTEM INTELLIGENCE",
-                20,
-                35);
+                "HAKKINDA",
+                LeftX,
+                47);
 
             Label separator = new Label(
                 "================================",
-                20,
-                52);
+                LeftX,
+                79);
 
             Add(title);
             Add(subtitle);
@@ -57,8 +63,8 @@ namespace HolmiumOS.GUI.Apps
         {
             Label section = new Label(
                 "[ RUNTIME ]",
-                20,
-                75);
+                LeftX,
+                120);
 
             Add(section);
 
@@ -76,29 +82,29 @@ namespace HolmiumOS.GUI.Apps
                     : "NativeAOT";
 
             Label os = new Label(
-                "OS       : HolmiumOS Gen3",
-                20,
-                95);
+                "OS        : HolmiumOS Gen3",
+                LeftX,
+                152);
 
             Label cosmos = new Label(
                 "Cosmos    : " + CosmosVersion,
-                20,
-                112);
+                LeftX,
+                184);
 
             Label dotnet = new Label(
                 ".NET      : " + runtimeVersion,
-                20,
-                129);
+                LeftX,
+                216);
 
             Label arch = new Label(
                 "Arch      : " + architecture,
-                20,
-                146);
+                LeftX,
+                248);
 
             Label execution = new Label(
                 "Execution : " + executionMode,
-                20,
-                163);
+                LeftX,
+                280);
 
             Add(os);
             Add(cosmos);
@@ -111,8 +117,8 @@ namespace HolmiumOS.GUI.Apps
         {
             Label section = new Label(
                 "[ HARDWARE ]",
-                320,
-                75);
+                RightX,
+                120);
 
             Add(section);
 
@@ -129,28 +135,28 @@ namespace HolmiumOS.GUI.Apps
 
             Label cpu = new Label(
                 "CPU       : " + cpuInfo,
-                320,
-                95);
+                RightX,
+                152);
 
             Label cpuApi = new Label(
                 "CPU data  : Gen3 public API",
-                320,
-                112);
+                RightX,
+                184);
 
             Label ram = new Label(
                 "RAM       : Kernel API unavailable",
-                320,
-                129);
+                RightX,
+                216);
 
             Label memory = new Label(
                 "Memory    : NativeAOT runtime",
-                320,
-                146);
+                RightX,
+                248);
 
             Label hardware = new Label(
                 "HAL       : Gen3 x64 HAL",
-                320,
-                163);
+                RightX,
+                280);
 
             Add(cpu);
             Add(cpuApi);
@@ -163,8 +169,8 @@ namespace HolmiumOS.GUI.Apps
         {
             Label section = new Label(
                 "[ GRAPHICS ]",
-                20,
-                195);
+                LeftX,
+                340);
 
             Add(section);
 
@@ -176,8 +182,8 @@ namespace HolmiumOS.GUI.Apps
                 {
                     Add(new Label(
                         "Graphics  : Canvas unavailable",
-                        20,
-                        215));
+                        LeftX,
+                        372));
 
                     return;
                 }
@@ -194,28 +200,28 @@ namespace HolmiumOS.GUI.Apps
                     width +
                     " x " +
                     height,
-                    20,
-                    215);
+                    LeftX,
+                    372);
 
                 Label colorDepth = new Label(
                     "Color     : " +
                     depth +
                     " bit",
-                    20,
-                    232);
+                    LeftX,
+                    404);
 
                 Label refreshRate = new Label(
                     "Refresh   : " +
                     refresh +
                     " Hz",
-                    20,
-                    249);
+                    LeftX,
+                    436);
 
                 Label backend = new Label(
                     "Canvas    : " +
                     canvasName,
-                    20,
-                    266);
+                    LeftX,
+                    468);
 
                 int modeCount = 0;
 
@@ -228,8 +234,8 @@ namespace HolmiumOS.GUI.Apps
                     "Modes     : " +
                     modeCount +
                     " available",
-                    20,
-                    283);
+                    LeftX,
+                    500);
 
                 Add(resolution);
                 Add(colorDepth);
@@ -241,8 +247,8 @@ namespace HolmiumOS.GUI.Apps
             {
                 Add(new Label(
                     "Graphics  : Information unavailable",
-                    20,
-                    215));
+                    LeftX,
+                    372));
             }
         }
 
@@ -250,33 +256,34 @@ namespace HolmiumOS.GUI.Apps
         {
             Label section = new Label(
                 "[ STORAGE ]",
-                320,
-                195);
+                RightX,
+                340);
 
             Add(section);
 
             try
             {
                 int deviceCount = StorageManager.DeviceCount;
+
                 int partitionCount =
                     StorageManager.Partitions.Count;
 
                 Label devices = new Label(
                     "Devices   : " +
                     deviceCount,
-                    320,
-                    215);
+                    RightX,
+                    372);
 
                 Label partitions = new Label(
                     "Partitions: " +
                     partitionCount,
-                    320,
-                    232);
+                    RightX,
+                    404);
 
                 Add(devices);
                 Add(partitions);
 
-                int y = 249;
+                int y = 436;
 
                 for (int i = 0;
                      i < StorageManager.Devices.Count &&
@@ -297,7 +304,7 @@ namespace HolmiumOS.GUI.Apps
                         device.Name +
                         "  " +
                         size,
-                        320,
+                        RightX,
                         y);
 
                     Add(deviceLabel);
@@ -308,28 +315,28 @@ namespace HolmiumOS.GUI.Apps
                         " blocks x " +
                         device.BlockSize +
                         " B",
-                        320,
-                        y + 17);
+                        RightX,
+                        y + 32);
 
                     Add(geometry);
 
-                    y += 34;
+                    y += 64;
                 }
 
                 if (deviceCount == 0)
                 {
                     Add(new Label(
                         "No block devices detected",
-                        320,
-                        249));
+                        RightX,
+                        436));
                 }
             }
             catch
             {
                 Add(new Label(
                     "Storage   : Information unavailable",
-                    320,
-                    215));
+                    RightX,
+                    372));
             }
         }
 
@@ -337,46 +344,46 @@ namespace HolmiumOS.GUI.Apps
         {
             Label section = new Label(
                 "[ BOOT / KERNEL ]",
-                20,
-                315);
+                LeftX,
+                560);
 
             Add(section);
 
             Label bootloader = new Label(
                 "Bootloader: Limine",
-                20,
-                335);
+                LeftX,
+                592);
 
             Label protocol = new Label(
                 "Protocol  : Limine Boot Protocol",
-                20,
-                352);
+                LeftX,
+                624);
 
             Label kernel = new Label(
                 "Kernel    : Cosmos Gen3",
-                20,
-                369);
+                LeftX,
+                656);
 
             Label target = new Label(
                 "Target    : x64",
-                20,
-                386);
+                LeftX,
+                688);
 
             Label storage = new Label(
                 "Storage   : " +
                 (StorageManager.IsEnabled
                     ? "Enabled"
                     : "Disabled"),
-                20,
-                403);
+                LeftX,
+                720);
 
             Label initialized = new Label(
                 "StorageInit: " +
                 (StorageManager.IsInitialized
                     ? "Ready"
                     : "Not initialized"),
-                20,
-                420);
+                LeftX,
+                752);
 
             Add(bootloader);
             Add(protocol);
@@ -392,14 +399,14 @@ namespace HolmiumOS.GUI.Apps
         {
             Label separator = new Label(
                 "================================",
-                20,
-                447);
+                LeftX,
+                800);
 
             Label footer = new Label(
                 "HolmiumOS Gen3  |  Cosmos SDK " +
                 CosmosVersion,
-                20,
-                465);
+                LeftX,
+                832);
 
             Add(separator);
             Add(footer);

@@ -11,21 +11,12 @@ namespace HolmiumOS.GUI.Controls
         public string Text = "";
         public int MaxLength = 2000;
 
-        private const int CHAR_WIDTH = 8;
-        private const int CHAR_HEIGHT = 16;
         private const int PADDING = 5;
 
-        private static readonly Color Win9xWhite =
-            System.Drawing.Color.FromArgb(255, 255, 255);
-
-        private static readonly Color Win9xDarkGray =
-            System.Drawing.Color.FromArgb(128, 128, 128);
-
-        private static readonly Color Win9xBlack =
-            System.Drawing.Color.FromArgb(0, 0, 0);
-
-        private static readonly Color Win9xGray =
-            System.Drawing.Color.FromArgb(192, 192, 192);
+        private static readonly Color Win9xWhite = System.Drawing.Color.FromArgb(255, 255, 255);
+        private static readonly Color Win9xDarkGray = System.Drawing.Color.FromArgb(128, 128, 128);
+        private static readonly Color Win9xBlack = System.Drawing.Color.FromArgb(0, 0, 0);
+        private static readonly Color Win9xGray = System.Drawing.Color.FromArgb(192, 192, 192);
 
         public RichTextBox(
             int x,
@@ -40,6 +31,11 @@ namespace HolmiumOS.GUI.Controls
         {
             if (!Visible || canvas == null)
                 return;
+
+            Font font = PCScreenFont.DefaultFont;
+
+            int charWidth = font.Width;
+            int charHeight = font.Height;
 
             canvas.DrawFilledRectangle(
                 Win9xWhite,
@@ -110,14 +106,11 @@ namespace HolmiumOS.GUI.Controls
             int currX = X + PADDING;
             int currY = Y + PADDING;
 
-            int cursorX = currX;
-            int cursorY = currY;
-
             int maxRight =
-                X + Width - PADDING - CHAR_WIDTH;
+                X + Width - PADDING - charWidth;
 
             int maxBottom =
-                Y + Height - PADDING - CHAR_HEIGHT;
+                Y + Height - PADDING - charHeight;
 
             for (int i = 0; i < Text.Length; i++)
             {
@@ -126,7 +119,7 @@ namespace HolmiumOS.GUI.Controls
                 if (c == '\n')
                 {
                     currX = X + PADDING;
-                    currY += CHAR_HEIGHT;
+                    currY += charHeight;
 
                     if (currY > maxBottom)
                         break;
@@ -137,7 +130,7 @@ namespace HolmiumOS.GUI.Controls
                 if (currX > maxRight)
                 {
                     currX = X + PADDING;
-                    currY += CHAR_HEIGHT;
+                    currY += charHeight;
 
                     if (currY > maxBottom)
                         break;
@@ -145,28 +138,28 @@ namespace HolmiumOS.GUI.Controls
 
                 canvas.DrawString(
                     c.ToString(),
-                    PCScreenFont.DefaultFont,
+                    font,
                     Win9xBlack,
                     currX,
                     currY);
 
-                currX += CHAR_WIDTH;
+                currX += charWidth;
             }
 
-            cursorX = currX;
-            cursorY = currY;
+            int cursorX = currX;
+            int cursorY = currY;
 
             if (Focused && (DateTime.Now.Second % 2) == 0)
             {
                 if (cursorY <= maxBottom &&
-                    cursorX <= maxRight + CHAR_WIDTH)
+                    cursorX <= maxRight + charWidth)
                 {
                     canvas.DrawLine(
                         Win9xBlack,
                         cursorX,
                         cursorY + 1,
                         cursorX,
-                        cursorY + CHAR_HEIGHT - 2);
+                        cursorY + charHeight - 2);
                 }
             }
         }
