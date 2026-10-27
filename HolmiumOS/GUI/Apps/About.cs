@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Drawing;
-using System.Runtime.CompilerServices;
 using Cosmos.Kernel.System.Graphics;
 using Cosmos.Kernel.System.Storage;
 using HolmiumOS.GUI.Controls;
@@ -9,13 +7,12 @@ namespace HolmiumOS.GUI.Apps
 {
     public class About : AppBase
     {
-        private const string CosmosVersion = "3.0.86";
-
         private const int LeftX = 20;
         private const int RightX = 500;
-
         private const int LineHeight = 32;
-        private const int SectionGap = 18;
+
+        private int leftY;
+        private int rightY;
 
         public About() : base("Hakkinda")
         {
@@ -24,422 +21,114 @@ namespace HolmiumOS.GUI.Apps
         public override void Load()
         {
             if (Window != null)
-            {
                 Window.Title = "HolmiumOS Hakkinda";
-            }
 
-            AddHeader();
+            leftY = 20;
+            rightY = 20;
 
-            AddRuntimeSection();
-            AddHardwareSection();
-            AddGraphicsSection();
-            AddStorageSection();
-            AddBootSection();
+            AddSectionTitle("[ RUNTIME ]", LeftX, ref leftY);
+            AddRuntimeInfo();
+
+            AddSectionTitle("[ GRAPHICS ]", LeftX, ref leftY);
+            AddGraphicsInfo();
+
+            AddSectionTitle("[ STORAGE ]", RightX, ref rightY);
+            AddStorageInfo();
         }
 
-        private void AddHeader()
+        private void AddRuntimeInfo()
         {
-            Label title = new Label(
-                "HOLMIUMOS",
-                LeftX,
-                15);
-
-            Label subtitle = new Label(
-                "HAKKINDA",
-                LeftX,
-                47);
-
-            Label separator = new Label(
-                "================================",
-                LeftX,
-                79);
-
-            Add(title);
-            Add(subtitle);
-            Add(separator);
-        }
-
-        private void AddRuntimeSection()
-        {
-            Label section = new Label(
-                "[ RUNTIME ]",
-                LeftX,
-                120);
-
-            Add(section);
-
-            string architecture =
-                Environment.Is64BitProcess
-                    ? "x86_64 / 64-bit"
-                    : "32-bit";
-
-            string runtimeVersion =
-                Environment.Version.ToString();
-
-            string executionMode =
-                RuntimeFeature.IsDynamicCodeSupported
-                    ? "JIT / Dynamic Code"
-                    : "NativeAOT";
-
-            Label os = new Label(
-                "OS        : HolmiumOS Gen3",
-                LeftX,
-                152);
-
-            Label cosmos = new Label(
-                "Cosmos    : " + CosmosVersion,
-                LeftX,
-                184);
-
-            Label dotnet = new Label(
-                ".NET      : " + runtimeVersion,
-                LeftX,
-                216);
-
-            Label arch = new Label(
-                "Arch      : " + architecture,
-                LeftX,
-                248);
-
-            Label execution = new Label(
-                "Execution : " + executionMode,
-                LeftX,
-                280);
-
-            Add(os);
-            Add(cosmos);
-            Add(dotnet);
-            Add(arch);
-            Add(execution);
-        }
-
-        private void AddHardwareSection()
-        {
-            Label section = new Label(
-                "[ HARDWARE ]",
-                RightX,
-                120);
-
-            Add(section);
-
-            string cpuInfo;
-
-            if (Environment.Is64BitProcess)
+            try
             {
-                cpuInfo = "x86_64 processor";
+                AddLine(LeftX, ref leftY, ".NET Runtime: " + Environment.Version);
+                AddLine(LeftX, ref leftY, "Process: " + (Environment.Is64BitProcess ? "64-bit" : "32-bit"));
             }
-            else
+            catch
             {
-                cpuInfo = "32-bit processor";
+                // Bilgi alınamıyorsa gösterme.
             }
-
-            Label cpu = new Label(
-                "CPU       : " + cpuInfo,
-                RightX,
-                152);
-
-            Label cpuApi = new Label(
-                "CPU data  : Gen3 public API",
-                RightX,
-                184);
-
-            Label ram = new Label(
-                "RAM       : Kernel API unavailable",
-                RightX,
-                216);
-
-            Label memory = new Label(
-                "Memory    : NativeAOT runtime",
-                RightX,
-                248);
-
-            Label hardware = new Label(
-                "HAL       : Gen3 x64 HAL",
-                RightX,
-                280);
-
-            Add(cpu);
-            Add(cpuApi);
-            Add(ram);
-            Add(memory);
-            Add(hardware);
         }
 
-        private void AddGraphicsSection()
+        private void AddGraphicsInfo()
         {
-            Label section = new Label(
-                "[ GRAPHICS ]",
-                LeftX,
-                340);
-
-            Add(section);
-
             try
             {
                 Canvas canvas = Init.canvas;
-
                 if (canvas == null)
-                {
-                    Add(new Label(
-                        "Graphics  : Canvas unavailable",
-                        LeftX,
-                        372));
-
                     return;
-                }
 
-                int width = (int)canvas.Mode.Width;
-                int height = (int)canvas.Mode.Height;
-                int depth = (int)canvas.Mode.ColorDepth;
-                int refresh = canvas.RefreshRate;
+                AddLine(LeftX, ref leftY, "Resolution: " + (int)canvas.Mode.Width + " x " + (int)canvas.Mode.Height);
+                AddLine(LeftX, ref leftY, "Color depth: " + (int)canvas.Mode.ColorDepth + " bit");
+                AddLine(LeftX, ref leftY, "Refresh rate: " + canvas.RefreshRate + " Hz");
 
-                string canvasName = canvas.Name;
-
-                Label resolution = new Label(
-                    "Resolution: " +
-                    width +
-                    " x " +
-                    height,
-                    LeftX,
-                    372);
-
-                Label colorDepth = new Label(
-                    "Color     : " +
-                    depth +
-                    " bit",
-                    LeftX,
-                    404);
-
-                Label refreshRate = new Label(
-                    "Refresh   : " +
-                    refresh +
-                    " Hz",
-                    LeftX,
-                    436);
-
-                Label backend = new Label(
-                    "Canvas    : " +
-                    canvasName,
-                    LeftX,
-                    468);
-
-                int modeCount = 0;
+                if (!string.IsNullOrWhiteSpace(canvas.Name))
+                    AddLine(LeftX, ref leftY, "Canvas: " + canvas.Name);
 
                 if (canvas.AvailableModes != null)
-                {
-                    modeCount = canvas.AvailableModes.Count;
-                }
-
-                Label modes = new Label(
-                    "Modes     : " +
-                    modeCount +
-                    " available",
-                    LeftX,
-                    500);
-
-                Add(resolution);
-                Add(colorDepth);
-                Add(refreshRate);
-                Add(backend);
-                Add(modes);
+                    AddLine(LeftX, ref leftY, "Available modes: " + canvas.AvailableModes.Count);
             }
             catch
             {
-                Add(new Label(
-                    "Graphics  : Information unavailable",
-                    LeftX,
-                    372));
+                // Bilgi alınamıyorsa gösterme.
             }
         }
 
-        private void AddStorageSection()
+        private void AddStorageInfo()
         {
-            Label section = new Label(
-                "[ STORAGE ]",
-                RightX,
-                340);
-
-            Add(section);
-
             try
             {
-                int deviceCount = StorageManager.DeviceCount;
+                AddLine(RightX, ref rightY, "Devices: " + StorageManager.DeviceCount);
+                AddLine(RightX, ref rightY, "Partitions: " + StorageManager.Partitions.Count);
 
-                int partitionCount =
-                    StorageManager.Partitions.Count;
-
-                Label devices = new Label(
-                    "Devices   : " +
-                    deviceCount,
-                    RightX,
-                    372);
-
-                Label partitions = new Label(
-                    "Partitions: " +
-                    partitionCount,
-                    RightX,
-                    404);
-
-                Add(devices);
-                Add(partitions);
-
-                int y = 436;
-
-                for (int i = 0;
-                     i < StorageManager.Devices.Count &&
-                     i < 4;
-                     i++)
+                for (int i = 0; i < StorageManager.Devices.Count; i++)
                 {
-                    var device =
-                        StorageManager.Devices[i];
+                    var device = StorageManager.Devices[i];
+                    if (device == null)
+                        continue;
 
-                    ulong totalBytes =
-                        device.BlockCount *
-                        device.BlockSize;
+                    string name = string.IsNullOrWhiteSpace(device.Name) ? "Device " + i : device.Name;
+                    ulong totalBytes = (ulong)device.BlockCount * device.BlockSize;
 
-                    string size =
-                        FormatBytes(totalBytes);
-
-                    Label deviceLabel = new Label(
-                        device.Name +
-                        "  " +
-                        size,
-                        RightX,
-                        y);
-
-                    Add(deviceLabel);
-
-                    Label geometry = new Label(
-                        "  " +
-                        device.BlockCount +
-                        " blocks x " +
-                        device.BlockSize +
-                        " B",
-                        RightX,
-                        y + 32);
-
-                    Add(geometry);
-
-                    y += 64;
-                }
-
-                if (deviceCount == 0)
-                {
-                    Add(new Label(
-                        "No block devices detected",
-                        RightX,
-                        436));
+                    AddLine(RightX, ref rightY, name + ": " + FormatBytes(totalBytes));
+                    AddLine(RightX, ref rightY, "Blocks: " + device.BlockCount + " x " + device.BlockSize + " B");
                 }
             }
             catch
             {
-                Add(new Label(
-                    "Storage   : Information unavailable",
-                    RightX,
-                    372));
+                // Bilgi alınamıyorsa gösterme.
             }
         }
 
-        private void AddBootSection()
+        private void AddSectionTitle(string title, int x, ref int y)
         {
-            Label section = new Label(
-                "[ BOOT / KERNEL ]",
-                LeftX,
-                560);
-
-            Add(section);
-
-            Label bootloader = new Label(
-                "Bootloader: Limine",
-                LeftX,
-                592);
-
-            Label protocol = new Label(
-                "Protocol  : Limine Boot Protocol",
-                LeftX,
-                624);
-
-            Label kernel = new Label(
-                "Kernel    : Cosmos Gen3",
-                LeftX,
-                656);
-
-            Label target = new Label(
-                "Target    : x64",
-                LeftX,
-                688);
-
-            Label storage = new Label(
-                "Storage   : " +
-                (StorageManager.IsEnabled
-                    ? "Enabled"
-                    : "Disabled"),
-                LeftX,
-                720);
-
-            Label initialized = new Label(
-                "StorageInit: " +
-                (StorageManager.IsInitialized
-                    ? "Ready"
-                    : "Not initialized"),
-                LeftX,
-                752);
-
-            Add(bootloader);
-            Add(protocol);
-            Add(kernel);
-            Add(target);
-            Add(storage);
-            Add(initialized);
-
-            AddFooter();
+            Add(new Label(title, x, y));
+            y += LineHeight;
         }
 
-        private void AddFooter()
+        private void AddLine(int x, ref int y, string text)
         {
-            Label separator = new Label(
-                "================================",
-                LeftX,
-                800);
-
-            Label footer = new Label(
-                "HolmiumOS Gen3  |  Cosmos SDK " +
-                CosmosVersion,
-                LeftX,
-                832);
-
-            Add(separator);
-            Add(footer);
+            Add(new Label(text, x, y));
+            y += LineHeight;
         }
 
         private static string FormatBytes(ulong bytes)
         {
-            if (bytes >= 1024UL * 1024UL * 1024UL)
-            {
-                ulong gb =
-                    bytes /
-                    (1024UL * 1024UL * 1024UL);
+            const ulong KB = 1024UL;
+            const ulong MB = KB * 1024UL;
+            const ulong GB = MB * 1024UL;
+            const ulong TB = GB * 1024UL;
 
-                return gb + " GB";
-            }
+            if (bytes >= TB)
+                return (bytes / TB) + " TB";
 
-            if (bytes >= 1024UL * 1024UL)
-            {
-                ulong mb =
-                    bytes /
-                    (1024UL * 1024UL);
+            if (bytes >= GB)
+                return (bytes / GB) + " GB";
 
-                return mb + " MB";
-            }
+            if (bytes >= MB)
+                return (bytes / MB) + " MB";
 
-            if (bytes >= 1024UL)
-            {
-                ulong kb =
-                    bytes /
-                    1024UL;
-
-                return kb + " KB";
-            }
+            if (bytes >= KB)
+                return (bytes / KB) + " KB";
 
             return bytes + " B";
         }
@@ -447,9 +136,7 @@ namespace HolmiumOS.GUI.Apps
         private void Add(Control control)
         {
             if (Window != null)
-            {
                 Window.AddControl(control);
-            }
         }
 
         public override void Close()

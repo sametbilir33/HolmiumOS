@@ -19,7 +19,7 @@ namespace HolmiumOS.GUI
         {
             isGuiLoopRunning = true;
 
-            Canvas canvas = Canvas.GetFullScreen();
+            canvas = Canvas.GetFullScreen();
 
             CursorManager.Initialize();
 
