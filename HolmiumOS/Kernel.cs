@@ -24,6 +24,7 @@ using Cosmos.Kernel.System.Timer;
 using Cosmos.Kernel.System.Vfs;
 
 using Cosmos.Kernel.HAL.Vfs;
+using Cosmos.Kernel.HAL.Devices.Storage;
 
 using HolmiumOS.GUI;
 using HolmiumOS.Network;
