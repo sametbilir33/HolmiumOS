@@ -16,9 +16,6 @@
  * along with this program.
  */
 
-using System;
-using System.IO;
-
 using Cosmos.Kernel.System.Filesystems.Fat;
 using Cosmos.Kernel.System.Keyboard;
 using Cosmos.Kernel.System.Keyboard.ScanMaps;
@@ -27,7 +24,6 @@ using Cosmos.Kernel.System.Timer;
 using Cosmos.Kernel.System.Vfs;
 
 using Cosmos.Kernel.HAL.Vfs;
-using Cosmos.Kernel.HAL.Interfaces.Devices;
 
 using HolmiumOS.GUI;
 using HolmiumOS.Network;

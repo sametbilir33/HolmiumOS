@@ -21,6 +21,8 @@ namespace HolmiumOS.GUI
 
             canvas = Canvas.GetFullScreen();
 
+            MouseManager.SetScreenSize(canvas.Width, canvas.Height);
+
             CursorManager.Initialize();
 
             wallpaper = LoadWallpaper();

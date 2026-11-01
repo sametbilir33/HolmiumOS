@@ -47,17 +47,15 @@ namespace HolmiumOS.GUI
             Bitmap cursor =
                 GetCurrentCursor();
 
-            int x =
-                Clamp(
-                    (int)MouseManager.X,
-                    0,
-                    (int)canvas.Mode.Width - 1);
+            int x = Clamp(
+    (int)MouseManager.X,
+    0,
+    canvas.Width - 1);
 
-            int y =
-                Clamp(
-                    (int)MouseManager.Y,
-                    0,
-                    (int)canvas.Mode.Height - 1);
+int y = Clamp(
+    (int)MouseManager.Y,
+    0,
+    canvas.Height - 1);
 
             canvas.DrawImageAlpha(
                 cursor,
