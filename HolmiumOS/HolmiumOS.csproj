@@ -1,4 +1,3 @@
-
 <Project Sdk="Cosmos.Sdk/3.0.96">
 
   <PropertyGroup>
@@ -10,6 +9,7 @@
     <PackageReference Include="Cosmos.Kernel" Version="3.0.96" />
     <PackageReference Include="Cosmos.Kernel.System" Version="3.0.96" />
     <PackageReference Include="Cosmos.Kernel.HAL" Version="3.0.96" />
+    <PackageReference Include="Cosmos.Kernel.HAL.Interfaces" Version="3.0.89" />
   </ItemGroup>
 
 </Project>
