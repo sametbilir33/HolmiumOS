@@ -1,6 +1,6 @@
 ﻿using System;
 using Cosmos.Kernel.System.Storage;
-using Cosmos.Kernel.HAL.Interfaces.Devices;
+using Cosmos.Kernel.HAL.Devices.Storage;
 
 namespace HolmiumOS.Commands.FileSystem
 {

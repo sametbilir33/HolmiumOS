@@ -1,5 +1,5 @@
 ﻿using System;
-using Cosmos.Kernel.HAL.Interfaces.Devices;
+using Cosmos.Kernel.HAL.Devices.Storage;
 using Cosmos.Kernel.System.Storage;
 
 namespace HolmiumOS.Commands.System
