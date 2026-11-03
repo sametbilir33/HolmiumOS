@@ -31,13 +31,15 @@ using HolmiumOS.Shell;
 
 using FileSystemManager = HolmiumOS.Shell.FileSystemManager;
 using Sys = Cosmos.Kernel.System;
+using Cosmos.Kernel.System.FileSystem.Iso9660;
+using HolmiumOS.Storage;
 
 namespace HolmiumOS
 {
     public class Kernel : Sys.Kernel
     {
         public static readonly string OSVERSION = "0.4-beta";
-
+        private MemoryBlockDevice? liveDisk;
         protected override void BeforeRun()
         {
             KeyboardManager.SetLayout(new TRStandardLayout());
@@ -135,6 +137,133 @@ namespace HolmiumOS
             Console.WriteLine();
         }
 
+private bool MountBootIso()
+{
+    IBlockDevice? cdrom = null;
+
+    foreach (IBlockDevice device in StorageManager.Devices)
+    {
+        if (device is IRemovableMedia { IsReadOnly: true })
+        {
+            cdrom = device;
+            break;
+        }
+    }
+
+    if (cdrom == null)
+    {
+        Console.WriteLine("Boot ISO aygiti bulunamadi.");
+        return false;
+    }
+
+    Console.WriteLine("Boot ISO bulundu: " + cdrom.Name);
+
+    Iso9660FileSystemType iso =
+        new(cdrom);
+
+    if (!VfsManager.RegisterFileSystem("bootcd", iso))
+    {
+        Console.WriteLine("ISO filesystem kaydedilemedi.");
+        return false;
+    }
+
+    if (!VfsManager.TryMount(
+        "bootcd",
+        "",
+        MountFlags.None,
+        "/cdrom",
+        out VfsMount? mount))
+    {
+        Console.WriteLine("Boot ISO mount edilemedi.");
+        return false;
+    }
+
+    Console.WriteLine(
+        "Boot ISO /cdrom konumuna mount edildi.");
+
+    return true;
+}
+
+private bool InitializeLiveStorage()
+{
+    try
+    {
+        Console.WriteLine();
+        Console.WriteLine("=== HolmiumOS Live Mode ===");
+
+        liveDisk = new MemoryBlockDevice(
+            "HOLMIUM_RAM",
+            512,
+            65536);
+
+        FatFileSystemType fat =
+            new(liveDisk);
+
+        if (!VfsManager.RegisterFileSystem(
+            "livefat",
+            fat))
+        {
+            Console.WriteLine(
+                "RAM filesystem kaydedilemedi.");
+
+            return false;
+        }
+
+        if (!VfsManager.TryFormat(
+            "livefat",
+            "",
+            new FatFormatOptions
+            {
+                Type = FatType.Fat16,
+                VolumeLabel = "HOLMIUM"
+            }))
+        {
+            Console.WriteLine(
+                "RAM filesystem formatlanamadi.");
+
+            return false;
+        }
+
+        if (!VfsManager.TryMount(
+            "livefat",
+            "",
+            MountFlags.None,
+            "/mnt",
+            out VfsMount? mount))
+        {
+            Console.WriteLine(
+                "RAM filesystem mount edilemedi.");
+
+            return false;
+        }
+
+        Console.ForegroundColor = ConsoleColor.Green;
+
+        Console.WriteLine(
+            "Live Mode basariyla baslatildi.");
+
+        Console.WriteLine(
+            "RAM disk: 32 MiB");
+
+        Console.WriteLine(
+            "Mount: /mnt");
+
+        Console.ResetColor();
+
+        return true;
+    }
+    catch (Exception ex)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+
+        Console.WriteLine(
+            "Live Mode hatasi: " + ex.Message);
+
+        Console.ResetColor();
+
+        return false;
+    }
+}
 
         private bool InitializeStorage()
         {
@@ -144,7 +273,29 @@ namespace HolmiumOS
             Console.WriteLine("=== HolmiumOS Storage Manager ===");
             Console.ResetColor();
 
-            IBlockDevice? disk = StorageManager.PrimaryDevice;
+            MountBootIso();
+
+IBlockDevice? disk = null;
+
+foreach (IBlockDevice device in StorageManager.Devices)
+{
+    if (device is IRemovableMedia { IsReadOnly: true })
+        continue;
+
+    disk = device;
+    break;
+}
+
+if (disk == null)
+{
+    Console.ForegroundColor = ConsoleColor.Yellow;
+    Console.WriteLine();
+    Console.WriteLine("Yazilabilir disk bulunamadi.");
+    Console.WriteLine("Live Mode baslatiliyor...");
+    Console.ResetColor();
+
+    return InitializeLiveStorage();
+}
 
             if (disk == null)
             {
@@ -688,16 +839,12 @@ namespace HolmiumOS
             Console.ForegroundColor = ConsoleColor.Green;
 
             Console.WriteLine(
-                "Ilk kurulum basariyla tamamlandi!");
+    "Ilk kurulum basariyla tamamlandi.");
 
-            Console.WriteLine(
-                "Sistem 3 saniye icinde yeniden baslatiliyor...");
+Console.WriteLine(
+    "HolmiumOS baslatiliyor...");
 
-            Console.ResetColor();
-
-            TimerManager.Wait(3000);
-
-            Sys.Power.Reboot();
+Console.ResetColor();
         }
 
 

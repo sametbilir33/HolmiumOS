@@ -43,9 +43,9 @@ namespace HolmiumOS.GUI.Apps
         private static byte[]? LoadVideoData()
         {
             string[] paths =
-            {
-                "/mnt/boot/bad_apple.bad",
-            };
+{
+    "/cdrom/Resources/bad_apple.bad"
+};
 
             foreach (string path in paths)
             {

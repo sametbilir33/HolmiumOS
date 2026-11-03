@@ -10,120 +10,102 @@ namespace HolmiumOS.Shell
             UserManager.IsRoot || IsElevated;
 
         public static bool CanRead(string path)
-        {
-            path = Normalize(path);
+{
+    path = Normalize(path);
 
-            if (IsRoot)
-                return true;
+    if (IsRoot)
+        return true;
 
-            if (IsShadow(path))
-                return false;
+    if (IsShadow(path) || IsSystem(path) || IsOtherHome(path))
+        return false;
 
-            if (IsSystem(path))
-                return false;
+    return true;
+}
 
-            if (IsOwnHome(path))
-                return true;
+public static bool CanWrite(string path)
+{
+    path = Normalize(path);
 
-            if (IsOtherHome(path))
-                return false;
+    if (IsRoot)
+        return true;
 
-            return true;
-        }
+    if (IsSystem(path) || IsEtc(path) || IsOtherHome(path))
+        return false;
 
-        public static bool CanWrite(string path)
-        {
-            path = Normalize(path);
+    return IsOwnHome(path);
+}
 
-            if (IsRoot)
-                return true;
+public static bool CanDelete(string path) => CanWrite(path);
 
-            if (IsSystem(path))
-                return false;
+public static bool CanCreate(string path) => CanWrite(path);
 
-            if (IsEtc(path))
-                return false;
+public static bool CanEnter(string path)
+{
+    path = Normalize(path);
 
-            if (IsOwnHome(path))
-                return true;
+    if (IsRoot)
+        return true;
 
-            if (IsOtherHome(path))
-                return false;
+    if (IsSystem(path) || IsOtherHome(path))
+        return false;
 
-            return false;
-        }
-
-        public static bool CanDelete(string path)
-        {
-            return CanWrite(path);
-        }
-
-        public static bool CanCreate(string path)
-        {
-            return CanWrite(path);
-        }
-
-        public static bool CanEnter(string path)
-        {
-            path = Normalize(path);
-
-            if (IsRoot)
-                return true;
-
-            if (IsSystem(path))
-                return false;
-
-            if (IsOwnHome(path))
-                return true;
-
-            if (IsOtherHome(path))
-                return false;
-
-            return true;
-        }
+    return true;
+}
 
         private static bool IsOwnHome(string path)
-        {
-            string home = Normalize($@"/home/{UserManager.CurrentUser}");
+{
+    string home = Normalize($"/mnt/home/{UserManager.CurrentUser}");
 
-            return path.Equals(home, StringComparison.OrdinalIgnoreCase)
-                || path.StartsWith(home + @"/", StringComparison.OrdinalIgnoreCase);
-        }
+    return path.Equals(home, StringComparison.OrdinalIgnoreCase)
+        || path.StartsWith(home + "/", StringComparison.OrdinalIgnoreCase);
+}
 
-        private static bool IsOtherHome(string path)
-        {
-            path = Normalize(path);
+private static bool IsOtherHome(string path)
+{
+    path = Normalize(path);
 
-            if (path.Equals(@"/home", StringComparison.OrdinalIgnoreCase))
-                return false;
+    const string homeRoot = "/mnt/home";
 
-            if (!path.StartsWith(@"/home", StringComparison.OrdinalIgnoreCase))
-                return false;
+    if (path.Equals(homeRoot, StringComparison.OrdinalIgnoreCase))
+        return false;
 
-            return !IsOwnHome(path);
-        }
+    if (!path.StartsWith(homeRoot + "/", StringComparison.OrdinalIgnoreCase))
+        return false;
+
+    return !IsOwnHome(path);
+}
 
         private static bool IsSystem(string path)
-        {
-            return path.StartsWith(@"/system", StringComparison.OrdinalIgnoreCase);
-        }
+{
+    return path.Equals("/mnt/system", StringComparison.OrdinalIgnoreCase)
+        || path.StartsWith("/mnt/system/", StringComparison.OrdinalIgnoreCase);
+}
 
-        private static bool IsEtc(string path)
-        {
-            return path.StartsWith(@"/etc", StringComparison.OrdinalIgnoreCase);
-        }
+private static bool IsEtc(string path)
+{
+    return path.Equals("/mnt/etc", StringComparison.OrdinalIgnoreCase)
+        || path.StartsWith("/mnt/etc/", StringComparison.OrdinalIgnoreCase);
+}
 
-        private static bool IsShadow(string path)
-        {
-            return path.Equals(@"/etc/shadow", StringComparison.OrdinalIgnoreCase);
-        }
+private static bool IsShadow(string path)
+{
+    return path.Equals("/mnt/etc/shadow", StringComparison.OrdinalIgnoreCase);
+}
 
         private static string Normalize(string path)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-                return @"/";
+{
+    if (string.IsNullOrWhiteSpace(path))
+        return "/";
 
-            return path.TrimEnd('\\');
-        }
+    path = path.Replace('\\', '/').Trim();
+
+    while (path.Contains("//"))
+        path = path.Replace("//", "/");
+
+    if (path.Length > 1)
+        path = path.TrimEnd('/');
+
+    return path;
+}
     }
 }

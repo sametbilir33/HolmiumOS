@@ -77,9 +77,9 @@ namespace HolmiumOS.GUI
         private static Bitmap? LoadWallpaper()
         {
             string[] paths =
-            {
-                "/mnt/boot/Walpaper.bmp",
-            };
+{
+    "/cdrom/Resources/Walpaper.bmp"
+};
 
             foreach (string path in paths)
             {
