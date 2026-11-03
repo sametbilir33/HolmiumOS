@@ -4,7 +4,7 @@ using System.IO;
 using System.Net.Sockets;
 using System.Text;
 
-using Cosmos.Kernel.System.Timer;
+using Cosmos.Kernel.System.Timers;
 
 using HolmiumOS.Network;
 

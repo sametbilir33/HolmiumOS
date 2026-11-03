@@ -2,7 +2,7 @@
 using System.Drawing;
 using Cosmos.Kernel.System.Graphics;
 using Cosmos.Kernel.System.Graphics.Fonts;
-using Cosmos.Kernel.System.Keyboard;
+using Cosmos.Kernel.System.Input;
 
 namespace HolmiumOS.GUI.Controls
 {
@@ -154,7 +154,7 @@ namespace HolmiumOS.GUI.Controls
             if (!Focused)
                 return;
 
-            if (keyEvent.Key == ConsoleKeyEx.Backspace)
+            if (keyEvent.Key == Key.Backspace)
             {
                 if (Text.Length > 0)
                 {
@@ -167,7 +167,7 @@ namespace HolmiumOS.GUI.Controls
                 keyEvent.KeyChar != '\0' &&
                 Text.Length < MaxLength)
             {
-                if (keyEvent.Key == ConsoleKeyEx.Enter)
+                if (keyEvent.Key == Key.Enter)
                     return;
 
                 Text += keyEvent.KeyChar;

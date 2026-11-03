@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using Cosmos.Kernel.System.Graphics;
-using Cosmos.Kernel.System.Keyboard;
-using Cosmos.Kernel.System.Mouse;
+using Cosmos.Kernel.System.Input;
+using Cosmos.Kernel.System.Input;
 using HolmiumOS.GUI.Controls;
 
 namespace HolmiumOS.GUI

@@ -1,5 +1,5 @@
 ﻿using System;
-using Cosmos.Kernel.System.Keyboard;
+using Cosmos.Kernel.System.Input;
 
 namespace HolmiumOS.Shell
 {
@@ -16,15 +16,15 @@ namespace HolmiumOS.Shell
                     continue;
                 }
 
-                ConsoleKeyEx key = keyEvent.Key;
+                Key key = keyEvent.Key;
 
                 switch (key)
                 {
-                    case ConsoleKeyEx.Enter:
+                    case Key.Enter:
                         Console.WriteLine();
                         return password;
 
-                    case ConsoleKeyEx.Backspace:
+                    case Key.Backspace:
                         if (password.Length > 0)
                         {
                             password = password.Substring(
@@ -43,13 +43,13 @@ namespace HolmiumOS.Shell
 
                         continue;
 
-                    case ConsoleKeyEx.Delete:
-                    case ConsoleKeyEx.LeftArrow:
-                    case ConsoleKeyEx.RightArrow:
-                    case ConsoleKeyEx.UpArrow:
-                    case ConsoleKeyEx.DownArrow:
-                    case ConsoleKeyEx.Home:
-                    case ConsoleKeyEx.End:
+                    case Key.Delete:
+                    case Key.LeftArrow:
+                    case Key.RightArrow:
+                    case Key.UpArrow:
+                    case Key.DownArrow:
+                    case Key.Home:
+                    case Key.End:
                         continue;
                 }
 

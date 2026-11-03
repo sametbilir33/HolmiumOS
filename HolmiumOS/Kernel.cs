@@ -16,14 +16,13 @@
  * along with this program.
  */
 
-using Cosmos.Kernel.System.Filesystems.Fat;
-using Cosmos.Kernel.System.Keyboard;
-using Cosmos.Kernel.System.Keyboard.ScanMaps;
+using Cosmos.Kernel.System.FileSystem;
+using Cosmos.Kernel.System.FileSystem.Fat;
+using Cosmos.Kernel.System.Input;
+using Cosmos.Kernel.System.Input.Layouts;
 using Cosmos.Kernel.System.Storage;
-using Cosmos.Kernel.System.Timer;
-using Cosmos.Kernel.System.Vfs;
+using Cosmos.Kernel.System.Timers;
 
-using Cosmos.Kernel.HAL.Vfs;
 using Cosmos.Kernel.HAL.Devices.Storage;
 
 using HolmiumOS.GUI;
@@ -41,7 +40,7 @@ namespace HolmiumOS
 
         protected override void BeforeRun()
         {
-            KeyboardManager.SetKeyLayout(new TRStandardLayout());
+            KeyboardManager.SetLayout(new TRStandardLayout());
 
             if (!InitializeStorage())
             {
@@ -450,9 +449,9 @@ namespace HolmiumOS
             Console.WriteLine("=== FAT Filesystem ===");
             Console.ResetColor();
 
-            FatFilesystemType fat = new();
+            FatFileSystemType fat = new();
 
-            if (!VfsManager.RegisterFilesystem("fat", fat))
+            if (!VfsManager.RegisterFileSystem("fat", fat))
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(
@@ -485,12 +484,11 @@ namespace HolmiumOS
                 $"Partition [{SelectedPartitionIndex}] mount ediliyor...");
 
             if (VfsManager.TryMount(
-                "fat",
-                partition,
-                MountFlags.None,
-                "/mnt",
-                out VfsManager.VfsMount? mount))
-            {
+    "fat",
+    SelectedPartitionIndex.ToString(),
+    MountFlags.None,
+    "/mnt",
+    out VfsMount? mount)) {
                 if (mount != null)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
@@ -558,11 +556,11 @@ namespace HolmiumOS
             Console.ResetColor();
 
             if (!VfsManager.TryMount(
-                "fat",
-                partition,
-                MountFlags.None,
-                "/mnt",
-                out VfsManager.VfsMount? formattedMount))
+    "fat",
+    SelectedPartitionIndex.ToString(),
+    MountFlags.None,
+    "/mnt",
+    out VfsMount? formattedMount))
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(

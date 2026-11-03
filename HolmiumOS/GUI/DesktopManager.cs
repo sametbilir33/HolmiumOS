@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Cosmos.Kernel.System.Graphics;
 using Cosmos.Kernel.System.Graphics.Fonts;
-using Cosmos.Kernel.System.Mouse;
+using Cosmos.Kernel.System.Input;
 using HolmiumOS.GUI.Apps;
 using HolmiumOS.Shell;
 

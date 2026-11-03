@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using Cosmos.Kernel.System.Graphics;
-using Cosmos.Kernel.System.Mouse;
+using Cosmos.Kernel.System.Input;
 
 namespace HolmiumOS.GUI
 {
@@ -57,7 +57,7 @@ int y = Clamp(
     0,
     canvas.Height - 1);
 
-            canvas.DrawImageAlpha(
+            canvas.DrawImage(
                 cursor,
                 x,
                 y);

@@ -1,10 +1,6 @@
 ﻿using System;
 using CosmosNetworkManager = Cosmos.Kernel.System.Network.NetworkManager;
 using Cosmos.Kernel.System.Network;
-using Cosmos.Kernel.System.Network.Config;
-using Cosmos.Kernel.System.Network.DNS;
-using Cosmos.Kernel.System.Network.IPv4;
-using Cosmos.Kernel.System.Network.IPv4.DHCP;
 
 namespace HolmiumOS.Network;
 

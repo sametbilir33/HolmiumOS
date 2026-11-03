@@ -1,6 +1,6 @@
 ﻿using System;
-using Cosmos.Kernel.System.Keyboard.ScanMaps;
-using Sys = Cosmos.Kernel.System.Keyboard;
+using Cosmos.Kernel.System.Input;
+using Cosmos.Kernel.System.Input.Layouts;
 
 namespace HolmiumOS.Commands.Tools
 {
@@ -15,27 +15,27 @@ namespace HolmiumOS.Commands.Tools
             switch (args.ToLower())
             {
                 case "tr":
-                    Sys.KeyboardManager.SetKeyLayout(new TRStandardLayout());
+                    KeyboardManager.SetLayout(new TRStandardLayout());
                     break;
 
                 case "us":
-                    Sys.KeyboardManager.SetKeyLayout(new USStandardLayout());
+                    KeyboardManager.SetLayout(new USStandardLayout());
                     break;
 
                 case "gb":
-                    Sys.KeyboardManager.SetKeyLayout(new GBStandardLayout());
+                    KeyboardManager.SetLayout(new GBStandardLayout());
                     break;
 
                 case "fr":
-                    Sys.KeyboardManager.SetKeyLayout(new FRStandardLayout());
+                    KeyboardManager.SetLayout(new FRStandardLayout());
                     break;
 
                 case "de":
-                    Sys.KeyboardManager.SetKeyLayout(new DEStandardLayout());
+                    KeyboardManager.SetLayout(new DEStandardLayout());
                     break;
 
                 case "es":
-                    Sys.KeyboardManager.SetKeyLayout(new ESStandardLayout());
+                    KeyboardManager.SetLayout(new ESStandardLayout());
                     break;
 
                 default:
