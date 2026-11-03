@@ -273,7 +273,12 @@ private bool InitializeLiveStorage()
             Console.WriteLine("=== HolmiumOS Storage Manager ===");
             Console.ResetColor();
 
-            MountBootIso();
+            if (!MountBootIso())
+{
+    Console.ForegroundColor = ConsoleColor.Red;
+    Console.WriteLine("UYARI: Boot ISO mount edilemedi.");
+    Console.ResetColor();
+}
 
 IBlockDevice? disk = null;
 
@@ -762,8 +767,6 @@ if (disk == null)
 
             if (UserManager.UserExists("root"))
                 return;
-
-            Console.Clear();
 
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("=== Ilk Kurulum ===");

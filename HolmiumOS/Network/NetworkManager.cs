@@ -36,43 +36,13 @@ public static class NetworkManager
     {
         try
         {
-            Console.WriteLine("Initializing network...");
-
             NetworkStack.RemoveAllConfigIP();
-
-            if (CosmosNetworkManager.DeviceCount == 0)
-            {
-                Console.WriteLine("No network device found.");
-                return;
-            }
-
-            Console.WriteLine("Network device found.");
-            Console.WriteLine("Device: " + CosmosNetworkManager.Name);
-            Console.WriteLine("MAC: " + CosmosNetworkManager.MacAddress);
-            Console.WriteLine("Link up: " + CosmosNetworkManager.LinkUp);
-            Console.WriteLine("Ready: " + CosmosNetworkManager.Ready);
 
             DhcpClient dhcpClient = new();
 
             int result = dhcpClient.SendDiscoverPacket();
 
-            if (result < 0)
-            {
-                Console.WriteLine("DHCP initialization failed.");
-                return;
-            }
-
-            Console.WriteLine("DHCP configuration completed.");
-
-            IPConfig? config =
-                CosmosNetworkManager.Primary.IPConfig;
-
-            if (config is not null)
-            {
-                Console.WriteLine("IP address: " + config.Address);
-                Console.WriteLine("Subnet: " + config.SubnetMask);
-                Console.WriteLine("Gateway: " + config.DefaultGateway);
-            }
+            IPConfig? config = CosmosNetworkManager.Primary.IPConfig;
 
             Address4 dnsServer = new(1, 1, 1, 1);
 
@@ -80,8 +50,6 @@ public static class NetworkManager
 
             DNSClient = new DnsClient();
             DNSClient.Connect(dnsServer);
-
-            Console.WriteLine("DNS client initialized.");
         }
         catch (Exception ex)
         {

@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using Cosmos.Kernel.System.Graphics;
+﻿using Cosmos.Kernel.System.Graphics;
 using Cosmos.Kernel.System.Input;
 
 namespace HolmiumOS.GUI
@@ -12,17 +10,14 @@ namespace HolmiumOS.GUI
 
     public static class CursorManager
     {
-        private static Bitmap? defaultCursor;
+        private static Png? defaultCursor;
 
         public static CursorType Current { get; private set; } =
             CursorType.Default;
 
         public static void Initialize()
         {
-            defaultCursor = LoadBitmap(
-                "/cdrom/Resources/Cursor.bmp"
-            );
-
+            defaultCursor = LoadPng("/cdrom/Resources/Cursor.png");
             Current = CursorType.Default;
         }
 
@@ -38,100 +33,64 @@ namespace HolmiumOS.GUI
 
         public static void Draw(Canvas canvas)
         {
-            if (defaultCursor is null ||
-                canvas == null)
-            {
+            if (defaultCursor is null || canvas is null)
                 return;
-            }
-
-            Bitmap cursor =
-                GetCurrentCursor();
 
             int x = Clamp(
-    (int)MouseManager.X,
-    0,
-    canvas.Width - 1);
+                (int)MouseManager.X,
+                0,
+                canvas.Width - 1);
 
-int y = Clamp(
-    (int)MouseManager.Y,
-    0,
-    canvas.Height - 1);
+            int y = Clamp(
+                (int)MouseManager.Y,
+                0,
+                canvas.Height - 1);
 
-            canvas.DrawImage(
-                cursor,
-                x,
-                y);
+            canvas.DrawImage(defaultCursor, x, y);
         }
 
         public static int GetWidth()
         {
-            Bitmap? cursor =
-                defaultCursor;
-
-            return cursor is null
+            return defaultCursor is null
                 ? 0
-                : (int)cursor.Width;
+                : defaultCursor.Width;
         }
 
         public static int GetHeight()
         {
-            Bitmap? cursor =
-                defaultCursor;
-
-            return cursor is null
+            return defaultCursor is null
                 ? 0
-                : (int)cursor.Height;
+                : defaultCursor.Height;
         }
 
-        private static Bitmap GetCurrentCursor()
+        private static Png? LoadPng(string path)
         {
-            return defaultCursor
-                ?? throw new InvalidOperationException(
-                    "Cursor bitmap yüklenemedi.");
-        }
-
-        private static Bitmap? LoadBitmap(
-            params string[] paths)
-        {
-            foreach (string path in paths)
+            try
             {
-                try
-                {
-                    if (!File.Exists(path))
-                    {
-                        continue;
-                    }
+                if (!File.Exists(path))
+                    return null;
 
-                    return new Bitmap(path);
-                }
-                catch
-                {
-                    // Bir sonraki olası yolu dene.
-                }
+                return new Png(path);
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine(
+                    "Cursor hatasi: " + ex.Message);
 
-            return null;
+                return null;
+            }
         }
 
-        private static int Clamp(
-            int value,
-            int min,
-            int max)
+        private static int Clamp(int value, int min, int max)
         {
             if (min > max)
-            {
                 return min;
-            }
 
             if (value < min)
-            {
                 return min;
-            }
 
             if (value > max)
-            {
                 return max;
-            }
 
             return value;
         }

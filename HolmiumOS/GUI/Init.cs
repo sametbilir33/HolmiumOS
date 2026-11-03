@@ -11,7 +11,7 @@ namespace HolmiumOS.GUI
     {
         public static Canvas canvas = null!;
 
-        private static Bitmap? wallpaper;
+        private static Png? wallpaper;
 
         public static bool isGuiLoopRunning = true;
 
@@ -74,32 +74,15 @@ namespace HolmiumOS.GUI
             }
         }
 
-        private static Bitmap? LoadWallpaper()
-        {
-            string[] paths =
+        private static Png? LoadWallpaper()
 {
-    "/cdrom/Resources/Walpaper.bmp"
-};
+    const string path = "/cdrom/Resources/Wallpaper.png";
 
-            foreach (string path in paths)
-            {
-                try
-                {
-                    if (!File.Exists(path))
-                    {
-                        continue;
-                    }
-
-                    return new Bitmap(path);
-                }
-                catch
-                {
-                    // Bir sonraki yolu dene.
-                }
-            }
-
+        if (!File.Exists(path))
             return null;
-        }
+
+        return new Png(path);
+}
 
         private static bool CheckIfLoginIsOpen()
         {
