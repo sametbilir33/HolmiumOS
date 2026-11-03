@@ -15,8 +15,8 @@
   <ItemGroup>
     <CosmosIsoFile Include="Resources/Cursor.png"
                    IsoPath="Resources/Cursor.png" />
-    <CosmosIsoFile Include="Resources/Walpaper.png"
-                   IsoPath="Resources/Walpaper.png" />
+    <CosmosIsoFile Include="Resources/Wallpaper.png"
+                   IsoPath="Resources/Wallpaper.png" />
     <!-- <CosmosIsoFile Include="Resources/bad_apple.bad"
                    IsoPath="Resources/bad_apple.bad" /> -->
   </ItemGroup>
