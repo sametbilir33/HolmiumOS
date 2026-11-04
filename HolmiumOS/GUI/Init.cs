@@ -29,11 +29,9 @@ namespace HolmiumOS.GUI
 
             while (isGuiLoopRunning)
             {
-                bool isLoggedIn =
-                    UserManager.IsLoggedIn;
+                bool isLoggedIn = UserManager.IsLoggedIn;
 
-                bool isLoginAppOpen =
-                    CheckIfLoginIsOpen();
+                bool isLoginAppOpen = CheckIfLoginIsOpen();
 
                 if (!isLoggedIn && !isLoginAppOpen)
                 {
@@ -78,10 +76,17 @@ namespace HolmiumOS.GUI
 {
     const string path = "/cdrom/Resources/Wallpaper.png";
 
-        if (!File.Exists(path))
-            return null;
+    if (!File.Exists(path))
+        return null;
 
-        return new Png(path);
+    using FileStream stream = new FileStream(
+        path,
+        FileMode.Open,
+        FileAccess.Read,
+        FileShare.Read
+    );
+
+    return new Png(stream);
 }
 
         private static bool CheckIfLoginIsOpen()

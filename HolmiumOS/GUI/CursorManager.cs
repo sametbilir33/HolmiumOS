@@ -1,5 +1,7 @@
 ﻿using Cosmos.Kernel.System.Graphics;
 using Cosmos.Kernel.System.Input;
+using System;
+using System.IO;
 
 namespace HolmiumOS.GUI
 {
@@ -64,22 +66,27 @@ namespace HolmiumOS.GUI
         }
 
         private static Png? LoadPng(string path)
-        {
-            try
-            {
-                if (!File.Exists(path))
-                    return null;
+{
+    try
+    {
+        if (!File.Exists(path))
+            return null;
 
-                return new Png(path);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(
-                    "Cursor hatasi: " + ex.Message);
+        using FileStream stream = new FileStream(
+            path,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read
+        );
 
-                return null;
-            }
-        }
+        return new Png(stream);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Cursor hatasi: " + ex);
+        return null;
+    }
+}
 
         private static int Clamp(int value, int min, int max)
         {
