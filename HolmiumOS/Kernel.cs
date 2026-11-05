@@ -137,133 +137,132 @@ namespace HolmiumOS
             Console.WriteLine();
         }
 
-private bool MountBootIso()
-{
-    IBlockDevice? cdrom = null;
-
-    foreach (IBlockDevice device in StorageManager.Devices)
-    {
-        if (device is IRemovableMedia { IsReadOnly: true })
+        private bool MountBootIso()
         {
-            cdrom = device;
-            break;
-        }
-    }
+            IBlockDevice? cdrom = null;
 
-    if (cdrom == null)
-    {
-        Console.WriteLine("Boot ISO aygiti bulunamadi.");
-        return false;
-    }
-
-    Console.WriteLine("Boot ISO bulundu: " + cdrom.Name);
-
-    Iso9660FileSystemType iso =
-        new(cdrom);
-
-    if (!VfsManager.RegisterFileSystem("bootcd", iso))
-    {
-        Console.WriteLine("ISO filesystem kaydedilemedi.");
-        return false;
-    }
-
-    if (!VfsManager.TryMount(
-        "bootcd",
-        "",
-        MountFlags.None,
-        "/cdrom",
-        out VfsMount? mount))
-    {
-        Console.WriteLine("Boot ISO mount edilemedi.");
-        return false;
-    }
-
-    Console.WriteLine(
-        "Boot ISO /cdrom konumuna mount edildi.");
-
-    return true;
-}
-
-private bool InitializeLiveStorage()
-{
-    try
-    {
-        Console.WriteLine();
-        Console.WriteLine("=== HolmiumOS Live Mode ===");
-
-        liveDisk = new MemoryBlockDevice(
-            "HOLMIUM_RAM",
-            512,
-            65536);
-
-        FatFileSystemType fat =
-            new(liveDisk);
-
-        if (!VfsManager.RegisterFileSystem(
-            "livefat",
-            fat))
-        {
-            Console.WriteLine(
-                "RAM filesystem kaydedilemedi.");
-
-            return false;
-        }
-
-        if (!VfsManager.TryFormat(
-            "livefat",
-            "",
-            new FatFormatOptions
+            foreach (IBlockDevice device in StorageManager.Devices)
             {
-                Type = FatType.Fat16,
-                VolumeLabel = "HOLMIUM"
-            }))
-        {
-            Console.WriteLine(
-                "RAM filesystem formatlanamadi.");
+                if (device is IRemovableMedia { IsReadOnly: true })
+                {
+                    cdrom = device;
+                    break;
+                }
+            }
 
-            return false;
+            if (cdrom == null)
+            {
+                Console.WriteLine("Boot ISO aygiti bulunamadi.");
+                return false;
+            }
+
+            Console.WriteLine("Boot ISO bulundu: " + cdrom.Name);
+
+            Iso9660FileSystemType iso = new(cdrom);
+
+            if (!VfsManager.RegisterFileSystem("bootcd", iso))
+            {
+                Console.WriteLine("ISO filesystem kaydedilemedi.");
+                return false;
+            }
+
+            if (!VfsManager.TryMount(
+                "bootcd",
+                "",
+                MountFlags.None,
+                "/cdrom",
+                out VfsMount? mount))
+            {
+                Console.WriteLine("Boot ISO mount edilemedi.");
+                return false;
+            }
+
+            Console.WriteLine(
+                "Boot ISO /cdrom konumuna mount edildi.");
+
+            return true;
         }
 
-        if (!VfsManager.TryMount(
-            "livefat",
-            "",
-            MountFlags.None,
-            "/mnt",
-            out VfsMount? mount))
+        private bool InitializeLiveStorage()
         {
-            Console.WriteLine(
-                "RAM filesystem mount edilemedi.");
+            try
+            {
+                Console.WriteLine();
+                Console.WriteLine("=== HolmiumOS Live Mode ===");
 
-            return false;
+                liveDisk = new MemoryBlockDevice(
+                    "HOLMIUM_RAM",
+                    512,
+                    65536);
+
+                FatFileSystemType fat =
+                    new(liveDisk);
+
+                if (!VfsManager.RegisterFileSystem(
+                    "livefat",
+                    fat))
+                {
+                    Console.WriteLine(
+                        "RAM filesystem kaydedilemedi.");
+
+                    return false;
+                }
+
+                if (!VfsManager.TryFormat(
+                    "livefat",
+                    "",
+                    new FatFormatOptions
+                    {
+                        Type = FatType.Fat16,
+                        VolumeLabel = "HOLMIUM"
+                    }))
+                {
+                    Console.WriteLine(
+                        "RAM filesystem formatlanamadi.");
+
+                    return false;
+                }
+
+                if (!VfsManager.TryMount(
+                    "livefat",
+                    "",
+                    MountFlags.None,
+                    "/mnt",
+                    out VfsMount? mount))
+                {
+                    Console.WriteLine(
+                        "RAM filesystem mount edilemedi.");
+
+                    return false;
+                }
+
+                Console.ForegroundColor = ConsoleColor.Green;
+
+                Console.WriteLine(
+                    "Live Mode basariyla baslatildi.");
+
+                Console.WriteLine(
+                    "RAM disk: 32 MiB");
+
+                Console.WriteLine(
+                    "Mount: /mnt");
+
+                Console.ResetColor();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+
+                Console.WriteLine(
+                    "Live Mode hatasi: " + ex.Message);
+
+                Console.ResetColor();
+
+                return false;
+            }
         }
-
-        Console.ForegroundColor = ConsoleColor.Green;
-
-        Console.WriteLine(
-            "Live Mode basariyla baslatildi.");
-
-        Console.WriteLine(
-            "RAM disk: 32 MiB");
-
-        Console.WriteLine(
-            "Mount: /mnt");
-
-        Console.ResetColor();
-
-        return true;
-    }
-    catch (Exception ex)
-    {
-        Console.ForegroundColor = ConsoleColor.Red;
-
-        Console.WriteLine(
-            "Live Mode hatasi: " + ex.Message);
-
-        Console.ResetColor();
-
-        return false;
-    }
-}
 
         private bool InitializeStorage()
         {
@@ -274,33 +273,33 @@ private bool InitializeLiveStorage()
             Console.ResetColor();
 
             if (!MountBootIso())
-{
-    Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine("UYARI: Boot ISO mount edilemedi.");
-    Console.ResetColor();
-}
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("UYARI: Boot ISO mount edilemedi.");
+                Console.ResetColor();
+            }
 
-IBlockDevice? disk = null;
+            IBlockDevice? disk = null;
 
-foreach (IBlockDevice device in StorageManager.Devices)
-{
-    if (device is IRemovableMedia { IsReadOnly: true })
-        continue;
+            foreach (IBlockDevice device in StorageManager.Devices)
+            {
+                if (device is IRemovableMedia { IsReadOnly: true })
+                    continue;
 
-    disk = device;
-    break;
-}
+                disk = device;
+                break;
+            }
 
-if (disk == null)
-{
-    Console.ForegroundColor = ConsoleColor.Yellow;
-    Console.WriteLine();
-    Console.WriteLine("Yazilabilir disk bulunamadi.");
-    Console.WriteLine("Live Mode baslatiliyor...");
-    Console.ResetColor();
+            if (disk == null)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine();
+                Console.WriteLine("Yazilabilir disk bulunamadi.");
+                Console.WriteLine("Live Mode baslatiliyor...");
+                Console.ResetColor();
 
-    return InitializeLiveStorage();
-}
+                return InitializeLiveStorage();
+            }
 
             if (disk == null)
             {
@@ -644,7 +643,8 @@ if (disk == null)
     SelectedPartitionIndex.ToString(),
     MountFlags.None,
     "/mnt",
-    out VfsMount? mount)) {
+    out VfsMount? mount))
+            {
                 if (mount != null)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
@@ -844,10 +844,10 @@ if (disk == null)
             Console.WriteLine(
     "Ilk kurulum basariyla tamamlandi.");
 
-Console.WriteLine(
-    "HolmiumOS baslatiliyor...");
+            Console.WriteLine(
+                "HolmiumOS baslatiliyor...");
 
-Console.ResetColor();
+            Console.ResetColor();
         }
 
 
