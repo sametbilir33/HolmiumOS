@@ -7,12 +7,8 @@ namespace HolmiumOS.Commands.Network
     public class Ping : ICommand
     {
         public string Name => "ping";
-
-        public string Description =>
-            "Bir IP adresine baglanti testi yapar.";
-
-        public string Usage =>
-            "ping <ip>";
+        public string Description => "Bir IP adresine baglanti testi yapar.";
+        public string Usage => "ping <ip>";
 
         public void Execute(string args)
         {
@@ -25,39 +21,26 @@ namespace HolmiumOS.Commands.Network
             try
             {
                 string input = args.Trim();
-
-                Address? address =
-                    Address.Parse(input);
+                Address? address = Address.Parse(input);
 
                 if (address is null)
                 {
-                    Console.WriteLine(
-                        "Gecersiz IP adresi.");
-
+                    Console.WriteLine("Gecersiz IP adresi.");
                     return;
                 }
 
-                Console.WriteLine(
-                    $"PING {address}");
+                Console.WriteLine($"PING {address}");
 
-                int elapsed =
-    HolmiumNetworkManager.Ping(address);
+                int elapsed = HolmiumNetworkManager.Ping(address);
 
                 if (elapsed >= 0)
-                {
-                    Console.WriteLine(
-                        $"Reply from {address}: time={elapsed}ms");
-                }
+                    Console.WriteLine($"Reply from {address}: time={elapsed}ms");
                 else
-                {
-                    Console.WriteLine(
-                        "Request timed out.");
-                }
+                    Console.WriteLine("Request timed out.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine(
-                    $"ping error: {ex.Message}");
+                Console.WriteLine($"ping error: {ex.Message}");
             }
         }
     }

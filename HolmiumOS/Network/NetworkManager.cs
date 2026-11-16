@@ -9,34 +9,28 @@ public static class NetworkManager
     public static DnsClient DNSClient { get; private set; } = null!;
 
     public static int Ping(Address address, int timeout = 5000)
+{
+    IcmpClient? icmp = null;
+
+    try
     {
-        IcmpClient? icmp = null;
+        icmp = new IcmpClient();
+        icmp.Connect(address);
+        icmp.SendEcho();
 
-        try
-        {
-            icmp = new IcmpClient();
-            icmp.Connect(address);
-            icmp.SendEcho();
-
-            Cosmos.Kernel.System.Network.EndPoint source = new Cosmos.Kernel.System.Network.EndPoint(address, 0);
-
-            return icmp.Receive(ref source, timeout);
-        }
-        catch
-        {
-            return -1;
-        }
-        finally
-        {
-            try
-            {
-                icmp?.Close();
-            }
-            catch
-            {
-            }
-        }
+        Cosmos.Kernel.System.Network.EndPoint source = new Cosmos.Kernel.System.Network.EndPoint(Address4.Zero, 0);
+        return icmp.Receive(ref source, timeout);
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"ICMP error: {ex.Message}");
+        return -1;
+    }
+    finally
+    {
+        try { icmp?.Close(); } catch { }
+    }
+}
 
     public static void Init()
     {
