@@ -15,6 +15,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <CosmosIsoFile Include="Resources/Fonts/IBMPlexSans-Regular.ttf"
+               IsoPath="Resources/Fonts/IBMPlexSans-Regular.ttf" />
+    <CosmosIsoFile Include="Resources/Fonts/IBMPlexMono-Regular.ttf"
+               IsoPath="Resources/Fonts/IBMPlexMono-Regular.ttf" />
+    <CosmosIsoFile Include="Resources/Fonts/OFL.txt"
+               IsoPath="Resources/Fonts/OFL.txt" />
+
     <CosmosIsoFile Include="Resources/Cursor.png"
                    IsoPath="Resources/Cursor.png" />
     <CosmosIsoFile Include="Resources/Wallpaper.png"

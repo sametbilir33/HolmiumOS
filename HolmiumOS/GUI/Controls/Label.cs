@@ -17,7 +17,7 @@ namespace HolmiumOS.GUI.Controls
         public override void Draw(Canvas canvas)
         {
             if (!Visible || canvas == null) return;
-            canvas.DrawString(Text, PCScreenFont.DefaultFont, Color.Black, X, Y);
+            canvas.DrawString(Text, FontManager.UiFont, Color.Black, X, Y);
         }
 
         public override void Click() { }

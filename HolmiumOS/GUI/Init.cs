@@ -19,6 +19,8 @@ namespace HolmiumOS.GUI
         {
             isGuiLoopRunning = true;
 
+            FontManager.Initialize();
+
             canvas = Canvas.GetFullScreen();
 
             MouseManager.SetScreenSize(canvas.Width, canvas.Height);
