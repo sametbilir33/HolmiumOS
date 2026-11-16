@@ -161,7 +161,7 @@ namespace HolmiumOS.Shell
             {
                 string[] split = line.Split(':');
 
-                if (split.Length != 2)
+                if (split.Length != 3)
                     continue;
 
                 if (split[0].Equals(
