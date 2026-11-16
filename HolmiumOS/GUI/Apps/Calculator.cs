@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using HolmiumOS.GUI.Controls;
 using SysMath = System.Math;
@@ -7,7 +8,7 @@ namespace HolmiumOS.GUI.Apps
 {
     public class Calculator : AppBase
     {
-        private TextBox displayTextBox;
+        private TextBox? displayTextBox;
         private string currentExpression = "";
 
         public Calculator() : base("Hesap Makinesi")
@@ -16,127 +17,44 @@ namespace HolmiumOS.GUI.Apps
 
         public override void Load()
         {
-            if (this.Window == null)
+            if (Window == null)
                 return;
 
-            this.Window.Title = "Hesap Makinesi";
+            Window.Title = "Hesap Makinesi";
 
-            displayTextBox =
-                new TextBox(
-                    15,
-                    15,
-                    300,
-                    42);
-
+            displayTextBox = new TextBox(15, 15, 300, 42);
             displayTextBox.Text = "0";
             displayTextBox.MaxLength = 25;
+            Window.AddControl(displayTextBox);
 
-            this.Window.AddControl(displayTextBox);
+            string[,] keys =
+            {
+                { "7", "8", "9", "/" },
+                { "4", "5", "6", "*" },
+                { "1", "2", "3", "-" },
+                { "C", "0", "=", "+" }
+            };
 
-            // 7  8  9  /
-            Button btn7 =
-                new Button("7", 15, 75, 65, 55);
-            btn7.ClickAction = OnClick7;
-            this.Window.AddControl(btn7);
+            for (int row = 0; row < 4; row++)
+            {
+                for (int col = 0; col < 4; col++)
+                {
+                    string key = keys[row, col];
+                    int x = 15 + col * 75;
+                    int y = 75 + row * 65;
+                    int width = col == 3 ? 75 : 65;
 
-            Button btn8 =
-                new Button("8", 90, 75, 65, 55);
-            btn8.ClickAction = OnClick8;
-            this.Window.AddControl(btn8);
-
-            Button btn9 =
-                new Button("9", 165, 75, 65, 55);
-            btn9.ClickAction = OnClick9;
-            this.Window.AddControl(btn9);
-
-            Button btnDiv =
-                new Button("/", 240, 75, 75, 55);
-            btnDiv.ClickAction = OnClickDiv;
-            this.Window.AddControl(btnDiv);
-
-            // 4  5  6  *
-            Button btn4 =
-                new Button("4", 15, 140, 65, 55);
-            btn4.ClickAction = OnClick4;
-            this.Window.AddControl(btn4);
-
-            Button btn5 =
-                new Button("5", 90, 140, 65, 55);
-            btn5.ClickAction = OnClick5;
-            this.Window.AddControl(btn5);
-
-            Button btn6 =
-                new Button("6", 165, 140, 65, 55);
-            btn6.ClickAction = OnClick6;
-            this.Window.AddControl(btn6);
-
-            Button btnMul =
-                new Button("*", 240, 140, 75, 55);
-            btnMul.ClickAction = OnClickMul;
-            this.Window.AddControl(btnMul);
-
-            // 1  2  3  -
-            Button btn1 =
-                new Button("1", 15, 205, 65, 55);
-            btn1.ClickAction = OnClick1;
-            this.Window.AddControl(btn1);
-
-            Button btn2 =
-                new Button("2", 90, 205, 65, 55);
-            btn2.ClickAction = OnClick2;
-            this.Window.AddControl(btn2);
-
-            Button btn3 =
-                new Button("3", 165, 205, 65, 55);
-            btn3.ClickAction = OnClick3;
-            this.Window.AddControl(btn3);
-
-            Button btnSub =
-                new Button("-", 240, 205, 75, 55);
-            btnSub.ClickAction = OnClickSub;
-            this.Window.AddControl(btnSub);
-
-            // C  0  =  +
-            Button btnC =
-                new Button("C", 15, 270, 65, 55);
-            btnC.ClickAction = OnClickC;
-            this.Window.AddControl(btnC);
-
-            Button btn0 =
-                new Button("0", 90, 270, 65, 55);
-            btn0.ClickAction = OnClick0;
-            this.Window.AddControl(btn0);
-
-            Button btnEqual =
-                new Button("=", 165, 270, 65, 55);
-            btnEqual.ClickAction = OnClickEqual;
-            this.Window.AddControl(btnEqual);
-
-            Button btnAdd =
-                new Button("+", 240, 270, 75, 55);
-            btnAdd.ClickAction = OnClickAdd;
-            this.Window.AddControl(btnAdd);
+                    AddButton(key, x, y, width, 55);
+                }
+            }
         }
 
-        private void OnClick7() { ProcessInput("7"); }
-        private void OnClick8() { ProcessInput("8"); }
-        private void OnClick9() { ProcessInput("9"); }
-        private void OnClickDiv() { ProcessInput("/"); }
-
-        private void OnClick4() { ProcessInput("4"); }
-        private void OnClick5() { ProcessInput("5"); }
-        private void OnClick6() { ProcessInput("6"); }
-        private void OnClickMul() { ProcessInput("*"); }
-
-        private void OnClick1() { ProcessInput("1"); }
-        private void OnClick2() { ProcessInput("2"); }
-        private void OnClick3() { ProcessInput("3"); }
-        private void OnClickSub() { ProcessInput("-"); }
-
-        private void OnClickC() { ProcessInput("C"); }
-        private void OnClick0() { ProcessInput("0"); }
-        private void OnClickEqual() { ProcessInput("="); }
-        private void OnClickAdd() { ProcessInput("+"); }
+        private void AddButton(string text, int x, int y, int width, int height)
+        {
+            Button button = new Button(text, x, y, width, height);
+            button.ClickAction = () => ProcessInput(text);
+            Window?.AddControl(button);
+        }
 
         private void ProcessInput(string val)
         {
@@ -157,11 +75,8 @@ namespace HolmiumOS.GUI.Apps
 
                 try
                 {
-                    double result =
-                        Evaluate(currentExpression);
-
-                    string resultStr =
-                        result.ToString();
+                    double result = Evaluate(currentExpression);
+                    string resultStr = result.ToString();
 
                     displayTextBox.Text = resultStr;
                     currentExpression = resultStr;
@@ -175,32 +90,20 @@ namespace HolmiumOS.GUI.Apps
                 return;
             }
 
-            if (currentExpression == "0" &&
-                val != "+" &&
-                val != "-" &&
-                val != "*" &&
-                val != "/")
-            {
+            if (currentExpression == "0" && val != "+" && val != "-" && val != "*" && val != "/")
                 currentExpression = val;
-            }
             else
-            {
                 currentExpression += val;
-            }
 
-            displayTextBox.Text =
-                currentExpression;
+            displayTextBox.Text = currentExpression;
         }
 
         private double Evaluate(string expr)
         {
             expr = expr.Replace(" ", "");
 
-            Stack<double> values =
-                new Stack<double>();
-
-            Stack<char> ops =
-                new Stack<char>();
+            Stack<double> values = new Stack<double>();
+            Stack<char> ops = new Stack<char>();
 
             int Precedence(char op) => op switch
             {
@@ -210,102 +113,53 @@ namespace HolmiumOS.GUI.Apps
                 _ => 0
             };
 
-            double Apply(
-                double b,
-                double a,
-                char op) => op switch
+            double Apply(double b, double a, char op) => op switch
             {
                 '+' => a + b,
                 '-' => a - b,
                 '*' => a * b,
-                '/' => b == 0
-                    ? throw new Exception("Sifira bolme")
-                    : a / b,
+                '/' => b == 0 ? throw new Exception("Sifira bolme") : a / b,
                 '^' => SysMath.Pow(a, b),
                 _ => 0
             };
 
             void ApplyTop()
             {
-                if (values.Count < 2 ||
-                    ops.Count == 0)
-                {
-                    throw new Exception(
-                        "Gecersiz ifade.");
-                }
+                if (values.Count < 2 || ops.Count == 0)
+                    throw new Exception("Gecersiz ifade.");
 
-                values.Push(
-                    Apply(
-                        values.Pop(),
-                        values.Pop(),
-                        ops.Pop()));
+                values.Push(Apply(values.Pop(), values.Pop(), ops.Pop()));
             }
 
-            for (int i = 0;
-                 i < expr.Length;
-                 i++)
+            for (int i = 0; i < expr.Length; i++)
             {
                 char c = expr[i];
 
-                if ((c == '-' || c == '+') &&
-                    (i == 0 ||
-                     "+-*/^(".Contains(
-                         expr[i - 1].ToString())))
+                if ((c == '-' || c == '+') && (i == 0 || "+-*/^(".Contains(expr[i - 1].ToString())))
                 {
                     bool negative = c == '-';
                     i++;
 
-                    if (i >= expr.Length ||
-                        !(char.IsDigit(expr[i]) ||
-                          expr[i] == '.'))
-                    {
-                        throw new Exception(
-                            "Gecersiz ifade.");
-                    }
+                    if (i >= expr.Length || !(char.IsDigit(expr[i]) || expr[i] == '.'))
+                        throw new Exception("Gecersiz ifade.");
 
                     int start = i;
 
-                    while (
-                        i < expr.Length &&
-                        (char.IsDigit(expr[i]) ||
-                         expr[i] == '.'))
-                    {
+                    while (i < expr.Length && (char.IsDigit(expr[i]) || expr[i] == '.'))
                         i++;
-                    }
 
-                    double num =
-                        double.Parse(
-                            expr.Substring(
-                                start,
-                                i - start));
-
-                    values.Push(
-                        negative
-                            ? -num
-                            : num);
-
+                    double num = double.Parse(expr.Substring(start, i - start));
+                    values.Push(negative ? -num : num);
                     i--;
                 }
-                else if (
-                    char.IsDigit(c) ||
-                    c == '.')
+                else if (char.IsDigit(c) || c == '.')
                 {
                     int start = i;
 
-                    while (
-                        i < expr.Length &&
-                        (char.IsDigit(expr[i]) ||
-                         expr[i] == '.'))
-                    {
+                    while (i < expr.Length && (char.IsDigit(expr[i]) || expr[i] == '.'))
                         i++;
-                    }
 
-                    values.Push(
-                        double.Parse(
-                            expr.Substring(
-                                start,
-                                i - start)));
-
+                    values.Push(double.Parse(expr.Substring(start, i - start)));
                     i--;
                 }
                 else if (c == '(')
@@ -314,32 +168,19 @@ namespace HolmiumOS.GUI.Apps
                 }
                 else if (c == ')')
                 {
-                    while (
-                        ops.Count > 0 &&
-                        ops.Peek() != '(')
-                    {
+                    while (ops.Count > 0 && ops.Peek() != '(')
                         ApplyTop();
-                    }
 
                     if (ops.Count == 0)
-                    {
-                        throw new Exception(
-                            "Parantezler eslesmiyor.");
-                    }
+                        throw new Exception("Parantezler eslesmiyor.");
 
                     ops.Pop();
                 }
-                else if ("+-*/^".Contains(
-                    c.ToString()))
+                else if ("+-*/^".Contains(c.ToString()))
                 {
-                    while (
-                        ops.Count > 0 &&
-                        ops.Peek() != '(' &&
-                        (Precedence(ops.Peek()) >
-                             Precedence(c) ||
-                         (Precedence(ops.Peek()) ==
-                              Precedence(c) &&
-                          c != '^')))
+                    while (ops.Count > 0 && ops.Peek() != '(' &&
+                           (Precedence(ops.Peek()) > Precedence(c) ||
+                           (Precedence(ops.Peek()) == Precedence(c) && c != '^')))
                     {
                         ApplyTop();
                     }
@@ -348,29 +189,26 @@ namespace HolmiumOS.GUI.Apps
                 }
                 else
                 {
-                    throw new Exception(
-                        $"Gecersiz karakter: '{c}'");
+                    throw new Exception($"Gecersiz karakter: '{c}'");
                 }
             }
 
             while (ops.Count > 0)
             {
                 if (ops.Peek() == '(')
-                {
-                    throw new Exception(
-                        "Parantezler eslesmiyor.");
-                }
+                    throw new Exception("Parantezler eslesmiyor.");
 
                 ApplyTop();
             }
 
             if (values.Count != 1)
-            {
-                throw new Exception(
-                    "Gecersiz ifade.");
-            }
+                throw new Exception("Gecersiz ifade.");
 
             return values.Pop();
+        }
+
+        public override void Close()
+        {
         }
     }
 }

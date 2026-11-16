@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Drawing;
 using Cosmos.Kernel.System.Graphics;
 using Cosmos.Kernel.System.Graphics.Fonts;
@@ -11,23 +12,16 @@ namespace HolmiumOS.GUI.Controls
         public string Text = "";
         public int MaxLength = 30;
 
-        private static readonly Color Win9xWhite =
-            Color.FromArgb(255, 255, 255);
+        private const int PADDING = 8;
 
-        private static readonly Color Win9xDarkGray =
-            Color.FromArgb(128, 128, 128);
+        private static readonly Color BackgroundColor = Color.FromArgb(255, 255, 255);
+        private static readonly Color TextColor = Color.FromArgb(36, 36, 36);
+        private static readonly Color BorderColor = Color.FromArgb(190, 190, 190);
+        private static readonly Color FocusBorderColor = Color.FromArgb(53, 132, 228);
+        private static readonly Color HoverBorderColor = Color.FromArgb(150, 150, 150);
+        private static readonly Color CursorColor = Color.FromArgb(36, 36, 36);
 
-        private static readonly Color Win9xBlack =
-            Color.FromArgb(0, 0, 0);
-
-        private static readonly Color Win9xGray =
-            Color.FromArgb(192, 192, 192);
-
-        public TextBox(
-            int x,
-            int y,
-            int width,
-            int height)
+        public TextBox(int x, int y, int width, int height)
             : base(x, y, width, height)
         {
         }
@@ -37,111 +31,88 @@ namespace HolmiumOS.GUI.Controls
             if (!Visible || canvas == null)
                 return;
 
-            Font font = PCScreenFont.DefaultFont;
+            Font font = FontManager.UiFont;
+            int fontSize = FontManager.UiFontSize;
 
-            canvas.DrawFilledRectangle(
-                Win9xWhite,
-                X,
-                Y,
-                Width,
-                Height);
+            int textHeight = GetFontHeight(font, fontSize);
+            int textY = Y + (Height - textHeight) / 2;
 
-            canvas.DrawLine(
-                Win9xDarkGray,
-                X,
-                Y,
-                X + Width - 1,
-                Y);
+            Color borderColor = Focused
+                ? FocusBorderColor
+                : Hovered ? HoverBorderColor : BorderColor;
 
-            canvas.DrawLine(
-                Win9xDarkGray,
-                X,
-                Y,
-                X,
-                Y + Height - 1);
+            canvas.DrawFilledRectangle(BackgroundColor, X + 1, Y + 1, Width - 2, Height - 2);
 
-            canvas.DrawLine(
-                Win9xBlack,
-                X + 1,
-                Y + 1,
-                X + Width - 2,
-                Y + 1);
+            DrawRoundedRect(canvas, X, Y, Width, Height, 7, borderColor);
 
-            canvas.DrawLine(
-                Win9xBlack,
-                X + 1,
-                Y + 1,
-                X + 1,
-                Y + Height - 2);
+            int textX = X + PADDING;
+            int availableWidth = Width - PADDING * 2;
 
-            canvas.DrawLine(
-                Win9xWhite,
-                X,
-                Y + Height,
-                X + Width,
-                Y + Height);
+            string displayText = Text ?? "";
+            int textWidth = GetTextWidth(font, displayText, fontSize);
 
-            canvas.DrawLine(
-                Win9xWhite,
-                X + Width,
-                Y,
-                X + Width,
-                Y + Height);
-
-            canvas.DrawLine(
-                Win9xGray,
-                X + 1,
-                Y + Height - 1,
-                X + Width - 1,
-                Y + Height - 1);
-
-            canvas.DrawLine(
-                Win9xGray,
-                X + Width - 1,
-                Y + 1,
-                X + Width - 1,
-                Y + Height - 1);
-
-            int textY =
-                Y + (Height - font.Height) / 2;
-
-            canvas.DrawString(
-                Text ?? "",
-                font,
-                Win9xBlack,
-                X + 5,
-                textY);
-
-            if (Focused)
+            if (textWidth > availableWidth)
             {
-                DateTime now = DateTime.Now;
-                bool showCursor = (now.Second % 2) == 0;
+                int startIndex = displayText.Length;
 
-                if (showCursor)
-                {
-                    int textWidth =
-                        font.MeasureString(Text ?? "");
+                while (startIndex > 0 && GetTextWidth(font, displayText.Substring(startIndex - 1), fontSize) < availableWidth)
+                    startIndex--;
 
-                    int cursorX =
-                        X + 5 + textWidth;
-
-                    int cursorTop =
-                        Y + (Height - font.Height) / 2;
-
-                    int cursorBottom =
-                        cursorTop + font.Height - 1;
-
-                    if (cursorX < X + Width - 6)
-                    {
-                        canvas.DrawLine(
-                            Win9xBlack,
-                            cursorX,
-                            cursorTop,
-                            cursorX,
-                            cursorBottom);
-                    }
-                }
+                displayText = displayText.Substring(startIndex);
+                textWidth = GetTextWidth(font, displayText, fontSize);
             }
+
+            DrawText(canvas, displayText, font, fontSize, TextColor, textX, textY);
+
+            if (Focused && DateTime.Now.Second % 2 == 0)
+            {
+                int cursorX = textX + textWidth;
+
+                if (cursorX < X + Width - PADDING)
+                    canvas.DrawLine(CursorColor, cursorX, textY, cursorX, textY + textHeight - 1);
+            }
+        }
+
+        private static int GetFontHeight(Font font, int fontSize)
+        {
+            if (font is TrueTypeFont trueTypeFont)
+                return trueTypeFont.GetLineHeight(fontSize);
+
+            return font.Height;
+        }
+
+        private static int GetTextWidth(Font font, string text, int fontSize)
+        {
+            if (font is TrueTypeFont trueTypeFont)
+                return trueTypeFont.MeasureString(text, fontSize);
+
+            return font.MeasureString(text);
+        }
+
+        private static void DrawText(Canvas canvas, string text, Font font, int fontSize, Color color, int x, int y)
+        {
+            if (font is TrueTypeFont trueTypeFont)
+                canvas.DrawString(text, trueTypeFont, fontSize, color, x, y);
+            else
+                canvas.DrawString(text, font, color, x, y);
+        }
+
+        private static void DrawRoundedRect(Canvas canvas, int x, int y, int width, int height, int radius, Color color)
+        {
+            canvas.DrawLine(color, x + radius, y, x + width - radius - 1, y);
+            canvas.DrawLine(color, x + radius, y + height - 1, x + width - radius - 1, y + height - 1);
+            canvas.DrawLine(color, x, y + radius, x, y + height - radius - 1);
+            canvas.DrawLine(color, x + width - 1, y + radius, x + width - 1, y + height - radius - 1);
+
+            canvas.DrawLine(color, x + 2, y + 1, x + radius - 1, y + 1);
+            canvas.DrawLine(color, x + width - radius, y + 1, x + width - 3, y + 1);
+            canvas.DrawLine(color, x + 2, y + height - 2, x + radius - 1, y + height - 2);
+            canvas.DrawLine(color, x + width - radius, y + height - 2, x + width - 3, y + height - 2);
+
+            canvas.DrawLine(color, x + 1, y + 2, x + 1, y + radius - 1);
+            canvas.DrawLine(color, x + width - 2, y + 2, x + width - 2, y + radius - 1);
+            canvas.DrawLine(color, x + 1, y + height - radius, x + 1, y + height - 3);
+            canvas.DrawLine(color, x + width - 2, y + height - radius, x + width - 2, y + height - 3);
         }
 
         public override void Click()
@@ -156,20 +127,15 @@ namespace HolmiumOS.GUI.Controls
 
             if (keyEvent.Key == Key.Backspace)
             {
-                if (Text.Length > 0)
-                {
-                    Text = Text.Substring(
-                        0,
-                        Text.Length - 1);
-                }
+                if (!string.IsNullOrEmpty(Text))
+                    Text = Text.Substring(0, Text.Length - 1);
             }
-            else if (
-                keyEvent.KeyChar != '\0' &&
-                Text.Length < MaxLength)
+            else if (keyEvent.Key == Key.Enter)
             {
-                if (keyEvent.Key == Key.Enter)
-                    return;
-
+                return;
+            }
+            else if (keyEvent.KeyChar != '\0' && Text.Length < MaxLength)
+            {
                 Text += keyEvent.KeyChar;
             }
         }

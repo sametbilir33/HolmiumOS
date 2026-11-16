@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using Cosmos.Kernel.System;
 using HolmiumOS.GUI.Controls;
 using HolmiumOS.Shell;
@@ -7,194 +8,97 @@ namespace HolmiumOS.GUI.Apps
 {
     public class Login : AppBase
     {
-        private TextBox usernameTextBox;
-        private TextBox passwordTextBox;
-        private Button loginButton;
-        private Button rebootButton;
-        private Button shutdownButton;
-        private Label statusLabel;
-        private bool isSuccess;
+        private TextBox? usernameTextBox;
+        private TextBox? passwordTextBox;
+        private Button? loginButton;
+        private Button? rebootButton;
+        private Button? shutdownButton;
+        private Label? statusLabel;
 
-        public Login() : base("Giris Yap")
+        public Login() : base("Giriş Yap")
         {
-            this.isSuccess = false;
         }
 
         public override void Load()
         {
-            if (this.Window != null)
-                this.Window.Title = "Giris Yap";
+            if (Window == null)
+                return;
 
-            Label welcomeLabel =
-                new Label(
-                    "HolmiumOS'e Hos Geldiniz",
-                    20,
-                    20);
+            Window.Title = "Giriş Yap";
 
-            Label userTitle =
-                new Label(
-                    "Kullanici Adi:",
-                    20,
-                    65);
+            Label welcomeLabel = new Label("HolmiumOS", 20, 20);
+            Label subtitleLabel = new Label("Hesabınıza giriş yapın", 20, 55);
 
-            usernameTextBox =
-                new TextBox(
-                    20,
-                    100,
-                    300,
-                    42);
-
+            Label userTitle = new Label("Kullanıcı adı", 20, 105);
+            usernameTextBox = new TextBox(20, 135, 300, 42);
             usernameTextBox.Text = "";
             usernameTextBox.MaxLength = 20;
 
-            Label passTitle =
-                new Label(
-                    "Sifre:",
-                    20,
-                    155);
-
-            passwordTextBox =
-                new TextBox(
-                    20,
-                    190,
-                    300,
-                    42);
-
+            Label passTitle = new Label("Şifre", 20, 195);
+            passwordTextBox = new TextBox(20, 225, 300, 42);
             passwordTextBox.Text = "";
             passwordTextBox.MaxLength = 20;
 
-            statusLabel =
-                new Label(
-                    "Lutfen bilgilerinizi giriniz...",
-                    20,
-                    245);
+            statusLabel = new Label("Giriş bilgilerinizi bekliyorum.", 20, 285);
 
-            loginButton =
-                new Button(
-                    "Giris Yap",
-                    20,
-                    290,
-                    300,
-                    55);
+            loginButton = new Button("Giriş Yap", 20, 330, 300, 50);
+            loginButton.ClickAction = OnLoginButtonClick;
 
-            loginButton.ClickAction =
-                OnLoginButtonClick;
+            rebootButton = new Button("Yeniden Başlat", 20, 395, 180, 45);
+            rebootButton.ClickAction = OnRebootClick;
 
-            rebootButton =
-                new Button(
-                    "Yeniden Baslat",
-                    20,
-                    355,
-                    180,
-                    55);
+            shutdownButton = new Button("Kapat", 210, 395, 110, 45);
+            shutdownButton.ClickAction = OnShutdownClick;
 
-            rebootButton.ClickAction =
-                OnRebootClick;
-
-            shutdownButton =
-                new Button(
-                    "Kapat",
-                    210,
-                    355,
-                    110,
-                    55);
-
-            shutdownButton.ClickAction =
-                OnShutdownClick;
-
-            if (this.Window != null)
-            {
-                this.Window.AddControl(
-                    welcomeLabel);
-
-                this.Window.AddControl(
-                    userTitle);
-
-                this.Window.AddControl(
-                    usernameTextBox);
-
-                this.Window.AddControl(
-                    passTitle);
-
-                this.Window.AddControl(
-                    passwordTextBox);
-
-                this.Window.AddControl(
-                    statusLabel);
-
-                this.Window.AddControl(
-                    loginButton);
-
-                this.Window.AddControl(
-                    rebootButton);
-
-                this.Window.AddControl(
-                    shutdownButton);
-            }
+            Window.AddControl(welcomeLabel);
+            Window.AddControl(subtitleLabel);
+            Window.AddControl(userTitle);
+            Window.AddControl(usernameTextBox);
+            Window.AddControl(passTitle);
+            Window.AddControl(passwordTextBox);
+            Window.AddControl(statusLabel);
+            Window.AddControl(loginButton);
+            Window.AddControl(rebootButton);
+            Window.AddControl(shutdownButton);
         }
 
         private void OnLoginButtonClick()
         {
-            if (usernameTextBox == null ||
-                passwordTextBox == null ||
-                statusLabel == null)
-            {
+            if (usernameTextBox == null || passwordTextBox == null || statusLabel == null)
                 return;
-            }
 
-            string username =
-                usernameTextBox.Text;
+            string username = usernameTextBox.Text;
+            string password = passwordTextBox.Text;
 
-            string password =
-                passwordTextBox.Text;
-
-            if (string.IsNullOrEmpty(username))
+            if (string.IsNullOrWhiteSpace(username))
             {
-                statusLabel.Text =
-                    "Hata: Kullanici adi bos birakilamaz!";
-
+                statusLabel.Text = "Kullanıcı adı boş bırakılamaz.";
                 return;
             }
 
             try
             {
-                statusLabel.Text =
-                    "Dogrulaniyor...";
+                statusLabel.Text = "Doğrulanıyor...";
 
-                if (UserManager.Login(
-                        username,
-                        password))
+                if (UserManager.Login(username, password))
                 {
-                    statusLabel.Text =
-                        "Giris Basarili!";
+                    statusLabel.Text = "Giriş başarılı!";
 
-                    isSuccess = true;
+                    SendNotification("Sistem", "Giriş başarılı! Hoş geldiniz.", NotificationType.Success, 5);
 
-                    SendNotification(
-                        "Sistem",
-                        "Giris basarili! Hos geldiniz.",
-                        NotificationType.Success,
-                        5);
-
-                    if (this.Window != null)
-                    {
-                        WindowManager.Remove(
-                            this.Window);
-                    }
+                    if (Window != null)
+                        WindowManager.Remove(Window);
 
                     AppManager.Close(this);
                 }
                 else
                 {
-                    statusLabel.Text =
-                        "Hata: Hatali sifre girdiniz!";
+                    statusLabel.Text = "Kullanıcı adı veya şifre hatalı.";
                 }
             }
             catch (Exception ex)
             {
-                statusLabel.Text =
-                    "Giris Hatasi: " +
-                    ex.GetType().Name;
+                statusLabel.Text = "Giriş hatası: " + ex.GetType().Name;
             }
         }
 

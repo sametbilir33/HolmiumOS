@@ -1,6 +1,8 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Drawing;
 using Cosmos.Kernel.System.Graphics;
 using Cosmos.Kernel.System.Graphics.Fonts;
 using Cosmos.Kernel.System.Input;
@@ -13,44 +15,38 @@ namespace HolmiumOS.GUI
     {
         private class DesktopIcon
         {
-            public string Path { get; set; }
-            public string Name { get; set; }
+            public string Path { get; set; } = "";
+            public string Name { get; set; } = "";
             public bool IsDirectory { get; set; }
             public int X { get; set; }
             public int Y { get; set; }
-            public int Width { get; set; } = 90;
+            public int Width { get; set; } = 100;
             public int Height { get; set; } = 100;
             public bool Selected { get; set; }
         }
 
         private class DesktopMenuItem
         {
-            public string Text { get; set; }
+            public string Text { get; set; } = "";
             public int Y { get; set; }
             public int Height { get; set; } = 36;
         }
 
-        private static readonly List<DesktopIcon> icons =
-            new List<DesktopIcon>();
-
-        private static readonly List<DesktopMenuItem> contextMenu =
-            new List<DesktopMenuItem>();
+        private static readonly List<DesktopIcon> icons = new List<DesktopIcon>();
+        private static readonly List<DesktopMenuItem> contextMenu = new List<DesktopMenuItem>();
 
         private static bool wasLeftPressed = false;
         private static bool wasRightPressed = false;
-
         private static string lastUser = "";
 
-        private static DesktopIcon selectedIcon = null;
-        private static DesktopIcon lastClickedIcon = null;
+        private static DesktopIcon? selectedIcon = null;
+        private static DesktopIcon? lastClickedIcon = null;
+        private static DesktopIcon? contextIcon = null;
 
         private static long lastClickTime = 0;
-
         private static bool contextMenuVisible = false;
         private static int contextMenuX;
         private static int contextMenuY;
-        private static DesktopIcon contextIcon = null;
-
         private static int hoveredMenuItem = -1;
 
         private static bool isSelecting = false;
@@ -65,36 +61,32 @@ namespace HolmiumOS.GUI
         private const int IconSpacingY = 115;
         private const int MaxColumns = 12;
         private const int DoubleClickMilliseconds = 450;
-
         private const int IconWidth = 100;
         private const int IconHeight = 100;
-
         private const int ContextMenuItemHeight = 36;
-        private const int ContextMenuPadding = 10;
+        private const int ContextMenuPadding = 12;
 
-        private static readonly System.Drawing.Color Win9xGray =
-            System.Drawing.Color.FromArgb(192, 192, 192);
+        private static readonly Color DesktopTextColor = Color.FromArgb(255, 255, 255);
+        private static readonly Color DesktopTextShadow = Color.FromArgb(110, 0, 0, 0);
 
-        private static readonly System.Drawing.Color Win9xWhite =
-            System.Drawing.Color.FromArgb(255, 255, 255);
+        private static readonly Color MenuBackground = Color.FromArgb(246, 245, 244);
+        private static readonly Color MenuBorder = Color.FromArgb(205, 203, 199);
+        private static readonly Color MenuText = Color.FromArgb(36, 36, 36);
+        private static readonly Color MenuHover = Color.FromArgb(225, 237, 250);
+        private static readonly Color MenuSeparator = Color.FromArgb(225, 223, 220);
+        private static readonly Color MenuShadow = Color.FromArgb(55, 0, 0, 0);
 
-        private static readonly System.Drawing.Color Win9xLightGray =
-            System.Drawing.Color.FromArgb(223, 223, 223);
+        private static readonly Color SelectionBoxFill = Color.FromArgb(55, 53, 132, 228);
+        private static readonly Color SelectionBoxBorder = Color.FromArgb(150, 53, 132, 228);
+        private static readonly Color IconSelectionFill = Color.FromArgb(65, 53, 132, 228);
+        private static readonly Color IconSelectionBorder = Color.FromArgb(130, 53, 132, 228);
 
-        private static readonly System.Drawing.Color Win9xDarkGray =
-            System.Drawing.Color.FromArgb(128, 128, 128);
-
-        private static readonly System.Drawing.Color Win9xBlack =
-            System.Drawing.Color.FromArgb(0, 0, 0);
-
-        private static readonly System.Drawing.Color Win9xBlue =
-            System.Drawing.Color.FromArgb(0, 0, 128);
-
-        private static readonly System.Drawing.Color SelectionBoxFill =
-            System.Drawing.Color.FromArgb(70, 70, 130, 220);
-
-        private static readonly System.Drawing.Color SelectionBoxBorder =
-            System.Drawing.Color.FromArgb(180, 100, 160, 255);
+        private static readonly Color FolderColor = Color.FromArgb(255, 210, 105);
+        private static readonly Color FolderLightColor = Color.FromArgb(255, 224, 145);
+        private static readonly Color FolderDarkColor = Color.FromArgb(190, 135, 48);
+        private static readonly Color FileColor = Color.FromArgb(255, 255, 255);
+        private static readonly Color FileBorderColor = Color.FromArgb(190, 190, 190);
+        private static readonly Color FileLineColor = Color.FromArgb(190, 198, 208);
 
         private static int CompareNames(string a, string b)
         {
@@ -127,14 +119,75 @@ namespace HolmiumOS.GUI
             return 0;
         }
 
+        private static int MeasureText(Font font, string text)
+        {
+            if (font is TrueTypeFont trueTypeFont)
+                return trueTypeFont.MeasureString(text, FontManager.UiFontSize);
+
+            return font.MeasureString(text);
+        }
+
+        private static int GetFontHeight(Font font)
+        {
+            if (font is TrueTypeFont trueTypeFont)
+                return trueTypeFont.GetLineHeight(FontManager.UiFontSize);
+
+            return font.Height;
+        }
+
+        private static void DrawText(Canvas canvas, string text, Font font, Color color, int x, int y)
+        {
+            if (font is TrueTypeFont trueTypeFont)
+                canvas.DrawString(text, trueTypeFont, FontManager.UiFontSize, color, x, y);
+            else
+                canvas.DrawString(text, font, color, x, y);
+        }
+
+        private static void FillRoundedRect(Canvas canvas, int x, int y, int width, int height, int radius, Color color)
+        {
+            if (width <= 0 || height <= 0)
+                return;
+
+            radius = Math.Min(radius, Math.Min(width / 2, height / 2));
+
+            if (radius <= 0)
+            {
+                canvas.DrawFilledRectangle(color, x, y, width, height);
+                return;
+            }
+
+            canvas.DrawFilledRectangle(color, x + radius, y, width - radius * 2, height);
+            canvas.DrawFilledRectangle(color, x, y + radius, width, height - radius * 2);
+            canvas.DrawFilledCircle(color, x + radius, y + radius, radius);
+            canvas.DrawFilledCircle(color, x + width - radius - 1, y + radius, radius);
+            canvas.DrawFilledCircle(color, x + radius, y + height - radius - 1, radius);
+            canvas.DrawFilledCircle(color, x + width - radius - 1, y + height - radius - 1, radius);
+        }
+
+        private static void DrawRoundedOutline(Canvas canvas, int x, int y, int width, int height, int radius, Color color)
+        {
+            if (width <= 0 || height <= 0)
+                return;
+
+            radius = Math.Min(radius, Math.Min(width / 2, height / 2));
+
+            canvas.DrawLine(color, x + radius, y, x + width - radius - 1, y);
+            canvas.DrawLine(color, x + radius, y + height - 1, x + width - radius - 1, y + height - 1);
+            canvas.DrawLine(color, x, y + radius, x, y + height - radius - 1);
+            canvas.DrawLine(color, x + width - 1, y + radius, x + width - 1, y + height - radius - 1);
+
+            canvas.DrawLine(color, x + 2, y + 1, x + radius - 1, y + 1);
+            canvas.DrawLine(color, x + width - radius, y + 1, x + width - 3, y + 1);
+            canvas.DrawLine(color, x + 2, y + height - 2, x + radius - 1, y + height - 2);
+            canvas.DrawLine(color, x + width - radius, y + height - 2, x + width - 3, y + height - 2);
+        }
+
         public static void RefreshIcons()
         {
             icons.Clear();
-
             selectedIcon = null;
             lastClickedIcon = null;
             contextIcon = null;
-
             contextMenuVisible = false;
             hoveredMenuItem = -1;
             isSelecting = false;
@@ -144,86 +197,56 @@ namespace HolmiumOS.GUI
 
             string homeDir = UserManager.HomeDirectory;
 
-            if (string.IsNullOrEmpty(homeDir))
+            if (string.IsNullOrEmpty(homeDir) || !FileSystemManager.DirectoryExists(homeDir))
                 return;
 
-            if (!FileSystemManager.DirectoryExists(homeDir))
-                return;
-
-            var entryList =
-                new List<(string Path, string Name, bool IsDirectory)>();
+            var entryList = new List<(string Path, string Name, bool IsDirectory)>();
 
             try
             {
-                string[] dirs =
-                    FileSystemManager.GetDirectories(homeDir);
+                string[] dirs = FileSystemManager.GetDirectories(homeDir);
 
                 foreach (string dir in dirs)
                 {
-                    if (!string.IsNullOrEmpty(dir))
-                    {
-                        string dirName =
-                            Path.GetFileName(
-                                dir.TrimEnd('/', '\\'));
+                    if (string.IsNullOrEmpty(dir))
+                        continue;
 
-                        if (!string.IsNullOrEmpty(dirName))
-                        {
-                            string fullPath =
-                                homeDir.TrimEnd('/', '\\') +
-                                "/" +
-                                dirName;
+                    string dirName = Path.GetFileName(dir.TrimEnd('/', '\\'));
 
-                            fullPath =
-                                FileSystemManager.ResolvePath(fullPath);
+                    if (string.IsNullOrEmpty(dirName))
+                        continue;
 
-                            entryList.Add(
-                                (fullPath, dirName, true));
-                        }
-                    }
+                    string fullPath = homeDir.TrimEnd('/', '\\') + "/" + dirName;
+                    fullPath = FileSystemManager.ResolvePath(fullPath);
+                    entryList.Add((fullPath, dirName, true));
                 }
 
-                string[] files =
-                    FileSystemManager.GetFiles(homeDir);
+                string[] files = FileSystemManager.GetFiles(homeDir);
 
                 foreach (string file in files)
                 {
-                    if (!string.IsNullOrEmpty(file))
-                    {
-                        string fileName =
-                            Path.GetFileName(
-                                file.TrimEnd('/', '\\'));
+                    if (string.IsNullOrEmpty(file))
+                        continue;
 
-                        if (!string.IsNullOrEmpty(fileName))
-                        {
-                            string fullPath =
-                                homeDir.TrimEnd('/', '\\') +
-                                "/" +
-                                fileName;
+                    string fileName = Path.GetFileName(file.TrimEnd('/', '\\'));
 
-                            fullPath =
-                                FileSystemManager.ResolvePath(fullPath);
+                    if (string.IsNullOrEmpty(fileName))
+                        continue;
 
-                            entryList.Add(
-                                (fullPath, fileName, false));
-                        }
-                    }
+                    string fullPath = homeDir.TrimEnd('/', '\\') + "/" + fileName;
+                    fullPath = FileSystemManager.ResolvePath(fullPath);
+                    entryList.Add((fullPath, fileName, false));
                 }
 
                 for (int i = 0; i < entryList.Count - 1; i++)
                 {
                     for (int j = i + 1; j < entryList.Count; j++)
                     {
-                        if (CompareNames(
-                                entryList[i].Name,
-                                entryList[j].Name) > 0)
+                        if (CompareNames(entryList[i].Name, entryList[j].Name) > 0)
                         {
                             var temp = entryList[i];
-
-                            entryList[i] =
-                                entryList[j];
-
-                            entryList[j] =
-                                temp;
+                            entryList[i] = entryList[j];
+                            entryList[j] = temp;
                         }
                     }
                 }
@@ -233,22 +256,17 @@ namespace HolmiumOS.GUI
 
                 foreach (var entry in entryList)
                 {
-                    DesktopIcon icon =
-                        new DesktopIcon
-                        {
-                            Path = entry.Path,
-                            Name = entry.Name,
-                            IsDirectory = entry.IsDirectory,
-                            X = IconStartX +
-                                (col * IconSpacingX),
-                            Y = IconStartY +
-                                (row * IconSpacingY),
-                            Width = IconWidth,
-                            Height = IconHeight,
-                            Selected = false
-                        };
-
-                    icons.Add(icon);
+                    icons.Add(new DesktopIcon
+                    {
+                        Path = entry.Path,
+                        Name = entry.Name,
+                        IsDirectory = entry.IsDirectory,
+                        X = IconStartX + col * IconSpacingX,
+                        Y = IconStartY + row * IconSpacingY,
+                        Width = IconWidth,
+                        Height = IconHeight,
+                        Selected = false
+                    });
 
                     col++;
 
@@ -264,25 +282,15 @@ namespace HolmiumOS.GUI
             }
         }
 
-        private static void OpenIcon(DesktopIcon icon)
+        private static void OpenIcon(DesktopIcon? icon)
         {
             if (icon == null)
                 return;
 
             if (icon.IsDirectory)
-            {
-                var fileManager =
-                    new FileManager(icon.Path);
-
-                AppManager.Run(fileManager);
-            }
+                AppManager.Run(new FileManager(icon.Path));
             else
-            {
-                var notepad =
-                    new Notepad(icon.Path);
-
-                AppManager.Run(notepad);
-            }
+                AppManager.Run(new Notepad(icon.Path));
         }
 
         public static void Draw(Canvas canvas)
@@ -297,319 +305,97 @@ namespace HolmiumOS.GUI
             }
 
             if (isSelecting)
-            {
                 DrawSelectionBox(canvas);
-            }
 
             foreach (DesktopIcon icon in icons)
-            {
                 DrawIcon(canvas, icon);
-            }
 
             if (contextMenuVisible)
-            {
                 DrawContextMenu(canvas);
-            }
         }
 
-        private static void DrawIcon(
-            Canvas canvas,
-            DesktopIcon icon)
+        private static void DrawIcon(Canvas canvas, DesktopIcon icon)
         {
             if (icon.Selected)
             {
-                var selectionColor =
-                    System.Drawing.Color.FromArgb(
-                        90,
-                        70,
-                        130,
-                        220);
-
-                canvas.DrawFilledRectangle(
-                    selectionColor,
-                    icon.X,
-                    icon.Y,
-                    icon.Width,
-                    icon.Height);
+                FillRoundedRect(canvas, icon.X, icon.Y, icon.Width, icon.Height, 9, IconSelectionFill);
+                DrawRoundedOutline(canvas, icon.X, icon.Y, icon.Width, icon.Height, 9, IconSelectionBorder);
             }
 
             int iconX = icon.X + 28;
             int iconY = icon.Y + 5;
 
             if (icon.IsDirectory)
-            {
-                DrawFolderIcon(
-                    canvas,
-                    iconX,
-                    iconY);
-            }
+                DrawFolderIcon(canvas, iconX, iconY);
             else
-            {
-                DrawFileIcon(
-                    canvas,
-                    iconX,
-                    iconY);
-            }
+                DrawFileIcon(canvas, iconX, iconY);
 
+            Font font = FontManager.UiFont;
             string displayName = icon.Name;
-
-            Font font = PCScreenFont.DefaultFont;
-
             int maxTextWidth = icon.Width - 8;
 
-            if (font.MeasureString(displayName) > maxTextWidth)
+            if (MeasureText(font, displayName) > maxTextWidth)
             {
-                while (displayName.Length > 2 &&
-                       font.MeasureString(
-                           displayName + "..") > maxTextWidth)
-                {
-                    displayName =
-                        displayName.Substring(
-                            0,
-                            displayName.Length - 1);
-                }
+                while (displayName.Length > 2 && MeasureText(font, displayName + "..") > maxTextWidth)
+                    displayName = displayName.Substring(0, displayName.Length - 1);
 
                 displayName += "..";
             }
 
-            int textWidth =
-                font.MeasureString(displayName);
+            int textWidth = MeasureText(font, displayName);
+            int textX = icon.X + (icon.Width - textWidth) / 2;
+            int textY = icon.Y + 52;
 
-            int textX =
-                icon.X +
-                (icon.Width - textWidth) / 2;
-
-            int textY =
-                icon.Y + 52;
-
-            canvas.DrawString(
-                displayName,
-                font,
-                System.Drawing.Color.White,
-                textX,
-                textY);
+            DrawText(canvas, displayName, font, DesktopTextShadow, textX + 1, textY + 1);
+            DrawText(canvas, displayName, font, DesktopTextColor, textX, textY);
         }
 
-        private static void DrawFolderIcon(
-            Canvas canvas,
-            int x,
-            int y)
+        private static void DrawFolderIcon(Canvas canvas, int x, int y)
         {
-            var folderColor =
-                System.Drawing.Color.FromArgb(
-                    255,
-                    255,
-                    205,
-                    55);
-
-            var folderTopColor =
-                System.Drawing.Color.FromArgb(
-                    255,
-                    245,
-                    190,
-                    35);
-
-            var folderBorder =
-                System.Drawing.Color.FromArgb(
-                    255,
-                    190,
-                    145,
-                    20);
-
-            canvas.DrawFilledRectangle(
-                folderTopColor,
-                x + 4,
-                y,
-                18,
-                8);
-
-            canvas.DrawFilledRectangle(
-                folderColor,
-                x,
-                y + 6,
-                44,
-                30);
-
-            canvas.DrawLine(
-                folderBorder,
-                x,
-                y + 6,
-                x + 44,
-                y + 6);
-
-            canvas.DrawLine(
-                folderBorder,
-                x,
-                y + 36,
-                x + 44,
-                y + 36);
-
-            canvas.DrawLine(
-                folderBorder,
-                x,
-                y + 6,
-                x,
-                y + 36);
-
-            canvas.DrawLine(
-                folderBorder,
-                x + 44,
-                y + 6,
-                x + 44,
-                y + 36);
+            FillRoundedRect(canvas, x + 2, y + 8, 44, 30, 5, FolderDarkColor);
+            FillRoundedRect(canvas, x + 4, y + 2, 19, 12, 4, FolderLightColor);
+            FillRoundedRect(canvas, x, y + 8, 44, 28, 5, FolderColor);
+            FillRoundedRect(canvas, x + 2, y + 10, 40, 5, 2, FolderLightColor);
         }
 
-        private static void DrawFileIcon(
-            Canvas canvas,
-            int x,
-            int y)
+        private static void DrawFileIcon(Canvas canvas, int x, int y)
         {
-            var fileColor =
-                System.Drawing.Color.FromArgb(
-                    255,
-                    245,
-                    245,
-                    245);
+            FillRoundedRect(canvas, x + 8, y + 3, 34, 39, 4, Color.FromArgb(45, 0, 0, 0));
+            FillRoundedRect(canvas, x + 5, y, 34, 39, 4, FileBorderColor);
+            FillRoundedRect(canvas, x + 6, y + 1, 32, 37, 3, FileColor);
 
-            var borderColor =
-                System.Drawing.Color.FromArgb(
-                    255,
-                    170,
-                    175,
-                    185);
-
-            canvas.DrawFilledRectangle(
-                fileColor,
-                x + 6,
-                y,
-                32,
-                38);
-
-            canvas.DrawLine(
-                borderColor,
-                x + 6,
-                y,
-                x + 38,
-                y);
-
-            canvas.DrawLine(
-                borderColor,
-                x + 6,
-                y + 38,
-                x + 38,
-                y + 38);
-
-            canvas.DrawLine(
-                borderColor,
-                x + 6,
-                y,
-                x + 6,
-                y + 38);
-
-            canvas.DrawLine(
-                borderColor,
-                x + 38,
-                y,
-                x + 38,
-                y + 38);
-
-            canvas.DrawLine(
-                borderColor,
-                x + 28,
-                y,
-                x + 38,
-                y + 10);
+            canvas.DrawLine(FileLineColor, x + 12, y + 13, x + 32, y + 13);
+            canvas.DrawLine(FileLineColor, x + 12, y + 19, x + 32, y + 19);
+            canvas.DrawLine(FileLineColor, x + 12, y + 25, x + 29, y + 25);
         }
 
-        private static void DrawSelectionBox(
-            Canvas canvas)
+        private static void DrawSelectionBox(Canvas canvas)
         {
-            int x = selectionStartX;
-            int y = selectionStartY;
-
-            int width =
-                selectionEndX -
-                selectionStartX;
-
-            int height =
-                selectionEndY -
-                selectionStartY;
-
-            if (width < 0)
-            {
-                x = selectionEndX;
-                width = -width;
-            }
-
-            if (height < 0)
-            {
-                y = selectionEndY;
-                height = -height;
-            }
+            int x = Math.Min(selectionStartX, selectionEndX);
+            int y = Math.Min(selectionStartY, selectionEndY);
+            int width = Math.Abs(selectionEndX - selectionStartX);
+            int height = Math.Abs(selectionEndY - selectionStartY);
 
             if (width <= 0 || height <= 0)
                 return;
 
-            canvas.DrawFilledRectangle(
-                SelectionBoxFill,
-                x,
-                y,
-                width,
-                height);
-
-            canvas.DrawLine(
-                SelectionBoxBorder,
-                x,
-                y,
-                x + width,
-                y);
-
-            canvas.DrawLine(
-                SelectionBoxBorder,
-                x,
-                y,
-                x,
-                y + height);
-
-            canvas.DrawLine(
-                SelectionBoxBorder,
-                x + width,
-                y,
-                x + width,
-                y + height);
-
-            canvas.DrawLine(
-                SelectionBoxBorder,
-                x,
-                y + height,
-                x + width,
-                y + height);
+            FillRoundedRect(canvas, x, y, width, height, 3, SelectionBoxFill);
+            DrawRoundedOutline(canvas, x, y, width, height, 3, SelectionBoxBorder);
         }
 
-        public static void UpdateMouse(
-            Canvas canvas)
+        public static void UpdateMouse(Canvas canvas)
         {
             if (!UserManager.IsLoggedIn)
                 return;
 
-            int mouseX =
-                (int)MouseManager.X;
-
-            int mouseY =
-                (int)MouseManager.Y;
-
-            bool leftPressed =
-                MouseManager.LeftButton;
-
-            bool rightPressed =
-                MouseManager.RightButton;
+            int mouseX = (int)MouseManager.X;
+            int mouseY = (int)MouseManager.Y;
+            bool leftPressed = MouseManager.LeftButton;
+            bool rightPressed = MouseManager.RightButton;
 
             foreach (var window in WindowManager.GetWindows())
             {
-                if (window != null &&
-                    window.Contains(
-                        mouseX,
-                        mouseY))
+                if (window != null && window.Contains(mouseX, mouseY))
                 {
                     wasLeftPressed = leftPressed;
                     wasRightPressed = rightPressed;
@@ -619,34 +405,19 @@ namespace HolmiumOS.GUI
 
             if (contextMenuVisible)
             {
-                hoveredMenuItem =
-                    GetContextMenuItemAt(
-                        mouseX,
-                        mouseY);
+                hoveredMenuItem = GetContextMenuItemAt(mouseX, mouseY);
 
-                if (leftPressed &&
-                    !wasLeftPressed)
-                {
-                    HandleContextMenuClick(
-                        canvas,
-                        mouseX,
-                        mouseY);
-                }
+                if (leftPressed && !wasLeftPressed)
+                    HandleContextMenuClick(canvas, mouseX, mouseY);
 
                 wasLeftPressed = leftPressed;
                 wasRightPressed = rightPressed;
-
                 return;
             }
 
-            if (rightPressed &&
-                !wasRightPressed)
+            if (rightPressed && !wasRightPressed)
             {
-                DesktopIcon clickedIcon =
-                    GetIconAt(
-                        mouseX,
-                        mouseY);
-
+                DesktopIcon? clickedIcon = GetIconAt(mouseX, mouseY);
                 contextIcon = clickedIcon;
 
                 if (clickedIcon != null)
@@ -660,24 +431,14 @@ namespace HolmiumOS.GUI
                     WindowManager.ClearFocus();
                 }
 
-                ShowContextMenu(
-                    canvas,
-                    mouseX,
-                    mouseY);
-
-                wasRightPressed =
-                    rightPressed;
-
+                ShowContextMenu(canvas, mouseX, mouseY);
+                wasRightPressed = rightPressed;
                 return;
             }
 
-            if (leftPressed &&
-                !wasLeftPressed)
+            if (leftPressed && !wasLeftPressed)
             {
-                DesktopIcon icon =
-                    GetIconAt(
-                        mouseX,
-                        mouseY);
+                DesktopIcon? icon = GetIconAt(mouseX, mouseY);
 
                 if (icon != null)
                 {
@@ -687,49 +448,37 @@ namespace HolmiumOS.GUI
                 else
                 {
                     isSelecting = true;
-
                     selectionStartX = mouseX;
                     selectionStartY = mouseY;
                     selectionEndX = mouseX;
                     selectionEndY = mouseY;
-
                     ClearSelection();
                     WindowManager.ClearFocus();
                 }
             }
 
-            if (leftPressed &&
-                isSelecting)
+            if (leftPressed && isSelecting)
             {
                 selectionEndX = mouseX;
                 selectionEndY = mouseY;
-
                 UpdateBoxSelection();
             }
 
-            if (!leftPressed &&
-                wasLeftPressed)
+            if (!leftPressed && wasLeftPressed)
             {
                 if (isSelecting)
                 {
                     selectionEndX = mouseX;
                     selectionEndY = mouseY;
-
                     UpdateBoxSelection();
-
                     isSelecting = false;
                 }
                 else
                 {
-                    DesktopIcon icon =
-                        GetIconAt(
-                            mouseX,
-                            mouseY);
+                    DesktopIcon? icon = GetIconAt(mouseX, mouseY);
 
                     if (icon != null)
-                    {
                         HandleIconClick(icon);
-                    }
                 }
             }
 
@@ -737,51 +486,33 @@ namespace HolmiumOS.GUI
             wasRightPressed = rightPressed;
         }
 
-        private static void HandleIconClick(
-            DesktopIcon icon)
+        private static void HandleIconClick(DesktopIcon icon)
         {
-            long now =
-                DateTime.Now.Ticks /
-                TimeSpan.TicksPerMillisecond;
-
-            bool doubleClick =
-                lastClickedIcon == icon &&
-                (now - lastClickTime) <=
-                    DoubleClickMilliseconds;
+            long now = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+            bool doubleClick = lastClickedIcon == icon && now - lastClickTime <= DoubleClickMilliseconds;
 
             if (doubleClick)
             {
                 lastClickedIcon = null;
                 lastClickTime = 0;
-
                 OpenIcon(icon);
             }
             else
             {
                 SelectIcon(icon);
-
                 lastClickedIcon = icon;
                 lastClickTime = now;
             }
         }
 
-        private static DesktopIcon GetIconAt(
-            int x,
-            int y)
+        private static DesktopIcon? GetIconAt(int x, int y)
         {
-            for (int i = icons.Count - 1;
-                 i >= 0;
-                 i--)
+            for (int i = icons.Count - 1; i >= 0; i--)
             {
                 DesktopIcon icon = icons[i];
 
-                if (x >= icon.X &&
-                    x <= icon.X + icon.Width &&
-                    y >= icon.Y &&
-                    y <= icon.Y + icon.Height)
-                {
+                if (x >= icon.X && x <= icon.X + icon.Width && y >= icon.Y && y <= icon.Y + icon.Height)
                     return icon;
-                }
             }
 
             return null;
@@ -789,42 +520,19 @@ namespace HolmiumOS.GUI
 
         private static void UpdateBoxSelection()
         {
-            int left = selectionStartX;
-            int right = selectionEndX;
-            int top = selectionStartY;
-            int bottom = selectionEndY;
-
-            if (left > right)
-            {
-                int temp = left;
-                left = right;
-                right = temp;
-            }
-
-            if (top > bottom)
-            {
-                int temp = top;
-                top = bottom;
-                bottom = temp;
-            }
+            int left = Math.Min(selectionStartX, selectionEndX);
+            int right = Math.Max(selectionStartX, selectionEndX);
+            int top = Math.Min(selectionStartY, selectionEndY);
+            int bottom = Math.Max(selectionStartY, selectionEndY);
 
             foreach (DesktopIcon icon in icons)
             {
                 int iconLeft = icon.X;
-                int iconRight =
-                    icon.X + icon.Width;
-
+                int iconRight = icon.X + icon.Width;
                 int iconTop = icon.Y;
-                int iconBottom =
-                    icon.Y + icon.Height;
+                int iconBottom = icon.Y + icon.Height;
 
-                bool intersects =
-                    iconRight >= left &&
-                    iconLeft <= right &&
-                    iconBottom >= top &&
-                    iconTop <= bottom;
-
-                icon.Selected = intersects;
+                icon.Selected = iconRight >= left && iconLeft <= right && iconBottom >= top && iconTop <= bottom;
             }
 
             selectedIcon = null;
@@ -839,166 +547,79 @@ namespace HolmiumOS.GUI
             }
         }
 
-        private static void SelectIcon(
-            DesktopIcon icon)
+        private static void SelectIcon(DesktopIcon? icon)
         {
             foreach (DesktopIcon item in icons)
-            {
                 item.Selected = false;
-            }
 
             if (icon != null)
             {
                 icon.Selected = true;
                 selectedIcon = icon;
             }
+            else
+            {
+                selectedIcon = null;
+            }
         }
 
         private static void ClearSelection()
         {
             foreach (DesktopIcon icon in icons)
-            {
                 icon.Selected = false;
-            }
 
             selectedIcon = null;
         }
 
         private static int GetContextMenuWidth()
         {
-            Font font =
-                PCScreenFont.DefaultFont;
-
+            Font font = FontManager.UiFont;
             int maxWidth = 0;
 
             foreach (DesktopMenuItem item in contextMenu)
             {
-                int textWidth =
-                    font.MeasureString(item.Text);
+                int textWidth = MeasureText(font, item.Text);
 
                 if (textWidth > maxWidth)
                     maxWidth = textWidth;
             }
 
-            return maxWidth +
-                   (ContextMenuPadding * 2);
+            return maxWidth + ContextMenuPadding * 2;
         }
 
-        private static void ShowContextMenu(
-            Canvas canvas,
-            int x,
-            int y)
+        private static void ShowContextMenu(Canvas canvas, int x, int y)
         {
             contextMenu.Clear();
-
             hoveredMenuItem = -1;
 
             if (contextIcon != null)
             {
-                contextMenu.Add(
-                    new DesktopMenuItem
-                    {
-                        Text = "Ac",
-                        Y = 0,
-                        Height =
-                            ContextMenuItemHeight
-                    });
-
-                contextMenu.Add(
-                    new DesktopMenuItem
-                    {
-                        Text = "Sil",
-                        Y = ContextMenuItemHeight,
-                        Height =
-                            ContextMenuItemHeight
-                    });
-
-                contextMenu.Add(
-                    new DesktopMenuItem
-                    {
-                        Text = "Yenile",
-                        Y = ContextMenuItemHeight * 2,
-                        Height =
-                            ContextMenuItemHeight
-                    });
-
-                contextMenu.Add(
-                    new DesktopMenuItem
-                    {
-                        Text = "Ikonlari Sirala",
-                        Y = ContextMenuItemHeight * 3,
-                        Height =
-                            ContextMenuItemHeight
-                    });
+                contextMenu.Add(new DesktopMenuItem { Text = "Aç", Y = 0 });
+                contextMenu.Add(new DesktopMenuItem { Text = "Sil", Y = ContextMenuItemHeight });
+                contextMenu.Add(new DesktopMenuItem { Text = "Yenile", Y = ContextMenuItemHeight * 2 });
+                contextMenu.Add(new DesktopMenuItem { Text = "İkonları Sırala", Y = ContextMenuItemHeight * 3 });
             }
             else
             {
-                contextMenu.Add(
-                    new DesktopMenuItem
-                    {
-                        Text = "Yeni Klasor",
-                        Y = 0,
-                        Height =
-                            ContextMenuItemHeight
-                    });
-
-                contextMenu.Add(
-                    new DesktopMenuItem
-                    {
-                        Text = "Yeni Dosya",
-                        Y = ContextMenuItemHeight,
-                        Height =
-                            ContextMenuItemHeight
-                    });
-
-                contextMenu.Add(
-                    new DesktopMenuItem
-                    {
-                        Text = "Yenile",
-                        Y = ContextMenuItemHeight * 2,
-                        Height =
-                            ContextMenuItemHeight
-                    });
-
-                contextMenu.Add(
-                    new DesktopMenuItem
-                    {
-                        Text = "Ikonlari Sirala",
-                        Y = ContextMenuItemHeight * 3,
-                        Height =
-                            ContextMenuItemHeight
-                    });
+                contextMenu.Add(new DesktopMenuItem { Text = "Yeni Klasör", Y = 0 });
+                contextMenu.Add(new DesktopMenuItem { Text = "Yeni Dosya", Y = ContextMenuItemHeight });
+                contextMenu.Add(new DesktopMenuItem { Text = "Yenile", Y = ContextMenuItemHeight * 2 });
+                contextMenu.Add(new DesktopMenuItem { Text = "İkonları Sırala", Y = ContextMenuItemHeight * 3 });
             }
 
             contextMenuX = x;
             contextMenuY = y;
 
-            int screenWidth =
-                (int)canvas.Mode.Width;
+            int screenWidth = (int)canvas.Mode.Width;
+            int screenHeight = (int)canvas.Mode.Height;
+            int menuWidth = GetContextMenuWidth();
+            int menuHeight = contextMenu.Count * ContextMenuItemHeight;
 
-            int screenHeight =
-                (int)canvas.Mode.Height;
+            if (contextMenuX + menuWidth > screenWidth)
+                contextMenuX = screenWidth - menuWidth;
 
-            int menuWidth =
-                GetContextMenuWidth();
-
-            int menuHeight =
-                contextMenu.Count *
-                ContextMenuItemHeight;
-
-            if (contextMenuX + menuWidth >
-                screenWidth)
-            {
-                contextMenuX =
-                    screenWidth - menuWidth;
-            }
-
-            if (contextMenuY + menuHeight >
-                screenHeight)
-            {
-                contextMenuY =
-                    screenHeight - menuHeight;
-            }
+            if (contextMenuY + menuHeight > screenHeight)
+                contextMenuY = screenHeight - menuHeight;
 
             if (contextMenuX < 0)
                 contextMenuX = 0;
@@ -1009,215 +630,73 @@ namespace HolmiumOS.GUI
             contextMenuVisible = true;
         }
 
-        private static void DrawContextMenu(
-            Canvas canvas)
+        private static void DrawContextMenu(Canvas canvas)
         {
-            int width =
-                GetContextMenuWidth();
+            int width = GetContextMenuWidth();
+            int itemHeight = ContextMenuItemHeight;
+            int height = contextMenu.Count * itemHeight;
 
-            int itemHeight =
-                ContextMenuItemHeight;
+            FillRoundedRect(canvas, contextMenuX + 2, contextMenuY + 3, width, height, 9, MenuShadow);
+            FillRoundedRect(canvas, contextMenuX, contextMenuY, width, height, 9, MenuBackground);
+            DrawRoundedOutline(canvas, contextMenuX, contextMenuY, width, height, 9, MenuBorder);
 
-            int height =
-                contextMenu.Count *
-                itemHeight;
+            Font font = FontManager.UiFont;
+            int fontHeight = GetFontHeight(font);
 
-            canvas.DrawFilledRectangle(
-                Win9xGray,
-                contextMenuX,
-                contextMenuY,
-                width,
-                height);
-
-            canvas.DrawLine(
-                Win9xWhite,
-                contextMenuX,
-                contextMenuY,
-                contextMenuX + width - 1,
-                contextMenuY);
-
-            canvas.DrawLine(
-                Win9xWhite,
-                contextMenuX,
-                contextMenuY,
-                contextMenuX,
-                contextMenuY + height - 1);
-
-            canvas.DrawLine(
-                Win9xLightGray,
-                contextMenuX + 1,
-                contextMenuY + 1,
-                contextMenuX + width - 2,
-                contextMenuY + 1);
-
-            canvas.DrawLine(
-                Win9xLightGray,
-                contextMenuX + 1,
-                contextMenuY + 1,
-                contextMenuX + 1,
-                contextMenuY + height - 2);
-
-            canvas.DrawLine(
-                Win9xBlack,
-                contextMenuX,
-                contextMenuY + height - 1,
-                contextMenuX + width,
-                contextMenuY + height - 1);
-
-            canvas.DrawLine(
-                Win9xBlack,
-                contextMenuX + width - 1,
-                contextMenuY,
-                contextMenuX + width - 1,
-                contextMenuY + height);
-
-            canvas.DrawLine(
-                Win9xDarkGray,
-                contextMenuX + 1,
-                contextMenuY + height - 2,
-                contextMenuX + width - 2,
-                contextMenuY + height - 2);
-
-            canvas.DrawLine(
-                Win9xDarkGray,
-                contextMenuX + width - 2,
-                contextMenuY + 1,
-                contextMenuX + width - 2,
-                contextMenuY + height - 2);
-
-            Font font =
-                PCScreenFont.DefaultFont;
-
-            for (int i = 0;
-                 i < contextMenu.Count;
-                 i++)
+            for (int i = 0; i < contextMenu.Count; i++)
             {
-                DesktopMenuItem item =
-                    contextMenu[i];
-
-                int itemY =
-                    contextMenuY + item.Y;
-
-                int textWidth =
-                    font.MeasureString(item.Text);
-
-                int textX =
-                    contextMenuX +
-                    (width - textWidth) / 2;
-
-                int textY =
-                    itemY +
-                    (itemHeight - font.Height) / 2;
+                DesktopMenuItem item = contextMenu[i];
+                int itemY = contextMenuY + item.Y;
+                int textWidth = MeasureText(font, item.Text);
+                int textX = contextMenuX + ContextMenuPadding;
+                int textY = itemY + (itemHeight - fontHeight) / 2;
 
                 if (i == hoveredMenuItem)
-                {
-                    canvas.DrawFilledRectangle(
-                        Win9xBlue,
-                        contextMenuX + 2,
-                        itemY + 2,
-                        width - 4,
-                        itemHeight);
+                    FillRoundedRect(canvas, contextMenuX + 4, itemY + 2, width - 8, itemHeight - 4, 6, MenuHover);
 
-                    canvas.DrawString(
-                        item.Text,
-                        font,
-                        Win9xWhite,
-                        textX,
-                        textY);
-                }
-                else
-                {
-                    canvas.DrawString(
-                        item.Text,
-                        font,
-                        Win9xBlack,
-                        textX,
-                        textY);
-                }
+                DrawText(canvas, item.Text, font, MenuText, textX, textY);
             }
         }
 
-        private static int GetContextMenuItemAt(
-            int x,
-            int y)
+        private static int GetContextMenuItemAt(int x, int y)
         {
-            int width =
-                GetContextMenuWidth();
+            int width = GetContextMenuWidth();
+            int height = contextMenu.Count * ContextMenuItemHeight;
 
-            int itemHeight =
-                ContextMenuItemHeight;
-
-            int height =
-                contextMenu.Count *
-                itemHeight;
-
-            if (x < contextMenuX ||
-                x >= contextMenuX + width ||
-                y < contextMenuY ||
-                y >= contextMenuY + height)
-            {
+            if (x < contextMenuX || x >= contextMenuX + width || y < contextMenuY || y >= contextMenuY + height)
                 return -1;
-            }
 
-            int relativeY =
-                y - contextMenuY;
+            int index = (y - contextMenuY) / ContextMenuItemHeight;
 
-            int index =
-                relativeY / itemHeight;
-
-            if (index < 0 ||
-                index >= contextMenu.Count)
-            {
+            if (index < 0 || index >= contextMenu.Count)
                 return -1;
-            }
 
             return index;
         }
 
-        private static void HandleContextMenuClick(
-            Canvas canvas,
-            int x,
-            int y)
+        private static void HandleContextMenuClick(Canvas canvas, int x, int y)
         {
-            int width =
-                GetContextMenuWidth();
+            int width = GetContextMenuWidth();
+            int height = contextMenu.Count * ContextMenuItemHeight;
 
-            int height =
-                contextMenu.Count *
-                ContextMenuItemHeight;
-
-            if (x < contextMenuX ||
-                x >= contextMenuX + width ||
-                y < contextMenuY ||
-                y >= contextMenuY + height)
+            if (x < contextMenuX || x >= contextMenuX + width || y < contextMenuY || y >= contextMenuY + height)
             {
                 contextMenuVisible = false;
                 contextIcon = null;
                 hoveredMenuItem = -1;
-
                 return;
             }
 
-            int relativeY =
-                y - contextMenuY;
+            int index = (y - contextMenuY) / ContextMenuItemHeight;
 
-            int index =
-                relativeY /
-                ContextMenuItemHeight;
-
-            if (index < 0 ||
-                index >= contextMenu.Count)
-            {
+            if (index < 0 || index >= contextMenu.Count)
                 return;
-            }
 
-            string action =
-                contextMenu[index].Text;
-
+            string action = contextMenu[index].Text;
             contextMenuVisible = false;
             hoveredMenuItem = -1;
 
-            if (action == "Ac")
+            if (action == "Aç")
             {
                 if (contextIcon != null)
                     OpenIcon(contextIcon);
@@ -1230,22 +709,13 @@ namespace HolmiumOS.GUI
                     {
                         if (contextIcon.IsDirectory)
                         {
-                            if (Directory.Exists(
-                                    contextIcon.Path))
-                            {
-                                Directory.Delete(
-                                    contextIcon.Path,
-                                    true);
-                            }
+                            if (Directory.Exists(contextIcon.Path))
+                                Directory.Delete(contextIcon.Path, true);
                         }
                         else
                         {
-                            if (File.Exists(
-                                    contextIcon.Path))
-                            {
-                                File.Delete(
-                                    contextIcon.Path);
-                            }
+                            if (File.Exists(contextIcon.Path))
+                                File.Delete(contextIcon.Path);
                         }
 
                         RefreshIcons();
@@ -1255,92 +725,49 @@ namespace HolmiumOS.GUI
                     }
                 }
             }
-            else if (action == "Yeni Klasor")
+            else if (action == "Yeni Klasör")
             {
-                string defaultPath =
-                    UserManager.IsLoggedIn
-                        ? UserManager.HomeDirectory
-                        : "/home";
+                string defaultPath = UserManager.IsLoggedIn ? UserManager.HomeDirectory : "/home";
 
-                var msg =
-                    new MessageBox(
-                        "Yeni Klasor",
-                        "Klasor adi girin:",
-                        true,
-                        "YeniKlasor",
-                        (inputName) =>
+                var msg = new MessageBox("Yeni Klasör", "Klasör adı girin:", true, "YeniKlasor", (inputName) =>
+                {
+                    if (!string.IsNullOrEmpty(inputName))
+                    {
+                        try
                         {
-                            if (!string.IsNullOrEmpty(
-                                    inputName))
-                            {
-                                try
-                                {
-                                    string targetPath =
-                                        defaultPath.TrimEnd(
-                                            '/',
-                                            '\\') +
-                                        "/" +
-                                        inputName.Trim();
-
-                                    targetPath =
-                                        FileSystemManager.ResolvePath(
-                                            targetPath);
-
-                                    FileSystemManager.CreateDirectory(
-                                        targetPath);
-
-                                    RefreshIcons();
-                                }
-                                catch
-                                {
-                                }
-                            }
-                        });
+                            string targetPath = defaultPath.TrimEnd('/', '\\') + "/" + inputName.Trim();
+                            targetPath = FileSystemManager.ResolvePath(targetPath);
+                            FileSystemManager.CreateDirectory(targetPath);
+                            RefreshIcons();
+                        }
+                        catch
+                        {
+                        }
+                    }
+                });
 
                 AppManager.Run(msg);
             }
             else if (action == "Yeni Dosya")
             {
-                string defaultPath =
-                    UserManager.IsLoggedIn
-                        ? UserManager.HomeDirectory
-                        : "/home";
+                string defaultPath = UserManager.IsLoggedIn ? UserManager.HomeDirectory : "/home";
 
-                var msg =
-                    new MessageBox(
-                        "Yeni Dosya",
-                        "Dosya adi girin (orn: not.txt):",
-                        true,
-                        "yeni.txt",
-                        (inputName) =>
+                var msg = new MessageBox("Yeni Dosya", "Dosya adı girin (örn: not.txt):", true, "yeni.txt", (inputName) =>
+                {
+                    if (!string.IsNullOrEmpty(inputName))
+                    {
+                        try
                         {
-                            if (!string.IsNullOrEmpty(
-                                    inputName))
-                            {
-                                try
-                                {
-                                    string targetPath =
-                                        defaultPath.TrimEnd(
-                                            '/',
-                                            '\\') +
-                                        "/" +
-                                        inputName.Trim();
-
-                                    targetPath =
-                                        FileSystemManager.ResolvePath(
-                                            targetPath);
-
-                                    FileSystemManager.WriteFile(
-                                        targetPath,
-                                        "");
-
-                                    RefreshIcons();
-                                }
-                                catch
-                                {
-                                }
-                            }
-                        });
+                            string targetPath = defaultPath.TrimEnd('/', '\\') + "/" + inputName.Trim();
+                            targetPath = FileSystemManager.ResolvePath(targetPath);
+                            FileSystemManager.WriteFile(targetPath, "");
+                            RefreshIcons();
+                        }
+                        catch
+                        {
+                        }
+                    }
+                });
 
                 AppManager.Run(msg);
             }
@@ -1348,7 +775,7 @@ namespace HolmiumOS.GUI
             {
                 RefreshIcons();
             }
-            else if (action == "Ikonlari Sirala")
+            else if (action == "İkonları Sırala")
             {
                 ArrangeIcons();
             }

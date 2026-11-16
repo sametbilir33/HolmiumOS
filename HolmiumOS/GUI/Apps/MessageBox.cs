@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using HolmiumOS.GUI.Controls;
 
 namespace HolmiumOS.GUI.Apps
@@ -8,16 +9,13 @@ namespace HolmiumOS.GUI.Apps
         public string Message { get; set; }
         public bool ShowInput { get; set; }
 
-        public string InputText =>
-            txtInput != null
-                ? txtInput.Text
-                : "";
+        public string InputText => txtInput?.Text ?? "";
 
-        private Label lblMessage;
-        private TextBox txtInput;
+        private Label? lblMessage;
+        private TextBox? txtInput;
 
-        private Action<string> onConfirm;
-        private Action onCancel;
+        private Action<string>? onConfirm;
+        private Action? onCancel;
 
         private string defaultInput;
         private string confirmBtnText;
@@ -28,128 +26,73 @@ namespace HolmiumOS.GUI.Apps
             string message,
             bool showInput = false,
             string defaultInput = "",
-            Action<string> onConfirm = null,
-            Action onCancel = null,
+            Action<string>? onConfirm = null,
+            Action? onCancel = null,
             string confirmBtnText = "Tamam",
-            string cancelBtnText = "Iptal")
+            string cancelBtnText = "İptal")
             : base(title ?? "Bilgi")
         {
-            this.Message = message ?? "";
-            this.ShowInput = showInput;
-            this.defaultInput =
-                defaultInput ?? "";
-
+            Message = message ?? "";
+            ShowInput = showInput;
+            this.defaultInput = defaultInput ?? "";
             this.onConfirm = onConfirm;
             this.onCancel = onCancel;
-
-            this.confirmBtnText =
-                confirmBtnText;
-
-            this.cancelBtnText =
-                cancelBtnText;
+            this.confirmBtnText = confirmBtnText;
+            this.cancelBtnText = cancelBtnText;
         }
 
         public override void Load()
         {
-            if (this.Window != null)
-            {
-                this.Window.Title =
-                    this.Name;
-            }
+            if (Window == null)
+                return;
 
-            int currentY = 15;
+            Window.Title = Name;
 
-            lblMessage =
-                new Label(
-                    Message,
-                    15,
-                    currentY);
+            int currentY = 20;
 
-            currentY += 40;
+            lblMessage = new Label(Message, 20, currentY);
+            currentY += 55;
 
             if (ShowInput)
             {
-                txtInput =
-                    new TextBox(
-                        15,
-                        currentY,
-                        300,
-                        42);
+                txtInput = new TextBox(20, currentY, 300, 42);
+                txtInput.Text = defaultInput;
+                txtInput.Focused = true;
+                Window.AddControl(txtInput);
 
-                txtInput.Text =
-                    defaultInput;
-
-                txtInput.Focused =
-                    true;
-
-                currentY += 55;
+                currentY += 60;
             }
 
-            Button btnConfirm =
-                new Button(
-                    confirmBtnText,
-                    15,
-                    currentY,
-                    130,
-                    55);
+            Button btnConfirm = new Button(confirmBtnText, 20, currentY, 145, 48);
+            btnConfirm.ClickAction = OnConfirmClicked;
 
-            btnConfirm.ClickAction =
-                OnConfirmClicked;
+            Button btnCancel = new Button(cancelBtnText, 175, currentY, 145, 48);
+            btnCancel.ClickAction = OnCancelClicked;
 
-            Button btnCancel =
-                new Button(
-                    cancelBtnText,
-                    155,
-                    currentY,
-                    130,
-                    55);
-
-            btnCancel.ClickAction =
-                OnCancelClicked;
-
-            if (this.Window != null)
-            {
-                this.Window.AddControl(
-                    lblMessage);
-
-                if (ShowInput &&
-                    txtInput != null)
-                {
-                    this.Window.AddControl(
-                        txtInput);
-                }
-
-                this.Window.AddControl(
-                    btnConfirm);
-
-                this.Window.AddControl(
-                    btnCancel);
-            }
+            Window.AddControl(lblMessage);
+            Window.AddControl(btnConfirm);
+            Window.AddControl(btnCancel);
         }
 
         private void OnConfirmClicked()
         {
-            if (onConfirm != null)
-            {
-                onConfirm(InputText);
-            }
-
+            onConfirm?.Invoke(InputText);
             CloseApp();
         }
 
         private void OnCancelClicked()
         {
-            if (onCancel != null)
-            {
-                onCancel();
-            }
-
+            onCancel?.Invoke();
             CloseApp();
         }
 
         private void CloseApp()
         {
             AppManager.Close(this);
+        }
+
+        public override void Close()
+        {
         }
     }
 }

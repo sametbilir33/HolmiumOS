@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Drawing;
 using Cosmos.Kernel.System.Graphics;
 using Cosmos.Kernel.System.Graphics.Fonts;
@@ -8,12 +9,18 @@ namespace HolmiumOS.GUI.Controls
     public class Button : Control
     {
         public string Text;
-        public Action ClickAction;
+        public Action? ClickAction;
 
-        private static readonly Color Win9xGray = Color.FromArgb(192, 192, 192);
-        private static readonly Color Win9xWhite = Color.FromArgb(255, 255, 255);
-        private static readonly Color Win9xDarkGray = Color.FromArgb(128, 128, 128);
-        private static readonly Color Win9xBlack = Color.FromArgb(0, 0, 0);
+        private const int CornerRadius = 8;
+
+        private static readonly Color BackgroundColor = Color.FromArgb(246, 245, 244);
+        private static readonly Color BorderColor = Color.FromArgb(199, 199, 199);
+        private static readonly Color HoverColor = Color.FromArgb(235, 235, 235);
+        private static readonly Color HoverBorderColor = Color.FromArgb(169, 169, 169);
+        private static readonly Color PressedColor = Color.FromArgb(222, 222, 220);
+        private static readonly Color PressedBorderColor = Color.FromArgb(153, 153, 153);
+        private static readonly Color ShadowColor = Color.FromArgb(35, 0, 0, 0);
+        private static readonly Color TextColor = Color.FromArgb(36, 36, 36);
 
         public Button(string text, int x, int y, int width, int height)
             : base(x, y, width, height)
@@ -21,51 +28,90 @@ namespace HolmiumOS.GUI.Controls
             Text = text ?? "";
         }
 
+        private static void DrawRoundedRect(Canvas canvas, Color color, int x, int y, int width, int height, int radius)
+        {
+            if (width <= 0 || height <= 0)
+                return;
+
+            radius = Math.Min(radius, Math.Min(width, height) / 2);
+
+            if (radius <= 0)
+            {
+                canvas.DrawFilledRectangle(color, x, y, width, height);
+                return;
+            }
+
+            int centerWidth = width - radius * 2;
+            int centerHeight = height - radius * 2;
+
+            if (centerWidth > 0)
+                canvas.DrawFilledRectangle(color, x + radius, y, centerWidth, height);
+
+            if (centerHeight > 0)
+                canvas.DrawFilledRectangle(color, x, y + radius, width, centerHeight);
+
+            canvas.DrawFilledCircle(color, x + radius, y + radius, radius);
+            canvas.DrawFilledCircle(color, x + width - radius - 1, y + radius, radius);
+            canvas.DrawFilledCircle(color, x + radius, y + height - radius - 1, radius);
+            canvas.DrawFilledCircle(color, x + width - radius - 1, y + height - radius - 1, radius);
+        }
+
         public override void Draw(Canvas canvas)
         {
-            if (!Visible || canvas == null) return;
+            if (!Visible || canvas == null || Width <= 0 || Height <= 0)
+                return;
 
-            canvas.DrawFilledRectangle(
-                Win9xGray,
-                X,
-                Y,
-                Width,
-                Height);
+            Color background = BackgroundColor;
+            Color border = BorderColor;
 
-            canvas.DrawLine(Win9xWhite, X, Y, X + Width - 1, Y);
-            canvas.DrawLine(Win9xWhite, X, Y, X, Y + Height - 1);
+            if (Pressed)
+            {
+                background = PressedColor;
+                border = PressedBorderColor;
+            }
+            else if (Hovered)
+            {
+                background = HoverColor;
+                border = HoverBorderColor;
+            }
 
-            canvas.DrawLine(Win9xDarkGray, X + 1, Y + 1, X + Width - 2, Y + 1);
-            canvas.DrawLine(Win9xDarkGray, X + 1, Y + 1, X + 1, Y + Height - 2);
+            DrawRoundedRect(canvas, ShadowColor, X, Y + 2, Width, Height, CornerRadius);
+            DrawRoundedRect(canvas, border, X, Y, Width, Height, CornerRadius);
+            DrawRoundedRect(canvas, background, X + 1, Y + 1, Width - 2, Height - 2, CornerRadius - 1);
 
-            canvas.DrawLine(Win9xBlack, X, Y + Height - 1, X + Width, Y + Height - 1);
-            canvas.DrawLine(Win9xBlack, X + Width - 1, Y, X + Width - 1, Y + Height);
+            Font font = FontManager.UiFont;
+            int fontSize = FontManager.UiFontSize;
 
-            canvas.DrawLine(Win9xDarkGray, X + 1, Y + Height - 2, X + Width - 2, Y + Height - 2);
-            canvas.DrawLine(Win9xDarkGray, X + Width - 2, Y + 1, X + Width - 2, Y + Height - 2);
+            int textWidth;
+            int textHeight;
+            int textX;
+            int textY;
 
-            Font font = PCScreenFont.DefaultFont;
+            if (font is TrueTypeFont trueTypeFont)
+            {
+                textWidth = trueTypeFont.MeasureString(Text, fontSize);
+                textHeight = trueTypeFont.GetLineHeight(fontSize);
 
-            int textWidth = font.MeasureString(Text);
-            int textHeight = font.Height;
+                textX = X + (Width - textWidth) / 2;
+                textY = Y + (Height - textHeight) / 2;
 
-            int textX = X + (Width - textWidth) / 2;
-            int textY = Y + (Height - textHeight) / 2;
+                canvas.DrawString(Text, trueTypeFont, fontSize, TextColor, textX, textY);
+            }
+            else
+            {
+                textWidth = Text.Length * font.Width;
+                textHeight = font.Height;
 
-            canvas.DrawString(
-                Text,
-                font,
-                Win9xBlack,
-                textX,
-                textY);
+                textX = X + (Width - textWidth) / 2;
+                textY = Y + (Height - textHeight) / 2;
+
+                canvas.DrawString(Text, font, TextColor, textX, textY);
+            }
         }
 
         public override void Click()
         {
-            if (ClickAction != null)
-            {
-                ClickAction.Invoke();
-            }
+            ClickAction?.Invoke();
         }
     }
 }

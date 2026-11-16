@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Cosmos.Kernel.System.Graphics;
 using Cosmos.Kernel.System.Input;
-using Cosmos.Kernel.System.Input;
 using HolmiumOS.GUI.Controls;
 
 namespace HolmiumOS.GUI
@@ -10,7 +9,7 @@ namespace HolmiumOS.GUI
     public static class WindowManager
     {
         private static List<Window> windows = new List<Window>();
-        public static Window activeWindow;
+        public static Window? activeWindow;
         private static bool wasPressed = false;
 
         public static void Add(Window window)
@@ -210,9 +209,25 @@ namespace HolmiumOS.GUI
             wasPressed = isPressed;
         }
 
+
         private static void UpdateControlCursor()
         {
             CursorManager.Reset();
+
+            // Önce bütün kontrollerin durumlarını sıfırla.
+            for (int w = 0; w < windows.Count; w++)
+            {
+                for (int c = 0; c < windows[w].Controls.Count; c++)
+                {
+                    Control control = windows[w].Controls[c];
+
+                    if (control == null)
+                        continue;
+
+                    control.Hovered = false;
+                    control.Pressed = false;
+                }
+            }
 
             if (activeWindow == null || activeWindow.IsMinimized)
                 return;
@@ -220,30 +235,36 @@ namespace HolmiumOS.GUI
             int mx = (int)MouseManager.X;
             int my = (int)MouseManager.Y;
 
-            if (!activeWindow.Contains(mx, my))
-                return;
-
             int count = activeWindow.Controls.Count;
 
             for (int i = count - 1; i >= 0; i--)
             {
-                if (i >= activeWindow.Controls.Count)
-                    break;
-
                 Control control = activeWindow.Controls[i];
 
                 if (control == null || !control.Visible)
                     continue;
 
-                if (!control.Contains(mx, my))
+                int absX = activeWindow.X + control.X;
+                int absY = activeWindow.Y + Window.TitleBarHeight + control.Y;
+
+                bool isHovered =
+                    mx >= absX &&
+                    mx <= absX + control.Width &&
+                    my >= absY &&
+                    my <= absY + control.Height;
+
+                if (!isHovered)
                     continue;
+
+                control.Hovered = true;
+                control.Pressed = MouseManager.LeftButton;
 
                 if (control.Cursor.HasValue)
                 {
                     CursorManager.Set(control.Cursor.Value);
                 }
 
-                return;
+                break;
             }
         }
 

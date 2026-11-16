@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using Cosmos.Kernel.System.Graphics;
@@ -12,19 +13,48 @@ namespace HolmiumOS.GUI.Controls
 
         public IReadOnlyList<string> Items => items;
         public int SelectedIndex { get; private set; } = -1;
-        public Action<int, string> OnSelectedIndexChanged;
+        public Action<int, string>? OnSelectedIndexChanged;
 
         private const int ItemHeight = 36;
+        private const int CornerRadius = 7;
 
-        private static readonly Color Win9xWhite = Color.FromArgb(255, 255, 255);
-        private static readonly Color Win9xDarkGray = Color.FromArgb(128, 128, 128);
-        private static readonly Color Win9xBlack = Color.FromArgb(0, 0, 0);
-        private static readonly Color Win9xGray = Color.FromArgb(192, 192, 192);
-        private static readonly Color Win9xSelectedBlue = Color.FromArgb(0, 0, 128);
+        private static readonly Color BackgroundColor = Color.FromArgb(255, 255, 255);
+        private static readonly Color BorderColor = Color.FromArgb(190, 190, 190);
+        private static readonly Color SelectedColor = Color.FromArgb(53, 132, 228);
+        private static readonly Color TextColor = Color.FromArgb(36, 36, 36);
+        private static readonly Color White = Color.FromArgb(255, 255, 255);
 
         public ListBox(int x, int y, int width, int height)
             : base(x, y, width, height)
         {
+        }
+
+        private static void DrawRoundedRect(Canvas canvas, Color color, int x, int y, int width, int height, int radius)
+        {
+            if (width <= 0 || height <= 0)
+                return;
+
+            radius = Math.Min(radius, Math.Min(width, height) / 2);
+
+            if (radius <= 0)
+            {
+                canvas.DrawFilledRectangle(color, x, y, width, height);
+                return;
+            }
+
+            int centerWidth = width - radius * 2;
+            int centerHeight = height - radius * 2;
+
+            if (centerWidth > 0)
+                canvas.DrawFilledRectangle(color, x + radius, y, centerWidth, height);
+
+            if (centerHeight > 0)
+                canvas.DrawFilledRectangle(color, x, y + radius, width, centerHeight);
+
+            canvas.DrawFilledCircle(color, x + radius, y + radius, radius);
+            canvas.DrawFilledCircle(color, x + width - radius - 1, y + radius, radius);
+            canvas.DrawFilledCircle(color, x + radius, y + height - radius - 1, radius);
+            canvas.DrawFilledCircle(color, x + width - radius - 1, y + height - radius - 1, radius);
         }
 
         public void AddItem(string item)
@@ -34,7 +64,8 @@ namespace HolmiumOS.GUI.Controls
 
         public void AddItems(IEnumerable<string> collection)
         {
-            if (collection == null) return;
+            if (collection == null)
+                return;
 
             foreach (var item in collection)
                 items.Add(item ?? "");
@@ -48,15 +79,18 @@ namespace HolmiumOS.GUI.Controls
 
         public void RemoveAt(int index)
         {
-            if (index < 0 || index >= items.Count) return;
+            if (index < 0 || index >= items.Count)
+                return;
 
             items.RemoveAt(index);
 
-            if (SelectedIndex >= items.Count)
-                SelectedIndex = items.Count - 1;
+            if (SelectedIndex == index)
+                SelectedIndex = -1;
+            else if (SelectedIndex > index)
+                SelectedIndex--;
         }
 
-        public string GetSelectedItem()
+        public string? GetSelectedItem()
         {
             if (SelectedIndex < 0 || SelectedIndex >= items.Count)
                 return null;
@@ -66,104 +100,53 @@ namespace HolmiumOS.GUI.Controls
 
         public override void Draw(Canvas canvas)
         {
-            if (!Visible || canvas == null) return;
+            if (!Visible || canvas == null || Width <= 0 || Height <= 0)
+                return;
 
-            Font font = PCScreenFont.DefaultFont;
+            Font font = FontManager.UiFont;
+            int fontSize = FontManager.UiFontSize;
 
-            canvas.DrawFilledRectangle(
-                Win9xWhite,
-                X,
-                Y,
-                Width,
-                Height);
+            DrawRoundedRect(canvas, BorderColor, X, Y, Width, Height, CornerRadius);
+            DrawRoundedRect(canvas, BackgroundColor, X + 1, Y + 1, Width - 2, Height - 2, CornerRadius - 1);
 
-            canvas.DrawLine(
-                Win9xDarkGray,
-                X,
-                Y,
-                X + Width - 1,
-                Y);
-
-            canvas.DrawLine(
-                Win9xDarkGray,
-                X,
-                Y,
-                X,
-                Y + Height - 1);
-
-            canvas.DrawLine(
-                Win9xBlack,
-                X + 1,
-                Y + 1,
-                X + Width - 2,
-                Y + 1);
-
-            canvas.DrawLine(
-                Win9xBlack,
-                X + 1,
-                Y + 1,
-                X + 1,
-                Y + Height - 2);
-
-            canvas.DrawLine(
-                Win9xWhite,
-                X,
-                Y + Height,
-                X + Width,
-                Y + Height);
-
-            canvas.DrawLine(
-                Win9xWhite,
-                X + Width,
-                Y,
-                X + Width,
-                Y + Height);
-
-            canvas.DrawLine(
-                Win9xGray,
-                X + 1,
-                Y + Height - 1,
-                X + Width - 1,
-                Y + Height - 1);
-
-            canvas.DrawLine(
-                Win9xGray,
-                X + Width - 1,
-                Y + 1,
-                X + Width - 1,
-                Y + Height - 1);
-
-            int visibleCount = Height / ItemHeight;
+            int visibleCount = (Height - 4) / ItemHeight;
 
             for (int i = 0; i < visibleCount && i < items.Count; i++)
             {
-                int itemY = Y + 2 + (i * ItemHeight);
+                int itemY = Y + 2 + i * ItemHeight;
+                bool selected = i == SelectedIndex;
 
-                int textY = itemY + (ItemHeight - font.Height) / 2;
-
-                if (i == SelectedIndex)
+                if (selected)
                 {
-                    canvas.DrawFilledRectangle(
-                        Win9xSelectedBlue,
-                        X + 2,
-                        itemY,
-                        Width - 4,
-                        ItemHeight);
+                    DrawRoundedRect(canvas, SelectedColor, X + 3, itemY, Width - 6, ItemHeight, 5);
+                }
+
+                Color textColor = selected ? White : TextColor;
+
+                int textY;
+
+                if (font is TrueTypeFont trueTypeFont)
+                {
+                    int textHeight = trueTypeFont.GetLineHeight(fontSize);
+                    textY = itemY + (ItemHeight - textHeight) / 2;
 
                     canvas.DrawString(
                         items[i],
-                        font,
-                        Win9xWhite,
-                        X + 6,
+                        trueTypeFont,
+                        fontSize,
+                        textColor,
+                        X + 10,
                         textY);
                 }
                 else
                 {
+                    textY = itemY + (ItemHeight - font.Height) / 2;
+
                     canvas.DrawString(
                         items[i],
                         font,
-                        Win9xBlack,
-                        X + 6,
+                        textColor,
+                        X + 10,
                         textY);
                 }
             }
@@ -181,22 +164,15 @@ namespace HolmiumOS.GUI.Controls
 
             SelectedIndex = index;
             Focused = true;
-
-            if (OnSelectedIndexChanged != null)
-                OnSelectedIndexChanged(index, items[index]);
+            OnSelectedIndexChanged?.Invoke(index, items[index]);
         }
 
-        public void HandleAbsoluteClick(
-            int absoluteX,
-            int absoluteY,
-            int absoluteListX,
-            int absoluteListY)
+        public void HandleAbsoluteClick(int absoluteX, int absoluteY, int absoluteListX, int absoluteListY)
         {
             int relativeX = absoluteX - absoluteListX;
             int relativeY = absoluteY - absoluteListY;
 
-            if (relativeX < 0 || relativeX >= Width ||
-                relativeY < 0 || relativeY >= Height)
+            if (relativeX < 0 || relativeX >= Width || relativeY < 0 || relativeY >= Height)
                 return;
 
             int index = relativeY / ItemHeight;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using HolmiumOS.GUI.Controls;
 using HolmiumOS.Shell;
@@ -7,30 +8,24 @@ namespace HolmiumOS.GUI.Apps
 {
     public class FileManager : AppBase
     {
-        private Button btnBack;
-        private TextBox txtPath;
-        private Button btnGo;
-        private Label lblStatus;
-
-        private Button btnUp;
-        private Button btnDown;
-
-        private ListBox lstFiles;
+        private Button? btnBack;
+        private TextBox? txtPath;
+        private Button? btnGo;
+        private Label? lblStatus;
+        private Button? btnUp;
+        private Button? btnDown;
+        private ListBox? lstFiles;
 
         private string currentPath = "/";
-
         private int scrollOffset = 0;
-
         private const int PAGE_SIZE = 7;
+        private string? initialPathOverride;
 
-        private string initialPathOverride = null;
-
-        public FileManager() : base("Dosya Yoneticisi")
+        public FileManager() : base("Dosya Yöneticisi")
         {
         }
 
-        public FileManager(string initialPath = null)
-            : base("Dosya Yoneticisi")
+        public FileManager(string? initialPath = null) : base("Dosya Yöneticisi")
         {
             initialPathOverride = initialPath;
         }
@@ -39,85 +34,42 @@ namespace HolmiumOS.GUI.Apps
         {
             try
             {
-                if (Window != null)
-                {
-                    Window.Title =
-                        "Dosya Yoneticisi";
-                }
+                if (Window == null)
+                    return;
 
+                Window.Title = "Dosya Yöneticisi";
                 InitUserPath();
 
-                btnBack = new Button(
-                    "<-",
-                    10,
-                    10,
-                    65,
-                    55)
-                {
-                    ClickAction = DoNavigateBack
-                };
+                btnBack = new Button("<", 10, 10, 65, 48);
+                btnBack.ClickAction = DoNavigateBack;
 
-                txtPath = new TextBox(
-                    85,
-                    10,
-                    360,
-                    55)
-                {
-                    Text = currentPath,
-                    MaxLength = 100
-                };
+                txtPath = new TextBox(85, 10, 360, 48);
+                txtPath.Text = currentPath;
+                txtPath.MaxLength = 100;
 
-                btnGo = new Button(
-                    "Go",
-                    455,
-                    10,
-                    75,
-                    55)
-                {
-                    ClickAction = DoNavigateGo
-                };
+                btnGo = new Button("Git", 455, 10, 75, 48);
+                btnGo.ClickAction = DoNavigateGo;
 
-                btnUp = new Button(
-                    "^",
-                    455,
-                    80,
-                    75,
-                    140)
-                {
-                    ClickAction = ScrollUp
-                };
+                btnUp = new Button("Yukari", 455, 80, 75, 135);
+                btnUp.ClickAction = ScrollUp;
 
-                btnDown = new Button(
-                    "v",
-                    455,
-                    230,
-                    75,
-                    140)
-                {
-                    ClickAction = ScrollDown
-                };
+                btnDown = new Button("Asagi", 455, 225, 75, 135);
+                btnDown.ClickAction = ScrollDown;
 
-                lblStatus = new Label(
-                    "Hazir",
-                    10,
-                    390);
+                lblStatus = new Label("Hazir", 10, 380);
 
-                if (Window != null)
-                {
-                    Window.AddControl(btnBack);
-                    Window.AddControl(txtPath);
-                    Window.AddControl(btnGo);
-                    Window.AddControl(btnUp);
-                    Window.AddControl(btnDown);
-                    Window.AddControl(lblStatus);
-                }
+                Window.AddControl(btnBack);
+                Window.AddControl(txtPath);
+                Window.AddControl(btnGo);
+                Window.AddControl(btnUp);
+                Window.AddControl(btnDown);
+                Window.AddControl(lblStatus);
 
                 LoadDirectory(currentPath);
             }
             catch
             {
-                SetStatus(
-                    "Baslatma hatasi!");
+                SetStatus("Baslatma hatasi!");
             }
         }
 
@@ -125,30 +77,12 @@ namespace HolmiumOS.GUI.Apps
         {
             try
             {
-                if (!string.IsNullOrEmpty(
-                        initialPathOverride) &&
-                    FileSystemManager.DirectoryExists(
-                        initialPathOverride))
-                {
-                    currentPath =
-                        FileSystemManager.ResolvePath(
-                            initialPathOverride);
-                }
-                else if (
-                    UserManager.IsLoggedIn &&
-                    !string.IsNullOrEmpty(
-                        UserManager.HomeDirectory) &&
-                    FileSystemManager.DirectoryExists(
-                        UserManager.HomeDirectory))
-                {
-                    currentPath =
-                        FileSystemManager.ResolvePath(
-                            UserManager.HomeDirectory);
-                }
+                if (!string.IsNullOrEmpty(initialPathOverride) && FileSystemManager.DirectoryExists(initialPathOverride))
+                    currentPath = FileSystemManager.ResolvePath(initialPathOverride);
+                else if (UserManager.IsLoggedIn && !string.IsNullOrEmpty(UserManager.HomeDirectory) && FileSystemManager.DirectoryExists(UserManager.HomeDirectory))
+                    currentPath = FileSystemManager.ResolvePath(UserManager.HomeDirectory);
                 else
-                {
                     currentPath = "/";
-                }
             }
             catch
             {
@@ -160,64 +94,38 @@ namespace HolmiumOS.GUI.Apps
 
         private void FixPath()
         {
-            if (string.IsNullOrWhiteSpace(
-                    currentPath))
+            if (string.IsNullOrWhiteSpace(currentPath))
             {
                 currentPath = "/";
                 return;
             }
 
-            currentPath =
-                FileSystemManager.ResolvePath(
-                    currentPath);
+            currentPath = FileSystemManager.ResolvePath(currentPath);
         }
 
-        private void LoadDirectory(
-            string path)
+        private void LoadDirectory(string path)
         {
-            currentPath =
-                FileSystemManager.ResolvePath(
-                    path);
-
+            currentPath = FileSystemManager.ResolvePath(path);
             FixPath();
 
             if (txtPath != null)
-            {
                 txtPath.Text = currentPath;
-            }
 
-            if (lstFiles != null &&
-                Window != null)
+            if (lstFiles != null && Window != null)
             {
-                try
-                {
-                    Window.Controls.Remove(
-                        lstFiles);
-                }
-                catch
-                {
-                }
-
+                Window.Controls.Remove(lstFiles);
                 lstFiles = null;
             }
 
-            lstFiles = new ListBox(
-                10,
-                80,
-                435,
-                280);
+            lstFiles = new ListBox(10, 75, 435, 290);
 
-            List<ItemEntry> items =
-                new List<ItemEntry>();
+            List<ItemEntry> items = new List<ItemEntry>();
 
             try
             {
-                if (!PermissionManager.CanRead(
-                        currentPath))
+                if (!PermissionManager.CanRead(currentPath))
                 {
-                    SetStatus(
-                        "Erisim Yetkisi Yok!");
-
+                    SetStatus("Bu klasore erisim izniniz yok.");
                     AttachListBoxToWindow();
                     return;
                 }
@@ -228,26 +136,14 @@ namespace HolmiumOS.GUI.Apps
 
             try
             {
-                string[] dirs =
-                    FileSystemManager.GetDirectories(
-                        currentPath);
+                string[]? dirs = FileSystemManager.GetDirectories(currentPath);
 
                 if (dirs != null)
                 {
-                    for (int i = 0;
-                         i < dirs.Length;
-                         i++)
+                    for (int i = 0; i < dirs.Length; i++)
                     {
-                        if (!string.IsNullOrEmpty(
-                                dirs[i]))
-                        {
-                            items.Add(
-                                new ItemEntry
-                                {
-                                    Path = dirs[i],
-                                    IsDirectory = true
-                                });
-                        }
+                        if (!string.IsNullOrEmpty(dirs[i]))
+                            items.Add(new ItemEntry { Path = dirs[i], IsDirectory = true });
                     }
                 }
             }
@@ -257,26 +153,14 @@ namespace HolmiumOS.GUI.Apps
 
             try
             {
-                string[] files =
-                    FileSystemManager.GetFiles(
-                        currentPath);
+                string[]? files = FileSystemManager.GetFiles(currentPath);
 
                 if (files != null)
                 {
-                    for (int i = 0;
-                         i < files.Length;
-                         i++)
+                    for (int i = 0; i < files.Length; i++)
                     {
-                        if (!string.IsNullOrEmpty(
-                                files[i]))
-                        {
-                            items.Add(
-                                new ItemEntry
-                                {
-                                    Path = files[i],
-                                    IsDirectory = false
-                                });
-                        }
+                        if (!string.IsNullOrEmpty(files[i]))
+                            items.Add(new ItemEntry { Path = files[i], IsDirectory = false });
                     }
                 }
             }
@@ -284,119 +168,47 @@ namespace HolmiumOS.GUI.Apps
             {
             }
 
-            List<ItemEntry> visibleItems =
-                new List<ItemEntry>();
+            List<ItemEntry> visibleItems = new List<ItemEntry>();
 
-            if (scrollOffset < 0)
-            {
-                scrollOffset = 0;
-            }
+            scrollOffset = Math.Max(0, Math.Min(scrollOffset, Math.Max(0, items.Count - PAGE_SIZE)));
 
-            if (scrollOffset >
-                Math.Max(
-                    0,
-                    items.Count - PAGE_SIZE))
-            {
-                scrollOffset =
-                    Math.Max(
-                        0,
-                        items.Count - PAGE_SIZE);
-            }
+            int endLimit = Math.Min(scrollOffset + PAGE_SIZE, items.Count);
 
-            int endLimit =
-                Math.Min(
-                    scrollOffset + PAGE_SIZE,
-                    items.Count);
-
-            for (
-                int i = scrollOffset;
-                i < endLimit;
-                i++)
+            for (int i = scrollOffset; i < endLimit; i++)
             {
                 ItemEntry entry = items[i];
+                string cleanName = ExtractName(entry.Path);
 
-                string cleanName =
-                    ExtractName(entry.Path);
-
-                if (entry.IsDirectory)
-                {
-                    lstFiles.AddItem(
-                        "[DIR]  " +
-                        Shorten(cleanName, 26));
-                }
-                else
-                {
-                    lstFiles.AddItem(
-                        "[FILE] " +
-                        Shorten(cleanName, 25));
-                }
-
+                lstFiles.AddItem((entry.IsDirectory ? "[DIR]  " : "[FILE] ") + Shorten(cleanName, entry.IsDirectory ? 26 : 25));
                 visibleItems.Add(entry);
             }
 
             if (items.Count > PAGE_SIZE)
-            {
-                SetStatus(
-                    "Gosterilen: " +
-                    (scrollOffset + 1) +
-                    "-" +
-                    endLimit +
-                    " / " +
-                    items.Count);
-            }
+                SetStatus("Gosterilen: " + (scrollOffset + 1) + "-" + endLimit + " / " + items.Count);
             else
+                SetStatus(items.Count == 0 ? "Bu klasor bos." : "Toplam oge: " + items.Count);
+
+            lstFiles.OnSelectedIndexChanged = (index, text) =>
             {
-                SetStatus(
-                    items.Count == 0
-                        ? "Klasor bos."
-                        : "Toplam: " +
-                          items.Count);
-            }
+                if (index < 0 || index >= visibleItems.Count)
+                    return;
 
-            lstFiles.OnSelectedIndexChanged =
-                (index, text) =>
+                ItemEntry selected = visibleItems[index];
+
+                if (selected.IsDirectory)
                 {
-                    if (index >= 0 &&
-                        index < visibleItems.Count)
-                    {
-                        ItemEntry selected =
-                            visibleItems[index];
+                    scrollOffset = 0;
+                    LoadDirectory(FileSystemManager.ResolvePath(selected.Path));
+                }
+                else
+                {
+                    string filePath = FileSystemManager.ResolvePath(selected.Path);
+                    string fileName = ExtractName(filePath);
 
-                        if (selected.IsDirectory)
-                        {
-                            scrollOffset = 0;
-
-                            string newPath =
-                                FileSystemManager.ResolvePath(
-                                    selected.Path);
-
-                            LoadDirectory(
-                                newPath);
-                        }
-                        else
-                        {
-                            string filePath =
-                                FileSystemManager.ResolvePath(
-                                    selected.Path);
-
-                            string fileName =
-                                ExtractName(filePath);
-
-                            var notepad =
-                                new Notepad(
-                                    filePath);
-
-                            AppManager.Run(
-                                notepad);
-
-                            SetStatus(
-                                "Dosya: " +
-                                Shorten(
-                                    fileName,
-                                    25));
-                        }
-                    }
-                };
+                    AppManager.Run(new Notepad(filePath));
+                    SetStatus("Acildi: " + Shorten(fileName, 25));
+                }
+            };
 
             AttachListBoxToWindow();
         }
@@ -418,46 +230,23 @@ namespace HolmiumOS.GUI.Apps
 
         private void AttachListBoxToWindow()
         {
-            if (Window != null &&
-                lstFiles != null)
-            {
-                Window.AddControl(
-                    lstFiles);
-            }
+            if (Window != null && lstFiles != null)
+                Window.AddControl(lstFiles);
         }
 
         private void DoNavigateBack()
         {
             try
             {
-                string path =
-                    FileSystemManager.ResolvePath(
-                        currentPath);
+                string path = FileSystemManager.ResolvePath(currentPath);
 
                 if (path == "/")
-                {
                     return;
-                }
 
-                int lastSlash =
-                    path.LastIndexOf('/');
-
-                string parent;
-
-                if (lastSlash <= 0)
-                {
-                    parent = "/";
-                }
-                else
-                {
-                    parent =
-                        path.Substring(
-                            0,
-                            lastSlash);
-                }
+                int lastSlash = path.LastIndexOf('/');
+                string parent = lastSlash <= 0 ? "/" : path.Substring(0, lastSlash);
 
                 scrollOffset = 0;
-
                 LoadDirectory(parent);
             }
             catch
@@ -470,97 +259,63 @@ namespace HolmiumOS.GUI.Apps
         private void DoNavigateGo()
         {
             if (txtPath == null)
-            {
                 return;
-            }
 
-            string target =
-                txtPath.Text.Trim();
+            string target = txtPath.Text.Trim();
 
             if (string.IsNullOrEmpty(target))
-            {
                 return;
-            }
 
-            string resolved =
-                FileSystemManager.ResolvePath(
-                    target);
+            string resolved = FileSystemManager.ResolvePath(target);
 
-            if (FileSystemManager.DirectoryExists(
-                    resolved))
+            if (FileSystemManager.DirectoryExists(resolved))
             {
                 scrollOffset = 0;
                 LoadDirectory(resolved);
             }
             else
             {
-                SetStatus(
-                    "Klasor bulunamadi!");
+                SetStatus("Klasor bulunamadi!");
             }
         }
 
-        private string ExtractName(
-            string fullPath)
+        private string ExtractName(string fullPath)
         {
-            if (string.IsNullOrEmpty(
-                    fullPath))
-            {
+            if (string.IsNullOrEmpty(fullPath))
                 return "";
-            }
 
-            string path =
-                fullPath.TrimEnd('/');
+            string path = fullPath.TrimEnd('/');
 
             if (path == "/")
-            {
                 return "/";
-            }
 
-            int index =
-                path.LastIndexOf('/');
+            int index = path.LastIndexOf('/');
 
-            if (index >= 0 &&
-                index < path.Length - 1)
-            {
-                return path.Substring(
-                    index + 1);
-            }
-
-            return path;
+            return index >= 0 && index < path.Length - 1 ? path.Substring(index + 1) : path;
         }
 
-        private string Shorten(
-            string text,
-            int maxLen)
+        private string Shorten(string text, int maxLen)
         {
             if (string.IsNullOrEmpty(text))
-            {
                 return "";
-            }
 
-            if (text.Length <= maxLen)
-            {
-                return text;
-            }
-
-            return text.Substring(
-                0,
-                maxLen - 3) + "...";
+            return text.Length <= maxLen ? text : text.Substring(0, maxLen - 3) + "...";
         }
 
-        private void SetStatus(
-            string msg)
+        private void SetStatus(string msg)
         {
             if (lblStatus != null)
-            {
                 lblStatus.Text = msg;
-            }
         }
 
         private class ItemEntry
         {
-            public string Path { get; set; }
+            public string Path { get; set; } = "";
             public bool IsDirectory { get; set; }
+        }
+
+        public override void Close()
+        {
         }
     }
 }

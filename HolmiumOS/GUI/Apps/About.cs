@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using Cosmos.Kernel.System.Graphics;
 using Cosmos.Kernel.System.Storage;
 using HolmiumOS.GUI.Controls;
@@ -8,45 +9,50 @@ namespace HolmiumOS.GUI.Apps
     public class About : AppBase
     {
         private const int LeftX = 20;
-        private const int RightX = 500;
-        private const int LineHeight = 32;
+        private const int LineHeight = 30;
+        private const int SectionSpacing = 12;
 
-        private int leftY;
-        private int rightY;
+        private int currentY;
 
-        public About() : base("Hakkinda")
+        public About() : base("Hakkında")
         {
         }
 
         public override void Load()
         {
             if (Window != null)
-                Window.Title = "HolmiumOS Hakkinda";
+                Window.Title = "HolmiumOS Hakkında";
 
-            leftY = 20;
-            rightY = 20;
+            currentY = 20;
 
-            AddSectionTitle("[ RUNTIME ]", LeftX, ref leftY);
-            AddRuntimeInfo();
+            AddSectionTitle("HolmiumOS", "Sistem bilgileri");
+            AddLine("Runtime", Environment.Version.ToString());
+            AddLine("Architecture", Environment.Is64BitProcess ? "64-bit" : "32-bit");
 
-            AddSectionTitle("[ GRAPHICS ]", LeftX, ref leftY);
+            currentY += SectionSpacing;
+
+            AddSectionTitle("Graphics", "Görüntü sistemi");
             AddGraphicsInfo();
 
-            AddSectionTitle("[ STORAGE ]", RightX, ref rightY);
+            currentY += SectionSpacing;
+
+            AddSectionTitle("Storage", "Depolama aygıtları");
             AddStorageInfo();
         }
 
-        private void AddRuntimeInfo()
+        private void AddSectionTitle(string title, string subtitle)
         {
-            try
-            {
-                AddLine(LeftX, ref leftY, ".NET Runtime: " + Environment.Version);
-                AddLine(LeftX, ref leftY, "Process: " + (Environment.Is64BitProcess ? "64-bit" : "32-bit"));
-            }
-            catch
-            {
-                // Bilgi alınamıyorsa gösterme.
-            }
+            Add(new Label(title, LeftX, currentY));
+            currentY += LineHeight;
+
+            Add(new Label(subtitle, LeftX, currentY));
+            currentY += LineHeight + 4;
+        }
+
+        private void AddLine(string name, string value)
+        {
+            Add(new Label(name + ": " + value, LeftX, currentY));
+            currentY += LineHeight;
         }
 
         private void AddGraphicsInfo()
@@ -54,22 +60,23 @@ namespace HolmiumOS.GUI.Apps
             try
             {
                 Canvas canvas = Init.canvas;
+
                 if (canvas == null)
                     return;
 
-                AddLine(LeftX, ref leftY, "Resolution: " + (int)canvas.Mode.Width + " x " + (int)canvas.Mode.Height);
-                AddLine(LeftX, ref leftY, "Color depth: " + (int)canvas.Mode.ColorDepth + " bit");
-                AddLine(LeftX, ref leftY, "Refresh rate: " + canvas.RefreshRate + " Hz");
+                AddLine("Resolution", (int)canvas.Mode.Width + " x " + (int)canvas.Mode.Height);
+                AddLine("Color depth", (int)canvas.Mode.ColorDepth + " bit");
+                AddLine("Refresh rate", canvas.RefreshRate + " Hz");
 
                 if (!string.IsNullOrWhiteSpace(canvas.Name))
-                    AddLine(LeftX, ref leftY, "Canvas: " + canvas.Name);
+                    AddLine("Canvas", canvas.Name);
 
                 if (canvas.AvailableModes != null)
-                    AddLine(LeftX, ref leftY, "Available modes: " + canvas.AvailableModes.Count);
+                    AddLine("Available modes", canvas.AvailableModes.Count.ToString());
             }
             catch
             {
-                // Bilgi alınamıyorsa gösterme.
+                // Grafik bilgileri alınamazsa gösterme.
             }
         }
 
@@ -77,38 +84,27 @@ namespace HolmiumOS.GUI.Apps
         {
             try
             {
-                AddLine(RightX, ref rightY, "Devices: " + StorageManager.DeviceCount);
-                AddLine(RightX, ref rightY, "Partitions: " + StorageManager.Partitions.Count);
+                AddLine("Devices", StorageManager.DeviceCount.ToString());
+                AddLine("Partitions", StorageManager.Partitions.Count.ToString());
 
                 for (int i = 0; i < StorageManager.Devices.Count; i++)
                 {
                     var device = StorageManager.Devices[i];
+
                     if (device == null)
                         continue;
 
                     string name = string.IsNullOrWhiteSpace(device.Name) ? "Device " + i : device.Name;
                     ulong totalBytes = (ulong)device.BlockCount * device.BlockSize;
 
-                    AddLine(RightX, ref rightY, name + ": " + FormatBytes(totalBytes));
-                    AddLine(RightX, ref rightY, "Blocks: " + device.BlockCount + " x " + device.BlockSize + " B");
+                    AddLine(name, FormatBytes(totalBytes));
+                    AddLine("Block count", device.BlockCount + " x " + device.BlockSize + " B");
                 }
             }
             catch
             {
-                // Bilgi alınamıyorsa gösterme.
+                // Depolama bilgileri alınamazsa gösterme.
             }
-        }
-
-        private void AddSectionTitle(string title, int x, ref int y)
-        {
-            Add(new Label(title, x, y));
-            y += LineHeight;
-        }
-
-        private void AddLine(int x, ref int y, string text)
-        {
-            Add(new Label(text, x, y));
-            y += LineHeight;
         }
 
         private static string FormatBytes(ulong bytes)

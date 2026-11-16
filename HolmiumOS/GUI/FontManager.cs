@@ -9,12 +9,15 @@ namespace HolmiumOS.GUI
         private const string UiFontPath = "/cdrom/Resources/Fonts/IBMPlexSans-Regular.ttf";
         private const string MonoFontPath = "/cdrom/Resources/Fonts/IBMPlexMono-Regular.ttf";
 
-        private static Font _uiFont = PCScreenFont.DefaultFont;
-        private static Font _monoFont = PCScreenFont.DefaultFont;
+        private static Font _uiFont = FontManager.UiFont;
+        private static Font _monoFont = FontManager.UiFont;
         private static bool _initialized;
 
         public static Font UiFont => _uiFont;
         public static Font MonoFont => _monoFont;
+
+        public static int UiFontSize { get; set; } = 20;
+        public static int MonoFontSize { get; set; } = 18;
 
         public static void Initialize()
         {
@@ -31,7 +34,7 @@ namespace HolmiumOS.GUI
                 }
                 catch
                 {
-                    _uiFont = PCScreenFont.DefaultFont;
+                    _uiFont = FontManager.UiFont;
                 }
             }
 
@@ -43,7 +46,7 @@ namespace HolmiumOS.GUI
                 }
                 catch
                 {
-                    _monoFont = PCScreenFont.DefaultFont;
+                    _monoFont = FontManager.UiFont;
                 }
             }
         }

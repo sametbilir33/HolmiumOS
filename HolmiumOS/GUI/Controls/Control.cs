@@ -1,4 +1,5 @@
-﻿using Cosmos.Kernel.System.Graphics;
+﻿
+using Cosmos.Kernel.System.Graphics;
 using HolmiumOS.GUI;
 
 namespace HolmiumOS.GUI.Controls
@@ -12,6 +13,9 @@ namespace HolmiumOS.GUI.Controls
 
         public bool Visible = true;
         public bool Focused = false;
+
+        public bool Hovered = false;
+        public bool Pressed = false;
 
         public CursorType? Cursor { get; set; }
 

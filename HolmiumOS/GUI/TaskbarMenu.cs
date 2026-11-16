@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿
+using System.Drawing;
 using Cosmos.Kernel.System;
 using Cosmos.Kernel.System.Graphics;
 using Cosmos.Kernel.System.Graphics.Fonts;
@@ -18,514 +19,256 @@ namespace HolmiumOS.GUI
         private static bool rebootHover;
         private static bool shutdownHover;
 
-        private const int menuWidth = 300;
+        private const int menuWidth = 320;
         private const int menuHeight = 500;
+        private const int bannerWidth = 5;
 
-        private const int bannerWidth = 36;
-
-        private const int buttonWidth = 250;
+        private const int buttonWidth = 286;
         private const int buttonHeight = 40;
-        private const int buttonSpacing = 2;
+        private const int buttonSpacing = 3;
+
+        private static readonly Color BackgroundColor = Color.FromArgb(250, 249, 248);
+        private static readonly Color BorderColor = Color.FromArgb(205, 204, 203);
+        private static readonly Color ButtonColor = Color.FromArgb(250, 249, 248);
+        private static readonly Color HoverColor = Color.FromArgb(235, 235, 234);
+        private static readonly Color PressedColor = Color.FromArgb(222, 221, 220);
+        private static readonly Color TextColor = Color.FromArgb(36, 36, 36);
+        private static readonly Color SecondaryTextColor = Color.FromArgb(110, 110, 110);
+        private static readonly Color AccentColor = Color.FromArgb(53, 132, 228);
+        private static readonly Color SeparatorColor = Color.FromArgb(220, 219, 218);
 
         private static int GetMenuX(Canvas canvas)
         {
-            return 4;
+            return 8;
         }
 
         private static int GetMenuY(Canvas canvas)
         {
-            return (int)canvas.Mode.Height -
-                   Taskbar.Height -
-                   menuHeight -
-                   4;
+            return (int)canvas.Mode.Height - Taskbar.Height - menuHeight - 8;
         }
 
-        private static void DrawRaisedBox(
-            Canvas canvas,
-            int x,
-            int y,
-            int width,
-            int height)
+        private static int MeasureText(string text, Font font)
         {
-            canvas.DrawFilledRectangle(
-                Color.FromArgb(192, 192, 192),
-                x,
-                y,
-                width,
-                height);
+            if (font is TrueTypeFont trueTypeFont)
+                return trueTypeFont.MeasureString(text ?? "", FontManager.UiFontSize);
 
-            canvas.DrawLine(
-                Color.FromArgb(255, 255, 255),
-                x,
-                y,
-                x + width - 1,
-                y);
-
-            canvas.DrawLine(
-                Color.FromArgb(255, 255, 255),
-                x,
-                y,
-                x,
-                y + height - 1);
-
-            canvas.DrawLine(
-                Color.FromArgb(0, 0, 0),
-                x,
-                y + height - 1,
-                x + width - 1,
-                y + height - 1);
-
-            canvas.DrawLine(
-                Color.FromArgb(0, 0, 0),
-                x + width - 1,
-                y,
-                x + width - 1,
-                y + height - 1);
-
-            canvas.DrawLine(
-                Color.FromArgb(128, 128, 128),
-                x + 1,
-                y + height - 2,
-                x + width - 2,
-                y + height - 2);
-
-            canvas.DrawLine(
-                Color.FromArgb(128, 128, 128),
-                x + width - 2,
-                y + 1,
-                x + width - 2,
-                y + height - 2);
+            return font.MeasureString(text ?? "");
         }
 
-        private static void DrawButton(
-            Canvas canvas,
-            string text,
-            int x,
-            int y,
-            bool hover)
+        private static int GetFontHeight(Font font)
         {
-            Color background =
-                hover
-                    ? Color.FromArgb(0, 0, 128)
-                    : Color.FromArgb(192, 192, 192);
+            if (font is TrueTypeFont trueTypeFont)
+                return trueTypeFont.GetLineHeight(FontManager.UiFontSize);
 
-            Color textColor =
-                hover
-                    ? Color.White
-                    : Color.Black;
+            return font.Height;
+        }
 
-            canvas.DrawFilledRectangle(
-                background,
-                x,
-                y,
-                buttonWidth,
-                buttonHeight);
+        private static void DrawText(Canvas canvas, string text, Font font, Color color, int x, int y)
+        {
+            if (font is TrueTypeFont trueTypeFont)
+                canvas.DrawString(text ?? "", trueTypeFont, FontManager.UiFontSize, color, x, y);
+            else
+                canvas.DrawString(text ?? "", font, color, x, y);
+        }
 
-            Font font =
-                PCScreenFont.DefaultFont;
+        private static void DrawRoundedRect(Canvas canvas, Color color, int x, int y, int width, int height, int radius)
+        {
+            if (width <= 0 || height <= 0)
+                return;
 
-            int textWidth =
-                font.MeasureString(text);
+            radius = System.Math.Min(radius, System.Math.Min(width / 2, height / 2));
 
-            int textX =
-                x +
-                (buttonWidth - textWidth) / 2;
+            if (radius <= 0)
+            {
+                canvas.DrawFilledRectangle(color, x, y, width, height);
+                return;
+            }
 
-            int textY =
-                y +
-                (buttonHeight - font.Height) / 2;
+            canvas.DrawFilledRectangle(color, x + radius, y, width - radius * 2, height);
+            canvas.DrawFilledRectangle(color, x, y + radius, width, height - radius * 2);
 
-            canvas.DrawString(
-                text,
-                font,
-                textColor,
-                textX,
-                textY);
+            canvas.DrawFilledCircle(color, x + radius, y + radius, radius);
+            canvas.DrawFilledCircle(color, x + width - radius - 1, y + radius, radius);
+            canvas.DrawFilledCircle(color, x + radius, y + height - radius - 1, radius);
+            canvas.DrawFilledCircle(color, x + width - radius - 1, y + height - radius - 1, radius);
+        }
+
+        private static void DrawRoundedOutline(Canvas canvas, Color color, int x, int y, int width, int height, int radius)
+        {
+            canvas.DrawLine(color, x + radius, y, x + width - radius - 1, y);
+            canvas.DrawLine(color, x + radius, y + height - 1, x + width - radius - 1, y + height - 1);
+            canvas.DrawLine(color, x, y + radius, x, y + height - radius - 1);
+            canvas.DrawLine(color, x + width - 1, y + radius, x + width - 1, y + height - radius - 1);
+
+            canvas.DrawArc(color, x + radius, y + radius, radius, 180, 270);
+            canvas.DrawArc(color, x + width - radius - 1, y + radius, radius, 270, 360);
+            canvas.DrawArc(color, x + radius, y + height - radius - 1, radius, 90, 180);
+            canvas.DrawArc(color, x + width - radius - 1, y + height - radius - 1, radius, 0, 90);
+        }
+
+        private static void DrawButton(Canvas canvas, string text, int x, int y, bool hover, Font font)
+        {
+            Color background = hover ? HoverColor : ButtonColor;
+
+            DrawRoundedRect(canvas, background, x, y, buttonWidth, buttonHeight, 7);
+
+            if (hover)
+                DrawRoundedOutline(canvas, BorderColor, x, y, buttonWidth, buttonHeight, 7);
+
+            int textHeight = GetFontHeight(font);
+            int textWidth = MeasureText(text, font);
+
+            DrawText(canvas, text, font, TextColor, x + 14, y + (buttonHeight - textHeight) / 2);
+
+            int indicatorX = x + buttonWidth - 20;
+            int indicatorY = y + buttonHeight / 2;
+
+            if (hover)
+                canvas.DrawFilledCircle(AccentColor, indicatorX, indicatorY, 3);
+        }
+
+        private static void DrawSeparator(Canvas canvas, int x, int y, int width)
+        {
+            canvas.DrawLine(SeparatorColor, x, y, x + width, y);
         }
 
         public static void Draw(Canvas canvas)
         {
+            if (canvas == null)
+                return;
+
             int x = GetMenuX(canvas);
             int y = GetMenuY(canvas);
 
-            DrawRaisedBox(
-                canvas,
-                x,
-                y,
-                menuWidth,
-                menuHeight);
+            DrawRoundedRect(canvas, BackgroundColor, x, y, menuWidth, menuHeight, 12);
+            DrawRoundedOutline(canvas, BorderColor, x, y, menuWidth, menuHeight, 12);
 
-            canvas.DrawFilledRectangle(
-                Color.FromArgb(0, 0, 128),
-                x + 2,
-                y + 2,
-                bannerWidth,
-                menuHeight - 4);
+            Font font = FontManager.UiFont;
+            int fontHeight = GetFontHeight(font);
 
-            Font font =
-                PCScreenFont.DefaultFont;
+            DrawRoundedRect(canvas, AccentColor, x + 16, y + 16, bannerWidth, 28, 2);
 
-            string bannerText =
-                "HolmiumOS";
+            DrawText(canvas, "HolmiumOS", font, TextColor, x + 30, y + 16);
+            DrawText(canvas, "Uygulamalar", font, SecondaryTextColor, x + 30, y + 16 + fontHeight + 2);
 
-            int bannerHeight =
-                bannerText.Length *
-                font.Height;
+            int contentX = x + 16;
+            int buttonY = y + 68;
 
-            int bannerStartY =
-                y +
-                (menuHeight - bannerHeight) / 2;
+            DrawButton(canvas, "About", contentX, buttonY, aboutHover, font);
+            buttonY += buttonHeight + buttonSpacing;
 
-            for (int i = 0;
-                 i < bannerText.Length;
-                 i++)
-            {
-                string letter =
-                    bannerText[i].ToString();
+            DrawButton(canvas, "Terminal", contentX, buttonY, terminalHover, font);
+            buttonY += buttonHeight + buttonSpacing;
 
-                int letterWidth =
-                    font.MeasureString(letter);
+            DrawButton(canvas, "File Manager", contentX, buttonY, fileManagerHover, font);
+            buttonY += buttonHeight + buttonSpacing;
 
-                int letterX =
-                    x +
-                    2 +
-                    (bannerWidth - letterWidth) / 2;
+            DrawButton(canvas, "Calculator", contentX, buttonY, calculatorHover, font);
+            buttonY += buttonHeight + buttonSpacing;
 
-                int letterY =
-                    bannerStartY +
-                    (i * font.Height);
+            DrawButton(canvas, "Notepad", contentX, buttonY, notepadHover, font);
+            buttonY += buttonHeight + buttonSpacing;
 
-                canvas.DrawString(
-                    letter,
-                    font,
-                    Color.White,
-                    letterX,
-                    letterY);
-            }
+            DrawButton(canvas, "Bad Apple!!", contentX, buttonY, badAppleHover, font);
+            buttonY += buttonHeight + buttonSpacing;
 
-            int contentX =
-                x +
-                bannerWidth +
-                6;
+            DrawButton(canvas, "Task Manager", contentX, buttonY, taskManagerHover, font);
+            buttonY += buttonHeight + 12;
 
-            int buttonY =
-                y + 8;
+            DrawSeparator(canvas, contentX, buttonY, buttonWidth);
+            buttonY += 10;
 
-            DrawButton(
-                canvas,
-                "About",
-                contentX,
-                buttonY,
-                aboutHover);
+            DrawButton(canvas, "Reboot", contentX, buttonY, rebootHover, font);
+            buttonY += buttonHeight + buttonSpacing;
 
-            buttonY +=
-                buttonHeight +
-                buttonSpacing;
-
-            DrawButton(
-                canvas,
-                "Terminal",
-                contentX,
-                buttonY,
-                terminalHover);
-
-            buttonY +=
-                buttonHeight +
-                buttonSpacing;
-
-            DrawButton(
-                canvas,
-                "File Manager",
-                contentX,
-                buttonY,
-                fileManagerHover);
-
-            buttonY +=
-                buttonHeight +
-                buttonSpacing;
-
-            DrawButton(
-                canvas,
-                "Calculator",
-                contentX,
-                buttonY,
-                calculatorHover);
-
-            buttonY +=
-                buttonHeight +
-                buttonSpacing;
-
-            DrawButton(
-                canvas,
-                "Notepad",
-                contentX,
-                buttonY,
-                notepadHover);
-
-            buttonY +=
-                buttonHeight +
-                buttonSpacing;
-
-            DrawButton(
-                canvas,
-                "Bad Apple!!",
-                contentX,
-                buttonY,
-                badAppleHover);
-
-            buttonY +=
-                buttonHeight +
-                buttonSpacing;
-
-            DrawButton(
-                canvas,
-                "Task Manager",
-                contentX,
-                buttonY,
-                taskManagerHover);
-
-            buttonY +=
-                buttonHeight +
-                8;
-
-            canvas.DrawLine(
-                Color.FromArgb(128, 128, 128),
-                contentX,
-                buttonY,
-                contentX + buttonWidth - 4,
-                buttonY);
-
-            canvas.DrawLine(
-                Color.FromArgb(255, 255, 255),
-                contentX,
-                buttonY + 1,
-                contentX + buttonWidth - 4,
-                buttonY + 1);
-
-            buttonY += 8;
-
-            DrawButton(
-                canvas,
-                "Reboot",
-                contentX,
-                buttonY,
-                rebootHover);
-
-            buttonY +=
-                buttonHeight +
-                buttonSpacing;
-
-            DrawButton(
-                canvas,
-                "Shutdown",
-                contentX,
-                buttonY,
-                shutdownHover);
+            DrawButton(canvas, "Shutdown", contentX, buttonY, shutdownHover, font);
         }
 
-        public static bool IsInside(
-            int mouseX,
-            int mouseY)
+        public static bool IsInside(int mouseX, int mouseY)
         {
-            int x =
-                GetMenuX(Init.canvas);
+            int x = GetMenuX(Init.canvas);
+            int y = GetMenuY(Init.canvas);
 
-            int y =
-                GetMenuY(Init.canvas);
-
-            return mouseX >= x &&
-                   mouseX <= x + menuWidth &&
-                   mouseY >= y &&
-                   mouseY <= y + menuHeight;
+            return mouseX >= x && mouseX <= x + menuWidth && mouseY >= y && mouseY <= y + menuHeight;
         }
 
-        public static void UpdateHover(
-            int mouseX,
-            int mouseY)
+        public static void UpdateHover(int mouseX, int mouseY)
         {
-            int x =
-                GetMenuX(Init.canvas);
+            int x = GetMenuX(Init.canvas);
+            int y = GetMenuY(Init.canvas);
 
-            int y =
-                GetMenuY(Init.canvas);
+            int contentX = x + 16;
+            int buttonY = y + 68;
 
-            int contentX =
-                x +
-                bannerWidth +
-                6;
+            aboutHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
+            buttonY += buttonHeight + buttonSpacing;
 
-            int buttonY =
-                y + 8;
+            terminalHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
+            buttonY += buttonHeight + buttonSpacing;
 
-            aboutHover =
-                IsButtonInside(
-                    mouseX,
-                    mouseY,
-                    contentX,
-                    buttonY);
+            fileManagerHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
+            buttonY += buttonHeight + buttonSpacing;
 
-            buttonY +=
-                buttonHeight +
-                buttonSpacing;
+            calculatorHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
+            buttonY += buttonHeight + buttonSpacing;
 
-            terminalHover =
-                IsButtonInside(
-                    mouseX,
-                    mouseY,
-                    contentX,
-                    buttonY);
+            notepadHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
+            buttonY += buttonHeight + buttonSpacing;
 
-            buttonY +=
-                buttonHeight +
-                buttonSpacing;
+            badAppleHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
+            buttonY += buttonHeight + buttonSpacing;
 
-            fileManagerHover =
-                IsButtonInside(
-                    mouseX,
-                    mouseY,
-                    contentX,
-                    buttonY);
+            taskManagerHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
+            buttonY += buttonHeight + 12 + 10;
 
-            buttonY +=
-                buttonHeight +
-                buttonSpacing;
+            rebootHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
+            buttonY += buttonHeight + buttonSpacing;
 
-            calculatorHover =
-                IsButtonInside(
-                    mouseX,
-                    mouseY,
-                    contentX,
-                    buttonY);
-
-            buttonY +=
-                buttonHeight +
-                buttonSpacing;
-
-            notepadHover =
-                IsButtonInside(
-                    mouseX,
-                    mouseY,
-                    contentX,
-                    buttonY);
-
-            buttonY +=
-                buttonHeight +
-                buttonSpacing;
-
-            badAppleHover =
-                IsButtonInside(
-                    mouseX,
-                    mouseY,
-                    contentX,
-                    buttonY);
-
-            buttonY +=
-                buttonHeight +
-                buttonSpacing;
-
-            taskManagerHover =
-                IsButtonInside(
-                    mouseX,
-                    mouseY,
-                    contentX,
-                    buttonY);
-
-            buttonY +=
-                buttonHeight +
-                16;
-
-            rebootHover =
-                IsButtonInside(
-                    mouseX,
-                    mouseY,
-                    contentX,
-                    buttonY);
-
-            buttonY +=
-                buttonHeight +
-                buttonSpacing;
-
-            shutdownHover =
-                IsButtonInside(
-                    mouseX,
-                    mouseY,
-                    contentX,
-                    buttonY);
+            shutdownHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
         }
 
-        private static bool IsButtonInside(
-            int mouseX,
-            int mouseY,
-            int buttonX,
-            int buttonY)
+        private static bool IsButtonInside(int mouseX, int mouseY, int buttonX, int buttonY)
         {
-            return mouseX >= buttonX &&
-                   mouseX <= buttonX + buttonWidth &&
-                   mouseY >= buttonY &&
-                   mouseY <= buttonY + buttonHeight;
+            return mouseX >= buttonX && mouseX <= buttonX + buttonWidth && mouseY >= buttonY && mouseY <= buttonY + buttonHeight;
         }
 
-        public static void Click(
-            int mouseX,
-            int mouseY)
+        public static void Click(int mouseX, int mouseY)
         {
             if (aboutHover)
             {
-                AppManager.Run<Apps.About>(
-                    70,
-                    70);
-
+                AppManager.Run<Apps.About>(70, 70);
                 Taskbar.MenuOpen = false;
             }
             else if (terminalHover)
             {
-                AppManager.Run<Apps.Terminal>(
-                    50,
-                    50);
-
+                AppManager.Run<Apps.Terminal>(50, 50);
                 Taskbar.MenuOpen = false;
             }
             else if (fileManagerHover)
             {
-                var fileManager =
-                    new Apps.FileManager(
-                        UserManager.HomeDirectory);
-
+                var fileManager = new Apps.FileManager(UserManager.HomeDirectory);
                 AppManager.Run(fileManager);
-
                 Taskbar.MenuOpen = false;
             }
             else if (calculatorHover)
             {
-                AppManager.Run<Apps.Calculator>(
-                    50,
-                    50);
-
+                AppManager.Run<Apps.Calculator>(50, 50);
                 Taskbar.MenuOpen = false;
             }
             else if (notepadHover)
             {
-                var notepad =
-                    new Apps.Notepad(null);
-
+                var notepad = new Apps.Notepad(null);
                 AppManager.Run(notepad);
-
                 Taskbar.MenuOpen = false;
             }
             else if (badAppleHover)
             {
-                AppManager.Run<Apps.BadApple>(
-                    40,
-                    40);
-
+                AppManager.Run<Apps.BadApple>(40, 40);
                 Taskbar.MenuOpen = false;
             }
             else if (taskManagerHover)
             {
-                AppManager.Run<Apps.TaskManager>(
-                    80,
-                    60);
-
+                AppManager.Run<Apps.TaskManager>(80, 60);
                 Taskbar.MenuOpen = false;
             }
             else if (rebootHover)

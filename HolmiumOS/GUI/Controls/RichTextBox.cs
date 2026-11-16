@@ -1,6 +1,7 @@
-﻿using System;
-using Cosmos.Kernel.System.Input;
+﻿
+using System;
 using System.Drawing;
+using Cosmos.Kernel.System.Input;
 using Cosmos.Kernel.System.Graphics;
 using Cosmos.Kernel.System.Graphics.Fonts;
 
@@ -11,106 +12,80 @@ namespace HolmiumOS.GUI.Controls
         public string Text = "";
         public int MaxLength = 2000;
 
-        private const int PADDING = 5;
+        private const int Padding = 8;
+        private const int CornerRadius = 7;
 
-        private static readonly Color Win9xWhite = System.Drawing.Color.FromArgb(255, 255, 255);
-        private static readonly Color Win9xDarkGray = System.Drawing.Color.FromArgb(128, 128, 128);
-        private static readonly Color Win9xBlack = System.Drawing.Color.FromArgb(0, 0, 0);
-        private static readonly Color Win9xGray = System.Drawing.Color.FromArgb(192, 192, 192);
+        private static readonly Color BackgroundColor = Color.FromArgb(255, 255, 255);
+        private static readonly Color BorderColor = Color.FromArgb(190, 190, 190);
+        private static readonly Color FocusBorderColor = Color.FromArgb(53, 132, 228);
+        private static readonly Color TextColor = Color.FromArgb(36, 36, 36);
 
-        public RichTextBox(
-            int x,
-            int y,
-            int width,
-            int height)
+        public RichTextBox(int x, int y, int width, int height)
             : base(x, y, width, height)
         {
         }
 
-        public override void Draw(Canvas canvas)
+        private static void DrawRoundedRect(Canvas canvas, Color color, int x, int y, int width, int height, int radius)
         {
-            if (!Visible || canvas == null)
+            if (width <= 0 || height <= 0)
                 return;
 
-            Font font = PCScreenFont.DefaultFont;
+            radius = Math.Min(radius, Math.Min(width, height) / 2);
 
-            int charWidth = font.Width;
-            int charHeight = font.Height;
+            if (radius <= 0)
+            {
+                canvas.DrawFilledRectangle(color, x, y, width, height);
+                return;
+            }
 
-            canvas.DrawFilledRectangle(
-                Win9xWhite,
-                X,
-                Y,
-                Width,
-                Height);
+            int centerWidth = width - radius * 2;
+            int centerHeight = height - radius * 2;
 
-            canvas.DrawLine(
-                Win9xDarkGray,
-                X,
-                Y,
-                X + Width - 1,
-                Y);
+            if (centerWidth > 0)
+                canvas.DrawFilledRectangle(color, x + radius, y, centerWidth, height);
 
-            canvas.DrawLine(
-                Win9xDarkGray,
-                X,
-                Y,
-                X,
-                Y + Height - 1);
+            if (centerHeight > 0)
+                canvas.DrawFilledRectangle(color, x, y + radius, width, centerHeight);
 
-            canvas.DrawLine(
-                Win9xBlack,
-                X + 1,
-                Y + 1,
-                X + Width - 2,
-                Y + 1);
+            canvas.DrawFilledCircle(color, x + radius, y + radius, radius);
+            canvas.DrawFilledCircle(color, x + width - radius - 1, y + radius, radius);
+            canvas.DrawFilledCircle(color, x + radius, y + height - radius - 1, radius);
+            canvas.DrawFilledCircle(color, x + width - radius - 1, y + height - radius - 1, radius);
+        }
 
-            canvas.DrawLine(
-                Win9xBlack,
-                X + 1,
-                Y + 1,
-                X + 1,
-                Y + Height - 2);
+        private static int GetCharacterWidth(Font font, char character, int fontSize)
+        {
+            if (font is TrueTypeFont trueTypeFont)
+                return Math.Max(1, (int)trueTypeFont.MeasureString(character.ToString(), fontSize));
 
-            canvas.DrawLine(
-                Win9xWhite,
-                X,
-                Y + Height,
-                X + Width,
-                Y + Height);
+            return Math.Max(1, (int)font.Width);
+        }
 
-            canvas.DrawLine(
-                Win9xWhite,
-                X + Width,
-                Y,
-                X + Width,
-                Y + Height);
-
-            canvas.DrawLine(
-                Win9xGray,
-                X + 1,
-                Y + Height - 1,
-                X + Width - 1,
-                Y + Height - 1);
-
-            canvas.DrawLine(
-                Win9xGray,
-                X + Width - 1,
-                Y + 1,
-                X + Width - 1,
-                Y + Height - 1);
+        public override void Draw(Canvas canvas)
+        {
+            if (!Visible || canvas == null || Width <= 0 || Height <= 0)
+                return;
 
             if (Text == null)
                 Text = "";
 
-            int currX = X + PADDING;
-            int currY = Y + PADDING;
+            Font font = FontManager.UiFont;
+            int fontSize = FontManager.UiFontSize;
 
-            int maxRight =
-                X + Width - PADDING - charWidth;
+            int charHeight = font is TrueTypeFont trueTypeFont
+                ? trueTypeFont.GetLineHeight(fontSize)
+                : font.Height;
 
-            int maxBottom =
-                Y + Height - PADDING - charHeight;
+            Color border = Focused ? FocusBorderColor : BorderColor;
+
+            DrawRoundedRect(canvas, border, X, Y, Width, Height, CornerRadius);
+            DrawRoundedRect(canvas, BackgroundColor, X + 1, Y + 1, Width - 2, Height - 2, CornerRadius - 1);
+
+            int currX = X + Padding;
+            int currY = Y + Padding;
+
+            int maxRight = X + Width - Padding;
+            int maxBottom = Y + Height - Padding - charHeight;
 
             for (int i = 0; i < Text.Length; i++)
             {
@@ -118,7 +93,7 @@ namespace HolmiumOS.GUI.Controls
 
                 if (c == '\n')
                 {
-                    currX = X + PADDING;
+                    currX = X + Padding;
                     currY += charHeight;
 
                     if (currY > maxBottom)
@@ -127,39 +102,39 @@ namespace HolmiumOS.GUI.Controls
                     continue;
                 }
 
-                if (currX > maxRight)
+                int charWidth = GetCharacterWidth(font, c, fontSize);
+
+                if (currX + charWidth > maxRight)
                 {
-                    currX = X + PADDING;
+                    currX = X + Padding;
                     currY += charHeight;
 
                     if (currY > maxBottom)
                         break;
                 }
 
-                canvas.DrawString(
-                    c.ToString(),
-                    font,
-                    Win9xBlack,
-                    currX,
-                    currY);
+                if (font is TrueTypeFont ttf)
+                {
+                    canvas.DrawString(c.ToString(), ttf, fontSize, TextColor, currX, currY);
+                }
+                else
+                {
+                    canvas.DrawString(c.ToString(), font, TextColor, currX, currY);
+                }
 
                 currX += charWidth;
             }
 
-            int cursorX = currX;
-            int cursorY = currY;
-
-            if (Focused && (DateTime.Now.Second % 2) == 0)
+            if (Focused && DateTime.Now.Second % 2 == 0)
             {
-                if (cursorY <= maxBottom &&
-                    cursorX <= maxRight + charWidth)
+                if (currY <= maxBottom && currX <= maxRight)
                 {
                     canvas.DrawLine(
-                        Win9xBlack,
-                        cursorX,
-                        cursorY + 1,
-                        cursorX,
-                        cursorY + charHeight - 2);
+                        TextColor,
+                        currX,
+                        currY + 1,
+                        currX,
+                        currY + charHeight - 2);
                 }
             }
         }
@@ -169,9 +144,7 @@ namespace HolmiumOS.GUI.Controls
             Focused = true;
         }
 
-        public void MouseClick(
-            int mouseX,
-            int mouseY)
+        public void MouseClick(int mouseX, int mouseY)
         {
             Focused = true;
         }
@@ -181,25 +154,20 @@ namespace HolmiumOS.GUI.Controls
             if (!Focused)
                 return;
 
+            if (Text == null)
+                Text = "";
+
             if (keyEvent.Key == Key.Backspace)
             {
                 if (Text.Length > 0)
-                {
-                    Text = Text.Substring(
-                        0,
-                        Text.Length - 1);
-                }
+                    Text = Text.Substring(0, Text.Length - 1);
             }
             else if (keyEvent.Key == Key.Enter)
             {
                 if (Text.Length < MaxLength)
-                {
                     Text += "\n";
-                }
             }
-            else if (
-                keyEvent.KeyChar != '\0' &&
-                Text.Length < MaxLength)
+            else if (keyEvent.KeyChar != '\0' && Text.Length < MaxLength)
             {
                 Text += keyEvent.KeyChar;
             }

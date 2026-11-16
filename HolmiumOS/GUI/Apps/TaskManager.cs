@@ -1,224 +1,106 @@
-﻿using System;
-using System.Drawing;
+﻿
+using System;
 using HolmiumOS.GUI.Controls;
 
 namespace HolmiumOS.GUI.Apps
 {
     public class TaskManager : AppBase
     {
-        private ListBox applicationList;
-        private Label selectedLabel;
-        private Label applicationCountLabel;
-        private Label windowCountLabel;
-        private ProgressBar applicationBar;
-        private Button closeButton;
+        private ListBox? applicationList;
+        private Label? applicationCountLabel;
+        private Label? windowCountLabel;
+        private Label? selectedLabel;
+        private Button? closeButton;
 
-        public TaskManager()
-            : base("Gorev Yoneticisi")
+        public TaskManager() : base("Gorev Yoneticisi")
         {
         }
 
         public override void Load()
         {
+            if (Window == null)
+                return;
+
+            Window.Title = "Gorev Yoneticisi";
             BuildInterface();
             RefreshTaskList();
         }
 
         private void BuildInterface()
         {
-            Label titleLabel =
-                new Label(
-                    "Calisan Uygulamalar",
-                    15,
-                    15);
+            if (Window == null)
+                return;
+
+            Label titleLabel = new Label("Gorev Yoneticisi", 20, 15);
+            Label subtitleLabel = new Label("Calisan uygulamalari goruntuleyin ve yonetin.", 20, 48);
+
+            applicationCountLabel = new Label("Uygulamalar: 0", 20, 95);
+            windowCountLabel = new Label("Pencereler: 0", 200, 95);
+
+            applicationList = new ListBox(20, 135, 440, 285);
+            applicationList.OnSelectedIndexChanged = OnApplicationSelected;
+
+            selectedLabel = new Label("Secili uygulama: Yok", 20, 435);
+
+            closeButton = new Button("Gorevi Sonlandir", 20, 480, 200, 48);
+            closeButton.ClickAction = CloseSelectedApplication;
+
+            Button refreshButton = new Button("Yenile", 235, 480, 110, 48);
+            refreshButton.ClickAction = RefreshTaskList;
 
             Window.AddControl(titleLabel);
-
-            applicationList =
-                new ListBox(
-                    15,
-                    55,
-                    400,
-                    290);
-
-            applicationList.OnSelectedIndexChanged =
-                OnApplicationSelected;
-
-            Window.AddControl(
-                applicationList);
-
-            selectedLabel =
-                new Label(
-                    "Secili: Yok",
-                    15,
-                    360);
-
-            Window.AddControl(
-                selectedLabel);
-
-            applicationCountLabel =
-                new Label(
-                    "Uygulamalar: 0",
-                    15,
-                    400);
-
-            Window.AddControl(
-                applicationCountLabel);
-
-            windowCountLabel =
-                new Label(
-                    "Pencereler: 0",
-                    15,
-                    440);
-
-            Window.AddControl(
-                windowCountLabel);
-
-            Label usageLabel =
-                new Label(
-                    "Uygulama Yukü",
-                    15,
-                    480);
-
-            Window.AddControl(
-                usageLabel);
-
-            applicationBar =
-                new ProgressBar(
-                    15,
-                    520,
-                    400,
-                    20);
-
-            applicationBar.BarColor =
-                Color.DodgerBlue;
-
-            applicationBar.BackgroundColor =
-                Color.LightGray;
-
-            Window.AddControl(
-                applicationBar);
-
-            closeButton =
-                new Button(
-                    "Gorevi Sonlandir",
-                    15,
-                    560,
-                    220,
-                    55);
-
-            closeButton.ClickAction =
-                CloseSelectedApplication;
-
-            Window.AddControl(
-                closeButton);
-
-            Button refreshButton =
-                new Button(
-                    "Yenile",
-                    245,
-                    560,
-                    100,
-                    55);
-
-            refreshButton.ClickAction =
-                RefreshTaskList;
-
-            Window.AddControl(
-                refreshButton);
+            Window.AddControl(subtitleLabel);
+            Window.AddControl(applicationCountLabel);
+            Window.AddControl(windowCountLabel);
+            Window.AddControl(applicationList);
+            Window.AddControl(selectedLabel);
+            Window.AddControl(closeButton);
+            Window.AddControl(refreshButton);
 
             Window.UpdateSize();
         }
 
         private void RefreshTaskList()
         {
-            if (applicationList == null)
+            if (applicationList == null || Window == null)
                 return;
 
-            string selectedName =
-                applicationList.GetSelectedItem();
+            string? selectedName = applicationList.GetSelectedItem();
 
             applicationList.Clear();
 
             int applicationCount = 0;
-            int activeCount = 0;
 
-            for (
-                int i = 0;
-                i < AppManager.apps.Count;
-                i++)
+            for (int i = 0; i < AppManager.apps.Count; i++)
             {
-                AppBase app =
-                    AppManager.apps[i];
+                AppBase? app = AppManager.apps[i];
 
-                if (app == null ||
-                    app.Window == null)
-                {
+                if (app == null || app.Window == null)
                     continue;
-                }
 
-                string state =
-                    app.Window.Active
-                        ? "AKTIF"
-                        : "ACIK";
-
-                applicationList.AddItem(
-                    app.Name +
-                    " - " +
-                    state);
-
+                string state = app.Window.Active ? "Calisiyor" : "Arka planda";
+                applicationList.AddItem(app.Name + "    |    " + state);
                 applicationCount++;
+            }
 
-                if (app.Window.Active)
+            int windowCount = WindowManager.GetWindows().Count;
+
+            if (applicationCountLabel != null)
+                applicationCountLabel.Text = "Uygulamalar: " + applicationCount;
+
+            if (windowCountLabel != null)
+                windowCountLabel.Text = "Pencereler: " + windowCount;
+
+            if (selectedLabel != null)
+                selectedLabel.Text = "Secili uygulama: Yok";
+
+            if (!string.IsNullOrEmpty(selectedName))
+            {
+                for (int i = 0; i < applicationList.Items.Count; i++)
                 {
-                    activeCount++;
-                }
-            }
-
-            applicationCountLabel.Text =
-                "Uygulamalar: " +
-                applicationCount;
-
-            windowCountLabel.Text =
-                "Pencereler: " +
-                WindowManager
-                    .GetWindows()
-                    .Count;
-
-            if (applicationCount > 0)
-            {
-                int usage =
-                    (activeCount * 100) /
-                    applicationCount;
-
-                if (usage > 100)
-                    usage = 100;
-
-                applicationBar.Value =
-                    usage;
-            }
-            else
-            {
-                applicationBar.Value = 0;
-            }
-
-            selectedLabel.Text =
-                "Secili: Yok";
-
-            if (!string.IsNullOrEmpty(
-                    selectedName))
-            {
-                for (
-                    int i = 0;
-                    i < applicationList.Items.Count;
-                    i++)
-                {
-                    if (applicationList.Items[i] ==
-                        selectedName)
+                    if (applicationList.Items[i] == selectedName)
                     {
-                        applicationList.SelectIndex(
-                            i);
-
+                        applicationList.SelectIndex(i);
                         break;
                     }
                 }
@@ -227,13 +109,10 @@ namespace HolmiumOS.GUI.Apps
             Window.UpdateSize();
         }
 
-        private void OnApplicationSelected(
-            int index,
-            string name)
+        private void OnApplicationSelected(int index, string name)
         {
-            selectedLabel.Text =
-                "Secili: " +
-                name;
+            if (selectedLabel != null)
+                selectedLabel.Text = "Secili uygulama: " + name;
         }
 
         private void CloseSelectedApplication()
@@ -241,25 +120,15 @@ namespace HolmiumOS.GUI.Apps
             if (applicationList == null)
                 return;
 
-            int index =
-                applicationList.SelectedIndex;
+            int index = applicationList.SelectedIndex;
 
-            if (index < 0 ||
-                index >=
-                applicationList.Items.Count)
+            if (index < 0 || index >= applicationList.Items.Count)
             {
-                SendNotification(
-                    "Gorev Yoneticisi",
-                    "Once bir uygulama secin.",
-                    NotificationType.Warning
-                );
-
+                SendNotification("Gorev Yoneticisi", "Once bir uygulama secin.", NotificationType.Warning);
                 return;
             }
 
-            AppBase targetApp =
-                GetApplicationByListIndex(
-                    index);
+            AppBase? targetApp = GetApplicationByListIndex(index);
 
             if (targetApp == null)
                 return;
@@ -270,45 +139,27 @@ namespace HolmiumOS.GUI.Apps
                 return;
             }
 
-            string appName =
-                targetApp.Name;
+            string appName = targetApp.Name;
 
-            AppManager.Close(
-                targetApp);
+            AppManager.Close(targetApp);
 
-            SendNotification(
-                "Gorev Yoneticisi",
-                appName + " kapatildi.",
-                NotificationType.Info
-            );
-
+            SendNotification("Gorev Yoneticisi", appName + " kapatildi.", NotificationType.Info);
             RefreshTaskList();
         }
 
-        private AppBase GetApplicationByListIndex(
-            int listIndex)
+        private AppBase? GetApplicationByListIndex(int listIndex)
         {
             int currentIndex = 0;
 
-            for (
-                int i = 0;
-                i < AppManager.apps.Count;
-                i++)
+            for (int i = 0; i < AppManager.apps.Count; i++)
             {
-                AppBase app =
-                    AppManager.apps[i];
+                AppBase? app = AppManager.apps[i];
 
-                if (app == null ||
-                    app.Window == null)
-                {
+                if (app == null || app.Window == null)
                     continue;
-                }
 
-                if (currentIndex ==
-                    listIndex)
-                {
+                if (currentIndex == listIndex)
                     return app;
-                }
 
                 currentIndex++;
             }
