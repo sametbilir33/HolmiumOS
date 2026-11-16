@@ -59,6 +59,8 @@ namespace HolmiumOS
 
             CommandManager.RegisterCommands();
 
+            NetworkManager.Init();
+
             var mode = Boot.BootMenu.Show();
 
             if (mode == Boot.BootMode.CLI)
@@ -87,8 +89,6 @@ namespace HolmiumOS
             }
 
             Console.Clear();
-
-            NetworkManager.Init();
 
             Console.ResetColor();
 
