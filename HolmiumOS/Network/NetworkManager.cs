@@ -10,25 +10,31 @@ public static class NetworkManager
 
     public static int Ping(Address address, int timeout = 5000)
     {
+        IcmpClient? icmp = null;
+
         try
         {
-            IcmpClient icmp = new();
-
+            icmp = new IcmpClient();
             icmp.Connect(address);
             icmp.SendEcho();
 
-            Cosmos.Kernel.System.Network.EndPoint source =
-                new Cosmos.Kernel.System.Network.EndPoint(address, 0);
+            Cosmos.Kernel.System.Network.EndPoint source = new Cosmos.Kernel.System.Network.EndPoint(address, 0);
 
-            int elapsed = icmp.Receive(ref source, timeout);
-
-            icmp.Close();
-
-            return elapsed;
+            return icmp.Receive(ref source, timeout);
         }
         catch
         {
             return -1;
+        }
+        finally
+        {
+            try
+            {
+                icmp?.Close();
+            }
+            catch
+            {
+            }
         }
     }
 
@@ -36,13 +42,38 @@ public static class NetworkManager
     {
         try
         {
+            try
+            {
+                DNSClient?.Close();
+            }
+            catch
+            {
+            }
+
+            DNSClient = null!;
+
+            if (CosmosNetworkManager.DeviceCount == 0 || !CosmosNetworkManager.Ready)
+            {
+                throw new InvalidOperationException("No ready network adapter found.");
+            }
+
             NetworkStack.RemoveAllConfigIP();
 
             DhcpClient dhcpClient = new();
 
             int result = dhcpClient.SendDiscoverPacket();
 
+            if (result == -1)
+            {
+                throw new InvalidOperationException("DHCP request timed out.");
+            }
+
             IPConfig? config = CosmosNetworkManager.Primary.IPConfig;
+
+            if (config is null)
+            {
+                throw new InvalidOperationException("DHCP did not configure the primary adapter.");
+            }
 
             Address4 dnsServer = new(1, 1, 1, 1);
 
@@ -50,10 +81,11 @@ public static class NetworkManager
 
             DNSClient = new DnsClient();
             DNSClient.Connect(dnsServer);
+
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Network initialization failed.");
+            Console.WriteLine("[Network] Initialization failed.");
             Console.WriteLine(ex.Message);
         }
     }
@@ -106,6 +138,8 @@ public static class NetworkManager
         {
         }
 
+        DNSClient = null!;
+
         try
         {
             NetworkStack.RemoveAllConfigIP();
@@ -113,5 +147,7 @@ public static class NetworkManager
         catch
         {
         }
+
+        Console.WriteLine("[Network] Shutdown completed.");
     }
 }

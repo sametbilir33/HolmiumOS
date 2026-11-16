@@ -53,14 +53,24 @@ public sealed class URL
             value = value[(schemeSeparator + 3)..];
         }
 
-        int pathIndex = value.IndexOf('/');
+        int authorityEnd = value.IndexOfAny(new[] { '/', '?', '#' });
 
         string authority;
 
-        if (pathIndex >= 0)
+        if (authorityEnd >= 0)
         {
-            authority = value[..pathIndex];
-            Path = value[pathIndex..];
+            authority = value[..authorityEnd];
+
+            string remaining = value[authorityEnd..];
+
+            if (remaining.StartsWith("?") || remaining.StartsWith("#"))
+            {
+                Path = "/" + remaining;
+            }
+            else
+            {
+                Path = remaining;
+            }
         }
         else
         {
@@ -68,18 +78,49 @@ public sealed class URL
             Path = "/";
         }
 
-        int portSeparator = authority.LastIndexOf(':');
+        int fragmentIndex = Path.IndexOf('#');
 
-        if (portSeparator > 0 &&
-            portSeparator < authority.Length - 1 &&
-            int.TryParse(authority[(portSeparator + 1)..], out _))
+        if (fragmentIndex >= 0)
         {
-            Host = authority[..portSeparator];
-            Port = authority[(portSeparator + 1)..];
+            Path = Path[..fragmentIndex];
+        }
+
+        if (string.IsNullOrEmpty(Path))
+        {
+            Path = "/";
+        }
+
+        if (authority.StartsWith("["))
+        {
+            int bracketEnd = authority.IndexOf(']');
+
+            if (bracketEnd >= 0)
+            {
+                Host = authority[1..bracketEnd];
+
+                if (bracketEnd + 1 < authority.Length && authority[bracketEnd + 1] == ':')
+                {
+                    Port = authority[(bracketEnd + 2)..];
+                }
+            }
         }
         else
         {
-            Host = authority;
+            int portSeparator = authority.LastIndexOf(':');
+
+            if (portSeparator > 0)
+            {
+                Host = authority[..portSeparator];
+                Port = authority[(portSeparator + 1)..];
+            }
+            else
+            {
+                Host = authority;
+            }
+        }
+
+        if (string.IsNullOrEmpty(Port))
+        {
             Port = Scheme == "https" ? "443" : "80";
         }
     }
@@ -88,18 +129,17 @@ public sealed class URL
     {
         string authority = Host;
 
-        if (HasPort)
+        if (Host.Contains(':'))
         {
-            bool defaultHttpPort =
-                Scheme == "http" && Port == "80";
+            authority = "[" + Host + "]";
+        }
 
-            bool defaultHttpsPort =
-                Scheme == "https" && Port == "443";
+        bool defaultHttpPort = Scheme == "http" && Port == "80";
+        bool defaultHttpsPort = Scheme == "https" && Port == "443";
 
-            if (!defaultHttpPort && !defaultHttpsPort)
-            {
-                authority += ":" + Port;
-            }
+        if (!defaultHttpPort && !defaultHttpsPort && HasPort)
+        {
+            authority += ":" + Port;
         }
 
         return $"{Scheme}://{authority}{Path}";
