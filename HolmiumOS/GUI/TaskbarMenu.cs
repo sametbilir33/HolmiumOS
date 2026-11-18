@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Drawing;
 using Cosmos.Kernel.System;
 using Cosmos.Kernel.System.Graphics;
@@ -9,16 +10,6 @@ namespace HolmiumOS.GUI
 {
     public static class TaskbarMenu
     {
-        private static bool aboutHover;
-        private static bool terminalHover;
-        private static bool fileManagerHover;
-        private static bool calculatorHover;
-        private static bool notepadHover;
-        private static bool badAppleHover;
-        private static bool taskManagerHover;
-        private static bool rebootHover;
-        private static bool shutdownHover;
-
         private const int menuWidth = 320;
         private const int menuHeight = 500;
         private const int bannerWidth = 5;
@@ -27,17 +18,70 @@ namespace HolmiumOS.GUI
         private const int buttonHeight = 40;
         private const int buttonSpacing = 3;
 
+        private static int hoveredIndex = -1;
+
         private static readonly Color BackgroundColor = Color.FromArgb(250, 249, 248);
         private static readonly Color BorderColor = Color.FromArgb(205, 204, 203);
         private static readonly Color ButtonColor = Color.FromArgb(250, 249, 248);
         private static readonly Color HoverColor = Color.FromArgb(235, 235, 234);
-        private static readonly Color PressedColor = Color.FromArgb(222, 221, 220);
         private static readonly Color TextColor = Color.FromArgb(36, 36, 36);
         private static readonly Color SecondaryTextColor = Color.FromArgb(110, 110, 110);
         private static readonly Color AccentColor = Color.FromArgb(53, 132, 228);
         private static readonly Color SeparatorColor = Color.FromArgb(220, 219, 218);
 
-        private static int GetMenuX(Canvas canvas)
+        private class MenuItem
+        {
+            public string Text;
+            public Action Execute;
+            public bool SeparatorBefore;
+
+            public MenuItem(string text, Action execute, bool separatorBefore = false)
+            {
+                Text = text;
+                Execute = execute;
+                SeparatorBefore = separatorBefore;
+            }
+        }
+
+        // Yeni uygulamaları buraya ekle.
+        private static readonly MenuItem[] Items =
+        {
+            new MenuItem("About", LaunchAbout),
+            new MenuItem("Terminal", LaunchTerminal),
+            new MenuItem("File Manager", LaunchFileManager),
+            new MenuItem("Calculator", LaunchCalculator),
+            new MenuItem("Notepad", LaunchNotepad),
+            new MenuItem("Bad Apple!!", LaunchBadApple),
+            new MenuItem("Task Manager", LaunchTaskManager),
+
+            new MenuItem("Reboot", Reboot, true),
+            new MenuItem("Shutdown", Shutdown)
+        };
+
+        private static void LaunchAbout() => AppManager.Run<Apps.About>(70, 70);
+        private static void LaunchTerminal() => AppManager.Run<Apps.Terminal>(50, 50);
+
+        private static void LaunchFileManager()
+        {
+            var app = new Apps.FileManager(UserManager.HomeDirectory);
+            AppManager.Run(app);
+        }
+
+        private static void LaunchCalculator() => AppManager.Run<Apps.Calculator>(50, 50);
+
+        private static void LaunchNotepad()
+        {
+            var app = new Apps.Notepad(null);
+            AppManager.Run(app);
+        }
+
+        private static void LaunchBadApple() => AppManager.Run<Apps.BadApple>(40, 40);
+        private static void LaunchTaskManager() => AppManager.Run<Apps.TaskManager>(80, 60);
+
+        private static void Reboot() => Power.Reboot();
+        private static void Shutdown() => Power.Shutdown();
+
+        private static int GetMenuX()
         {
             return 8;
         }
@@ -76,7 +120,7 @@ namespace HolmiumOS.GUI
             if (width <= 0 || height <= 0)
                 return;
 
-            radius = System.Math.Min(radius, System.Math.Min(width / 2, height / 2));
+            radius = Math.Min(radius, Math.Min(width / 2, height / 2));
 
             if (radius <= 0)
             {
@@ -95,6 +139,20 @@ namespace HolmiumOS.GUI
 
         private static void DrawRoundedOutline(Canvas canvas, Color color, int x, int y, int width, int height, int radius)
         {
+            if (width <= 0 || height <= 0)
+                return;
+
+            radius = Math.Min(radius, Math.Min(width / 2, height / 2));
+
+            if (radius <= 0)
+            {
+                canvas.DrawLine(color, x, y, x + width - 1, y);
+                canvas.DrawLine(color, x, y + height - 1, x + width - 1, y + height - 1);
+                canvas.DrawLine(color, x, y, x, y + height - 1);
+                canvas.DrawLine(color, x + width - 1, y, x + width - 1, y + height - 1);
+                return;
+            }
+
             canvas.DrawLine(color, x + radius, y, x + width - radius - 1, y);
             canvas.DrawLine(color, x + radius, y + height - 1, x + width - radius - 1, y + height - 1);
             canvas.DrawLine(color, x, y + radius, x, y + height - radius - 1);
@@ -116,15 +174,10 @@ namespace HolmiumOS.GUI
                 DrawRoundedOutline(canvas, BorderColor, x, y, buttonWidth, buttonHeight, 7);
 
             int textHeight = GetFontHeight(font);
-            int textWidth = MeasureText(text, font);
-
             DrawText(canvas, text, font, TextColor, x + 14, y + (buttonHeight - textHeight) / 2);
 
-            int indicatorX = x + buttonWidth - 20;
-            int indicatorY = y + buttonHeight / 2;
-
             if (hover)
-                canvas.DrawFilledCircle(AccentColor, indicatorX, indicatorY, 3);
+                canvas.DrawFilledCircle(AccentColor, x + buttonWidth - 20, y + buttonHeight / 2, 3);
         }
 
         private static void DrawSeparator(Canvas canvas, int x, int y, int width)
@@ -137,7 +190,7 @@ namespace HolmiumOS.GUI
             if (canvas == null)
                 return;
 
-            int x = GetMenuX(canvas);
+            int x = GetMenuX();
             int y = GetMenuY(canvas);
 
             DrawRoundedRect(canvas, BackgroundColor, x, y, menuWidth, menuHeight, 12);
@@ -154,133 +207,91 @@ namespace HolmiumOS.GUI
             int contentX = x + 16;
             int buttonY = y + 68;
 
-            DrawButton(canvas, "About", contentX, buttonY, aboutHover, font);
-            buttonY += buttonHeight + buttonSpacing;
+            for (int i = 0; i < Items.Length; i++)
+            {
+                if (Items[i].SeparatorBefore)
+                {
+                    buttonY += 9;
+                    DrawSeparator(canvas, contentX, buttonY, buttonWidth);
+                    buttonY += 10;
+                }
 
-            DrawButton(canvas, "Terminal", contentX, buttonY, terminalHover, font);
-            buttonY += buttonHeight + buttonSpacing;
-
-            DrawButton(canvas, "File Manager", contentX, buttonY, fileManagerHover, font);
-            buttonY += buttonHeight + buttonSpacing;
-
-            DrawButton(canvas, "Calculator", contentX, buttonY, calculatorHover, font);
-            buttonY += buttonHeight + buttonSpacing;
-
-            DrawButton(canvas, "Notepad", contentX, buttonY, notepadHover, font);
-            buttonY += buttonHeight + buttonSpacing;
-
-            DrawButton(canvas, "Bad Apple!!", contentX, buttonY, badAppleHover, font);
-            buttonY += buttonHeight + buttonSpacing;
-
-            DrawButton(canvas, "Task Manager", contentX, buttonY, taskManagerHover, font);
-            buttonY += buttonHeight + 12;
-
-            DrawSeparator(canvas, contentX, buttonY, buttonWidth);
-            buttonY += 10;
-
-            DrawButton(canvas, "Reboot", contentX, buttonY, rebootHover, font);
-            buttonY += buttonHeight + buttonSpacing;
-
-            DrawButton(canvas, "Shutdown", contentX, buttonY, shutdownHover, font);
+                DrawButton(canvas, Items[i].Text, contentX, buttonY, hoveredIndex == i, font);
+                buttonY += buttonHeight + buttonSpacing;
+            }
         }
 
         public static bool IsInside(int mouseX, int mouseY)
         {
-            int x = GetMenuX(Init.canvas);
+            if (Init.canvas == null)
+                return false;
+
+            int x = GetMenuX();
             int y = GetMenuY(Init.canvas);
 
-            return mouseX >= x && mouseX <= x + menuWidth && mouseY >= y && mouseY <= y + menuHeight;
+            return mouseX >= x && mouseX < x + menuWidth && mouseY >= y && mouseY < y + menuHeight;
         }
 
         public static void UpdateHover(int mouseX, int mouseY)
         {
-            int x = GetMenuX(Init.canvas);
-            int y = GetMenuY(Init.canvas);
+            if (Init.canvas == null)
+            {
+                hoveredIndex = -1;
+                return;
+            }
 
-            int contentX = x + 16;
-            int buttonY = y + 68;
+            int x = GetMenuX() + 16;
+            int buttonY = GetMenuY(Init.canvas) + 68;
 
-            aboutHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
-            buttonY += buttonHeight + buttonSpacing;
+            hoveredIndex = -1;
 
-            terminalHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
-            buttonY += buttonHeight + buttonSpacing;
+            for (int i = 0; i < Items.Length; i++)
+            {
+                if (Items[i].SeparatorBefore)
+                {
+                    buttonY += 9 + 10;
+                }
 
-            fileManagerHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
-            buttonY += buttonHeight + buttonSpacing;
+                if (IsButtonInside(mouseX, mouseY, x, buttonY))
+                    hoveredIndex = i;
 
-            calculatorHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
-            buttonY += buttonHeight + buttonSpacing;
-
-            notepadHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
-            buttonY += buttonHeight + buttonSpacing;
-
-            badAppleHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
-            buttonY += buttonHeight + buttonSpacing;
-
-            taskManagerHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
-            buttonY += buttonHeight + 12 + 10;
-
-            rebootHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
-            buttonY += buttonHeight + buttonSpacing;
-
-            shutdownHover = IsButtonInside(mouseX, mouseY, contentX, buttonY);
+                buttonY += buttonHeight + buttonSpacing;
+            }
         }
 
         private static bool IsButtonInside(int mouseX, int mouseY, int buttonX, int buttonY)
         {
-            return mouseX >= buttonX && mouseX <= buttonX + buttonWidth && mouseY >= buttonY && mouseY <= buttonY + buttonHeight;
+            return mouseX >= buttonX && mouseX < buttonX + buttonWidth && mouseY >= buttonY && mouseY < buttonY + buttonHeight;
         }
 
         public static void Click(int mouseX, int mouseY)
         {
-            if (aboutHover)
+            if (hoveredIndex < 0 || hoveredIndex >= Items.Length)
+                return;
+
+            if (!IsButtonInside(mouseX, mouseY, GetMenuX() + 16, GetItemY(hoveredIndex)))
+                return;
+
+            Action execute = Items[hoveredIndex].Execute;
+            hoveredIndex = -1;
+            Taskbar.MenuOpen = false;
+
+            execute?.Invoke();
+        }
+
+        private static int GetItemY(int index)
+        {
+            int buttonY = GetMenuY(Init.canvas) + 68;
+
+            for (int i = 0; i < index; i++)
             {
-                AppManager.Run<Apps.About>(70, 70);
-                Taskbar.MenuOpen = false;
+                buttonY += buttonHeight + buttonSpacing;
+
+                if (Items[i + 1].SeparatorBefore)
+                    buttonY += 9 + 10;
             }
-            else if (terminalHover)
-            {
-                AppManager.Run<Apps.Terminal>(50, 50);
-                Taskbar.MenuOpen = false;
-            }
-            else if (fileManagerHover)
-            {
-                var fileManager = new Apps.FileManager(UserManager.HomeDirectory);
-                AppManager.Run(fileManager);
-                Taskbar.MenuOpen = false;
-            }
-            else if (calculatorHover)
-            {
-                AppManager.Run<Apps.Calculator>(50, 50);
-                Taskbar.MenuOpen = false;
-            }
-            else if (notepadHover)
-            {
-                var notepad = new Apps.Notepad(null);
-                AppManager.Run(notepad);
-                Taskbar.MenuOpen = false;
-            }
-            else if (badAppleHover)
-            {
-                AppManager.Run<Apps.BadApple>(40, 40);
-                Taskbar.MenuOpen = false;
-            }
-            else if (taskManagerHover)
-            {
-                AppManager.Run<Apps.TaskManager>(80, 60);
-                Taskbar.MenuOpen = false;
-            }
-            else if (rebootHover)
-            {
-                Taskbar.MenuOpen = false;
-                Power.Reboot();
-            }
-            else if (shutdownHover)
-            {
-                Taskbar.MenuOpen = false;
-                Power.Shutdown();
-            }
+
+            return buttonY;
         }
     }
 }

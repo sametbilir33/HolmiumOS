@@ -35,7 +35,6 @@ namespace HolmiumOS.GUI
         private static readonly Color ActiveColor = Color.FromArgb(220, 235, 250);
         private static readonly Color ActiveBorder = Color.FromArgb(53, 132, 228);
         private static readonly Color TextColor = Color.FromArgb(36, 36, 36);
-        private static readonly Color MutedTextColor = Color.FromArgb(100, 100, 100);
         private static readonly Color AccentColor = Color.FromArgb(53, 132, 228);
 
         public static int Height => height + bottomMargin;
@@ -43,23 +42,6 @@ namespace HolmiumOS.GUI
         public static int StartX(Canvas canvas)
         {
             return dockPadding;
-        }
-
-        private static int GetAppCount()
-        {
-            int count = 0;
-
-            for (int i = 0; i < AppManager.apps.Count; i++)
-            {
-                var app = AppManager.apps[i];
-
-                if (app == null || app.Window == null)
-                    continue;
-
-                count++;
-            }
-
-            return count;
         }
 
         private static int MeasureText(string text, Font font)
@@ -96,48 +78,72 @@ namespace HolmiumOS.GUI
 
             string result = title;
 
-            while (result.Length > 2 && MeasureText(result + "...", font) > maxWidth)
+            while (result.Length > 0 && MeasureText(result + "...", font) > maxWidth)
                 result = result.Substring(0, result.Length - 1);
 
             return result + "...";
         }
 
-        private static void DrawRoundedRect(Canvas canvas, Color color, int x, int y, int width, int height, int radius)
+        private static int GetCornerInset(int row, int rectHeight, int radius)
         {
-            if (width <= 0 || height <= 0)
-                return;
+            if (radius <= 1) return 0;
 
-            if (radius <= 0)
+            int cornerY = -1;
+
+            if (row < radius)
+                cornerY = radius - 1 - row;
+            else if (row >= rectHeight - radius)
+                cornerY = row - (rectHeight - radius);
+
+            if (cornerY < 0) return 0;
+
+            int r = radius - 1;
+            int x = (int)Math.Sqrt(r * r - cornerY * cornerY);
+
+            return r - x;
+        }
+
+        private static void DrawRoundedRect(Canvas canvas, Color color, int x, int y, int width, int rectHeight, int radius)
+        {
+            if (width <= 0 || rectHeight <= 0) return;
+
+            radius = Math.Max(0, Math.Min(radius, Math.Min(width, rectHeight) / 2));
+
+            if (radius == 0)
             {
-                canvas.DrawFilledRectangle(color, x, y, width, height);
+                canvas.DrawFilledRectangle(color, x, y, width, rectHeight);
                 return;
             }
 
-            radius = Math.Min(radius, Math.Min(width / 2, height / 2));
-
-            canvas.DrawFilledRectangle(color, x + radius, y, width - radius * 2, height);
-            canvas.DrawFilledRectangle(color, x, y + radius, width, height - radius * 2);
-
-            canvas.DrawFilledCircle(color, x + radius, y + radius, radius);
-            canvas.DrawFilledCircle(color, x + width - radius - 1, y + radius, radius);
-            canvas.DrawFilledCircle(color, x + radius, y + height - radius - 1, radius);
-            canvas.DrawFilledCircle(color, x + width - radius - 1, y + height - radius - 1, radius);
+            for (int row = 0; row < rectHeight; row++)
+            {
+                int inset = GetCornerInset(row, rectHeight, radius);
+                canvas.DrawLine(color, x + inset, y + row, x + width - inset - 1, y + row);
+            }
         }
 
-        private static void DrawRoundedOutline(Canvas canvas, Color color, int x, int y, int width, int height, int radius)
+        private static void DrawRoundedOutline(Canvas canvas, Color color, int x, int y, int width, int rectHeight, int radius)
         {
-            if (width <= 0 || height <= 0)
+            if (width <= 0 || rectHeight <= 0) return;
+
+            radius = Math.Max(0, Math.Min(radius, Math.Min(width, rectHeight) / 2));
+
+            if (radius == 0)
+            {
+                canvas.DrawRectangle(color, x, y, width, rectHeight);
                 return;
+            }
 
-            canvas.DrawLine(color, x + radius, y, x + width - radius - 1, y);
-            canvas.DrawLine(color, x + radius, y + height - 1, x + width - radius - 1, y + height - 1);
-            canvas.DrawLine(color, x, y + radius, x, y + height - radius - 1);
-            canvas.DrawLine(color, x + width - 1, y + radius, x + width - 1, y + height - radius - 1);
+            for (int row = 0; row < rectHeight; row++)
+            {
+                int inset = GetCornerInset(row, rectHeight, radius);
 
-            canvas.DrawArc(color, x + radius, y + radius, radius, 180, 270);
-            canvas.DrawArc(color, x + width - radius - 1, y + radius, radius, 270, 360);
-            canvas.DrawArc(color, x + radius, y + height - radius - 1, radius, 90, 180);
-            canvas.DrawArc(color, x + width - radius - 1, y + height - radius - 1, radius, 0, 90);
+                canvas.DrawPoint(color, x + inset, y + row);
+                canvas.DrawPoint(color, x + width - inset - 1, y + row);
+            }
+
+            canvas.DrawLine(color, x + radius - 1, y, x + width - radius, y);
+            canvas.DrawLine(color, x + radius - 1, y + rectHeight - 1, x + width - radius, y + rectHeight - 1);
         }
 
         private static void DrawButton(Canvas canvas, int x, int y, int width, int buttonHeight, bool hovered, bool pressed, bool active)
@@ -149,21 +155,21 @@ namespace HolmiumOS.GUI
             DrawRoundedOutline(canvas, border, x, y, width, buttonHeight, 8);
 
             if (active)
-                DrawRoundedRect(canvas, AccentColor, x + 8, y + buttonHeight - 4, width - 16, 3, 2);
+                DrawRoundedRect(canvas, ActiveBorder, x + 8, y + buttonHeight - 4, width - 16, 3, 1);
         }
 
         public static void Draw(Canvas canvas)
         {
-            if (canvas == null)
-                return;
+            if (canvas == null) return;
 
             Font font = FontManager.UiFont;
             int fontHeight = GetFontHeight(font);
             int screenWidth = (int)canvas.Mode.Width;
-            int taskbarY = (int)canvas.Mode.Height - height - bottomMargin;
+            int screenHeight = (int)canvas.Mode.Height;
+            int taskbarY = screenHeight - height - bottomMargin;
 
             canvas.DrawFilledRectangle(PanelColor, 0, taskbarY, screenWidth, height);
-            canvas.DrawLine(PanelBorder, 0, taskbarY, screenWidth, taskbarY);
+            canvas.DrawLine(PanelBorder, 0, taskbarY, screenWidth - 1, taskbarY);
 
             int startY = taskbarY + (height - buttonHeight) / 2;
 
@@ -210,6 +216,7 @@ namespace HolmiumOS.GUI
             }
 
             Color clockFill = clockHover ? ButtonHoverColor : ButtonColor;
+
             DrawRoundedRect(canvas, clockFill, clockX, clockY, clockBoxWidth, buttonHeight, 8);
             DrawRoundedOutline(canvas, ButtonBorder, clockX, clockY, clockBoxWidth, buttonHeight, 8);
 
@@ -227,18 +234,19 @@ namespace HolmiumOS.GUI
 
         public static bool ContainsClock(int mx, int my, Canvas canvas)
         {
+            if (canvas == null) return false;
+
             int screenWidth = (int)canvas.Mode.Width;
             int taskbarY = (int)canvas.Mode.Height - Height;
             int clockX = screenWidth - clockBoxWidth - dockPadding;
             int clockY = taskbarY + (height - buttonHeight) / 2;
 
-            return mx >= clockX && mx <= clockX + clockBoxWidth && my >= clockY && my <= clockY + buttonHeight;
+            return mx >= clockX && mx < clockX + clockBoxWidth && my >= clockY && my < clockY + buttonHeight;
         }
 
         public static void UpdateMouse(Canvas canvas)
         {
-            if (canvas == null)
-                return;
+            if (canvas == null) return;
 
             int mx = (int)MouseManager.X;
             int my = (int)MouseManager.Y;
@@ -248,8 +256,8 @@ namespace HolmiumOS.GUI
             int clockX = screenWidth - clockBoxWidth - dockPadding;
             int buttonY = taskbarY + (height - buttonHeight) / 2;
 
-            startHover = mx >= dockPadding && mx <= dockPadding + startWidth && my >= buttonY && my <= buttonY + buttonHeight;
-            clockHover = mx >= clockX && mx <= clockX + clockBoxWidth && my >= buttonY && my <= buttonY + buttonHeight;
+            startHover = mx >= dockPadding && mx < dockPadding + startWidth && my >= buttonY && my < buttonY + buttonHeight;
+            clockHover = mx >= clockX && mx < clockX + clockBoxWidth && my >= buttonY && my < buttonY + buttonHeight;
 
             if (MenuOpen)
                 TaskbarMenu.UpdateHover(mx, my);
@@ -277,7 +285,7 @@ namespace HolmiumOS.GUI
                         if (currentButtonX + buttonWidth > clockX - 10)
                             break;
 
-                        if (mx >= currentButtonX && mx <= currentButtonX + buttonWidth && my >= buttonY && my <= buttonY + buttonHeight)
+                        if (mx >= currentButtonX && mx < currentButtonX + buttonWidth && my >= buttonY && my < buttonY + buttonHeight)
                         {
                             var win = app.Window;
 

@@ -55,7 +55,7 @@ namespace HolmiumOS.GUI
 
             Font font = FontManager.UiFont;
             int titleWidth = MeasureText(Title, font);
-            int minWidth = titleWidth + 3 * ButtonSize + 40;
+            int minWidth = titleWidth + 90;
 
             Width = minWidth;
             Height = TitleBarHeight;
@@ -85,46 +85,104 @@ namespace HolmiumOS.GUI
                 canvas.DrawString(text ?? "", font, color, x, y);
         }
 
+        // Yuvarlak köşenin yatay içeri çekilme miktarını hesaplar.
+        private static int GetCornerInset(int row, int height, int radius)
+        {
+            if (radius <= 1) return 0;
+
+            int cornerY = -1;
+
+            if (row < radius)
+                cornerY = radius - 1 - row;
+            else if (row >= height - radius)
+                cornerY = row - (height - radius);
+
+            if (cornerY < 0) return 0;
+
+            int r = radius - 1;
+            int x = (int)System.Math.Sqrt(r * r - cornerY * cornerY);
+
+            return r - x;
+        }
+
+        // Dört köşesi yuvarlatılmış dolu dikdörtgen.
         private static void DrawRoundedRect(Canvas canvas, Color color, int x, int y, int width, int height, int radius)
         {
-            if (width <= 0 || height <= 0)
-                return;
+            if (width <= 0 || height <= 0) return;
 
-            radius = System.Math.Min(radius, System.Math.Min(width / 2, height / 2));
+            radius = System.Math.Max(0, System.Math.Min(radius, System.Math.Min(width, height) / 2));
 
-            if (radius <= 0)
+            if (radius == 0)
             {
                 canvas.DrawFilledRectangle(color, x, y, width, height);
                 return;
             }
 
-            canvas.DrawFilledRectangle(color, x + radius, y, width - radius * 2, height);
-            canvas.DrawFilledRectangle(color, x, y + radius, width, height - radius * 2);
-
-            canvas.DrawFilledCircle(color, x + radius, y + radius, radius);
-            canvas.DrawFilledCircle(color, x + width - radius - 1, y + radius, radius);
-            canvas.DrawFilledCircle(color, x + radius, y + height - radius - 1, radius);
-            canvas.DrawFilledCircle(color, x + width - radius - 1, y + height - radius - 1, radius);
+            for (int row = 0; row < height; row++)
+            {
+                int inset = GetCornerInset(row, height, radius);
+                canvas.DrawLine(color, x + inset, y + row, x + width - inset - 1, y + row);
+            }
         }
 
+        // Yuvarlatılmış dikdörtgenin kenarlığı.
         private static void DrawRoundedOutline(Canvas canvas, Color color, int x, int y, int width, int height, int radius)
         {
-            canvas.DrawLine(color, x + radius, y, x + width - radius - 1, y);
-            canvas.DrawLine(color, x + radius, y + height - 1, x + width - radius - 1, y + height - 1);
-            canvas.DrawLine(color, x, y + radius, x, y + height - radius - 1);
-            canvas.DrawLine(color, x + width - 1, y + radius, x + width - 1, y + height - radius - 1);
+            if (width <= 0 || height <= 0) return;
 
-            canvas.DrawArc(color, x + radius, y + radius, radius, 180, 270);
-            canvas.DrawArc(color, x + width - radius - 1, y + radius, radius, 270, 360);
-            canvas.DrawArc(color, x + radius, y + height - radius - 1, radius, 90, 180);
-            canvas.DrawArc(color, x + width - radius - 1, y + height - radius - 1, radius, 0, 90);
+            radius = System.Math.Max(0, System.Math.Min(radius, System.Math.Min(width, height) / 2));
+
+            if (radius == 0)
+            {
+                canvas.DrawRectangle(color, x, y, width, height);
+                return;
+            }
+
+            for (int row = 0; row < height; row++)
+            {
+                int inset = GetCornerInset(row, height, radius);
+
+                canvas.DrawPoint(color, x + inset, y + row);
+                canvas.DrawPoint(color, x + width - inset - 1, y + row);
+            }
+
+            canvas.DrawLine(color, x + radius - 1, y, x + width - radius, y);
+            canvas.DrawLine(color, x + radius - 1, y + height - 1, x + width - radius, y + height - 1);
+        }
+
+        // Yalnızca üst köşeleri yuvarlatılmış başlık çubuğu.
+        private static void DrawTopRoundedRect(Canvas canvas, Color color, int x, int y, int width, int height, int radius)
+        {
+            if (width <= 0 || height <= 0) return;
+
+            radius = System.Math.Max(0, System.Math.Min(radius, System.Math.Min(width, height)));
+
+            if (radius == 0)
+            {
+                canvas.DrawFilledRectangle(color, x, y, width, height);
+                return;
+            }
+
+            for (int row = 0; row < height; row++)
+            {
+                int inset = 0;
+
+                if (row < radius)
+                {
+                    int dy = radius - 1 - row;
+                    int r = radius - 1;
+                    inset = r - (int)System.Math.Sqrt(r * r - dy * dy);
+                }
+
+                canvas.DrawLine(color, x + inset, y + row, x + width - inset - 1, y + row);
+            }
         }
 
         public void UpdateSize()
         {
             Font font = FontManager.UiFont;
             int titleWidth = MeasureText(Title ?? "", font);
-            int minWidth = titleWidth + 3 * ButtonSize + 40;
+            int minWidth = titleWidth + 90;
 
             int maxWidth = 0;
             int maxHeight = 0;
@@ -154,8 +212,7 @@ namespace HolmiumOS.GUI
 
         public void AddControl(Control control)
         {
-            if (control == null)
-                return;
+            if (control == null) return;
 
             Controls.Add(control);
             UpdateSize();
@@ -172,9 +229,11 @@ namespace HolmiumOS.GUI
 
             Color iconColor = MutedTextColor;
 
+            // Küçültme simgesi.
             canvas.DrawLine(iconColor, minX + 7, buttonY + 17, minX + ButtonSize - 7, buttonY + 17);
             canvas.DrawLine(iconColor, minX + 7, buttonY + 18, minX + ButtonSize - 7, buttonY + 18);
 
+            // Kapatma simgesi.
             canvas.DrawLine(iconColor, closeX + 8, buttonY + 8, closeX + ButtonSize - 8, buttonY + ButtonSize - 8);
             canvas.DrawLine(iconColor, closeX + 9, buttonY + 8, closeX + ButtonSize - 8, buttonY + ButtonSize - 9);
             canvas.DrawLine(iconColor, closeX + ButtonSize - 8, buttonY + 8, closeX + 8, buttonY + ButtonSize - 8);
@@ -183,30 +242,35 @@ namespace HolmiumOS.GUI
 
         public void Draw(Canvas canvas)
         {
-            if (IsMinimized)
-                return;
+            if (IsMinimized) return;
 
             if (Dragging)
             {
                 Color dragBorderColor = ActiveBorderColor;
 
-                canvas.DrawLine(dragBorderColor, dragX, dragY, dragX + Width, dragY);
-                canvas.DrawLine(dragBorderColor, dragX, dragY + Height, dragX + Width, dragY + Height);
-                canvas.DrawLine(dragBorderColor, dragX, dragY, dragX, dragY + Height);
-                canvas.DrawLine(dragBorderColor, dragX + Width, dragY, dragX + Width, dragY + Height);
-                canvas.DrawLine(dragBorderColor, dragX, dragY + TitleBarHeight, dragX + Width, dragY + TitleBarHeight);
+                canvas.DrawLine(dragBorderColor, dragX, dragY, dragX + Width - 1, dragY);
+                canvas.DrawLine(dragBorderColor, dragX, dragY + Height - 1, dragX + Width - 1, dragY + Height - 1);
+                canvas.DrawLine(dragBorderColor, dragX, dragY, dragX, dragY + Height - 1);
+                canvas.DrawLine(dragBorderColor, dragX + Width - 1, dragY, dragX + Width - 1, dragY + Height - 1);
+                canvas.DrawLine(dragBorderColor, dragX, dragY + TitleBarHeight, dragX + Width - 1, dragY + TitleBarHeight);
 
                 return;
             }
 
+            // Pencere gölgesi.
             DrawRoundedRect(canvas, ShadowColor, X + 2, Y + 3, Width, Height, WindowRadius);
+
+            // Pencere gövdesi.
             DrawRoundedRect(canvas, WindowColor, X, Y, Width, Height, WindowRadius);
 
+            // Kenarlık.
             Color borderColor = Active ? ActiveBorderColor : BorderColor;
             DrawRoundedOutline(canvas, borderColor, X, Y, Width, Height, WindowRadius);
 
-            DrawRoundedRect(canvas, TitleBarColor, X + 1, Y + 1, Width - 2, TitleBarHeight, WindowRadius);
+            // Başlık çubuğu.
+            DrawTopRoundedRect(canvas, TitleBarColor, X + 1, Y + 1, Width - 2, TitleBarHeight, WindowRadius);
 
+            // Başlık çubuğunun alt çizgisi.
             canvas.DrawLine(BorderColor, X + 1, Y + TitleBarHeight, X + Width - 2, Y + TitleBarHeight);
 
             Font font = FontManager.UiFont;
@@ -219,12 +283,12 @@ namespace HolmiumOS.GUI
 
             int count = Controls.Count;
 
+            // Kontrolleri çiz.
             for (int i = 0; i < count; i++)
             {
                 var c = Controls[i];
 
-                if (c == null || !c.Visible)
-                    continue;
+                if (c == null || !c.Visible) continue;
 
                 int originalX = c.X;
                 int originalY = c.Y;
@@ -238,6 +302,7 @@ namespace HolmiumOS.GUI
                 c.Y = originalY;
             }
 
+            // Açık ComboBox listelerini en üstte çiz.
             for (int i = 0; i < count; i++)
             {
                 if (Controls[i] is ComboBox cb && cb.IsDropped)
@@ -287,26 +352,16 @@ namespace HolmiumOS.GUI
 
         public void Drag(int mx, int my, Canvas canvas)
         {
-            if (!Dragging)
-                return;
+            if (!Dragging) return;
 
             int targetX = mx - dragOffsetX;
             int targetY = my - dragOffsetY;
 
-            int screenWidth = (int)canvas.Mode.Width;
-            int screenHeight = (int)canvas.Mode.Height;
+            int screenWidth = canvas.Width;
+            int screenHeight = canvas.Height;
 
-            if (targetX < 0)
-                targetX = 0;
-
-            if (targetX + Width > screenWidth)
-                targetX = screenWidth - Width;
-
-            if (targetY < 0)
-                targetY = 0;
-
-            if (targetY + Height > screenHeight)
-                targetY = screenHeight - Height;
+            targetX = System.Math.Max(0, System.Math.Min(targetX, System.Math.Max(0, screenWidth - Width)));
+            targetY = System.Math.Max(0, System.Math.Min(targetY, System.Math.Max(0, screenHeight - Height)));
 
             dragX = targetX;
             dragY = targetY;
@@ -314,8 +369,7 @@ namespace HolmiumOS.GUI
 
         public void StopDrag()
         {
-            if (!Dragging)
-                return;
+            if (!Dragging) return;
 
             Dragging = false;
             X = dragX;
@@ -324,6 +378,7 @@ namespace HolmiumOS.GUI
 
         public void CheckControlsClick(int mx, int my)
         {
+            // Açık ComboBox listesinin dışına tıklanırsa listeyi kapat.
             for (int i = 0; i < Controls.Count; i++)
             {
                 if (Controls[i] is ComboBox cb && cb.IsDropped)
@@ -337,6 +392,7 @@ namespace HolmiumOS.GUI
                 }
             }
 
+            // Önceki odakları kaldır.
             for (int i = 0; i < Controls.Count; i++)
             {
                 if (Controls[i] != null)
@@ -345,6 +401,7 @@ namespace HolmiumOS.GUI
 
             int count = Controls.Count;
 
+            // ComboBox listesindeki seçimleri kontrol et.
             for (int i = 0; i < count; i++)
             {
                 if (Controls[i] is ComboBox comboBox && comboBox.IsDropped)
@@ -362,12 +419,12 @@ namespace HolmiumOS.GUI
                 }
             }
 
+            // Kontrolleri üstten alta değil, çizim sırasının tersinde kontrol et.
             for (int i = count - 1; i >= 0; i--)
             {
                 var c = Controls[i];
 
-                if (c == null || !c.Visible)
-                    continue;
+                if (c == null || !c.Visible) continue;
 
                 int absX = X + c.X;
                 int absY = Y + TitleBarHeight + c.Y;
